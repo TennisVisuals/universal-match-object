@@ -107,6 +107,31 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           }
        }
 
+       match.winProgression = function() {
+          var points = match.points();
+          var wp = '';
+          points.forEach(p => wp += p.winner);
+          return wp;
+       }
+
+       match.gameProgression = function() {
+          var points = match.points();
+          var gp = '';
+          points.forEach(function(p) {
+             if (p.point.indexOf('G') >= 0) gp += p.winner;
+             if (p.point.indexOf('T')) {
+                var tb_scores = p.point.split('T').join('').split('-');
+
+                // check for last point of tiebreak
+                if (Math.abs(tb_scores[0] - tb_scores[0]) >= 2 
+                    && (tb_scores[0] >= options.set.tiebreak_to || tb_scores[1] >= options.set.tiebreak_to)) {
+                       gp += p.winner;
+                }
+             }
+          });
+          return gp;
+       }
+
        match.push = function(values) {
           for (var s=0; s < options.match.sets; s++) {
              var ngames = 0;
@@ -675,11 +700,19 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
       var match = matchObject();
       match.options({set: {first_service: 0}});
       match.points(game.split(''));
-      return match.points().last().point.indexOf('G') >= 0;
+      if (match.points().last().point.indexOf('G') >= 0) {
+         return { wp: match.winProgression(), gp: match.gameProgression() };
+      } else {
+         return false;
+      }
    }
 
    mo.validSet = validSet;
    function validSet(set) {
+      if (set.indexOf('.') >= 0) {
+         console.log('More than one set submitted');
+         return false;
+      }
       var outcome = true;
       if (set.indexOf(';') > 0) {
          var games = set.split(';');
@@ -703,13 +736,24 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
       set = set.split(';').join('');
       set = set.split(',').join('');
 
-      var match = matchObject();
-      match.options({set: {first_service: 0}});
-      match.points(set.split(''));
-      var score = match.score();
-      if (score.sets.length != 1 || !score.sets[0].complete) outcome = false;
+      try {
+         var match = matchObject();
+         match.options({set: {first_service: 0}});
+         match.points(set.split(''));
+         var score = match.score();
+         if (score.sets.length != 1 || !score.sets[0].complete) outcome = false;
+      }
 
-      return outcome
+      catch (err) {
+         console.log('invalid characters in set string');
+         outcome = false;
+      }
+
+      if (outcome) {
+         return { wp: match.winProgression(), gp: match.gameProgression() };
+      } else {
+         return false;
+      }
    }
 
    mo.validTiebreak = validTiebreak;
