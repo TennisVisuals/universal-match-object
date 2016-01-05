@@ -701,7 +701,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
       match.options({set: {first_service: 0}});
       match.points(game.split(''));
       if (match.points().last().point.indexOf('G') >= 0) {
-         return { wp: match.winProgression(), gp: match.gameProgression() };
+         return { wp: match.winProgression(), gp: match.gameProgression(), score: match.score().match_score };
       } else {
          return false;
       }
@@ -709,8 +709,9 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
    mo.validSet = validSet;
    function validSet(set) {
+      var errors = [];
       if (set.indexOf('.') >= 0) {
-         console.log('More than one set submitted');
+         errors.push('More than one set submitted');
          return false;
       }
       var outcome = true;
@@ -720,12 +721,12 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
             if (games[g].indexOf('/') < 0) {
                if (!validGames(games[g])) {
                   outcome = false;
-                  console.log('Game', g, 'is invalid:', games[g]);
+                  errors.push('Game ' + g + ' is invalid: ' + games[g]);
                }
             } else {
                if (!validTiebreak(games[g])) {
                   outcome = false;
-                  console.log('Game', g, 'is an invalid tiebreak:', games[g]);
+                  errors.push('Game ' + g + ' is an invalid tiebreak: ' + games[g]);
                }
             }
          }
@@ -750,9 +751,9 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
       }
 
       if (outcome) {
-         return { wp: match.winProgression(), gp: match.gameProgression() };
+         return { wp: match.winProgression(), gp: match.gameProgression(), score: match.score().match_score };
       } else {
-         return false;
+         return { errors: errors };
       }
    }
 
