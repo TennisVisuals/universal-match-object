@@ -22,8 +22,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              games: 12,
              advantage: true,
              tiebreak: true,
-             tiebreak_to: 7,
-             average_points: 56
+             tiebreak_to: 7
           },
     
           points: {
@@ -214,8 +213,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                advantage: true,
                tiebreak: true,
                tiebreak_to: 7,
-               first_service: undefined,
-               average_points: 56
+               first_service: undefined
             },
 
             points: {
