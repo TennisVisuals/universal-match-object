@@ -33,8 +33,10 @@ match.pop()                       // pop last point from point array
   { winner: 1, point: '15-15', server: 0, game: 0 }
 
 match.players('Novak Djokovic', 'Serena Williams')
+match.players()                   // view player names
+[ 'Novak Djokovic', 'Serena Williams' ]
 
-match.reset()                     // clear all data
+match.reset()                     // clear point data
 match.push(['0-15', '15-15'])     // push point scores
 
 match.push({winner: 0, point: '30-15'})
