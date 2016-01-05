@@ -1,11 +1,98 @@
 # universal-match-object
-### javascript object for client browser or server (node) that creates/understands/validates tennis match scores
-The Universal Match Object (UMO) 'understands' the structure of tennis matches;
+### Create / Validate Tennis Match Scores
+
+The Universal Match Object (UMO) is a javascript object for client (browser) or server (node) that 'understands' the structure of tennis matches;
 it can be used to create new matches and to validate existing point progressions.
 
-The UMO is configurable:
+Node Usage:
+```
+m = require('./matchObject');
+match = m.matchObject();
+```
+
+Browser Usage:
+```
+<script src="./matchObject.js"></script>
+<script>
+  match = mo.matchObject();
+</script>
+```
+
+Examples:
+```
+match.push(0)                     // add a point won by player 0
+match.push(1)                     // add a point won by player 1
+match.push([0,1,0,0,1])           // add a sequence of points
+
+match.points([0,1])               // replaces existing points  
+match.points()                    // view all points
+[ { winner: 0, point: '15-0', server: 0, game: 0 },
+  { winner: 1, point: '15-15', server: 0, game: 0 } ]
+
+match.pop()                       // pop last point from point array
+  { winner: 1, point: '15-15', server: 0, game: 0 }
+
+match.players('Novak Djokovic', 'Serena Williams')
+
+match.reset()                     // clear all data
+match.push(['0-15', '15-15'])     // push point scores
+
+match.push({winner: 0, point: '30-15'})
+{ result: true }
+
+match.push('40-40')               // checks point validity
+{ result: false, error: 'invalid point' }
+
+match.score()                     // display current match score
+{ sets:
+   [ { score: '0-0',
+       point: '30-15',
+       legend: 'Djokovic/Williams',
+       leader: undefined,
+       games: [Object],
+       complete: false } ],
+  match_score: '',
+  winner: '',
+  loser: '' }
+```
+### Validate Point-by-Point data published by Jeff Sackmann
+The UMO supports the notation used by tennis_pointbypoint files:
+https://github.com/JeffSackmann/tennis_pointbypoint
+```
+match.push(['S','A','D','R'])
+match.push('SSDRSS'.split(''))
+```
+The UMO can be used to validate point-by-point sequences using the following convenience functions:
+```
+m.validGames('SSDRSS')            // sequence is a complete game
+m.validGames('SSSS;RRRR')         // sequence consists of complete games
+
+m.validTiebreak('S/SS/SR/RR/RR/RS/SR/RS/SS/SS/SS/SS/R')
+
+m.validSet('')                    // validate an entire set sequence
+```
+### The UMO is configurable:
  - number of games in a match
  - number of sets in a game
  - advantages at deuce
  - final set tiebreak
  - tiebreaks to 7 or 10
+
+```
+match.options()                   // output all configurable options
+match.options({match: {sets: 5}}) // change the number of sets (1 to 5)
+```
+### Origins
+The UMO is derived from the Points-to-Set component at TennisVisuals.com, which dynamically updates whenever points are added to or removed from the UMO:
+http://tennisvisuals.com/examples/pointsToSet.html
+
+As TennisVisuals matures more visualizations will utilize the UMO and it's functions will expand to include layering of more point detail, often derived from disparate sources.
+
+### Vision
+Eventually TennisVisuals will deliver real-time visualizations of in-process Tennis Matches, regardless of source.
+
+### Collaboration
+If you'd like to contribute to the development of TennisVisuals.com please contact me: 
+```
+info -at- tennisvisuals.com
+```
