@@ -24,7 +24,7 @@ match.push(0)                     // add a point won by player 0
 match.push(1)                     // add a point won by player 1
 match.push([0,1,0,0,1])           // add a sequence of points
 
-match.points([0,1])               // replaces existing points  
+match.points([0,1])               // replace existing points  
 match.points()                    // view all points
 [ { winner: 0, point: '15-0', server: 0, game: 0 },
   { winner: 1, point: '15-15', server: 0, game: 0 } ]
@@ -56,7 +56,7 @@ match.score()                     // display current match score
   loser: '' }
 ```
 ### Validate Point-by-Point data published by Jeff Sackmann
-The UMO supports the notation used by tennis_pointbypoint files:
+The UMO supports the notation used in tennis_pointbypoint files:
 https://github.com/JeffSackmann/tennis_pointbypoint
 ```
 match.push(['S','A','D','R'])
@@ -67,7 +67,9 @@ The UMO can be used to validate point-by-point sequences using the following con
 m.validGames('SSDRSS')            // sequence is a complete game
 m.validGames('SSSS;RRRR')         // sequence consists of complete games
 
+// because UMO understands match structure, delimiters are optional
 m.validTiebreak('S/SS/SR/RR/RR/RS/SR/RS/SS/SS/SS/SS/R')
+m.validTiebreak('SSSSRRRRRRSSRRSSSSSSSSSR')
 
 m.validSet('')                    // validate an entire set sequence
 ```
@@ -92,7 +94,7 @@ As TennisVisuals matures more visualizations will utilize the UMO and it's funct
 Eventually TennisVisuals will deliver real-time visualizations of in-process Tennis Matches, regardless of source.
 
 ### Collaboration
-If you'd like to contribute to the development of TennisVisuals.com please contact me: 
+If you'd like to contribute to the development of TennisVisuals.com please contact me:
 ```
 info -at- tennisvisuals.com
 ```
