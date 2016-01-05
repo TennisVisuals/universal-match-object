@@ -92,6 +92,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 set_objects[s].players(options.players).options(opts);
                 var result = set_objects[s].points(values);
                 var sg = set_objects[s].games();
+                console.log(sg);
                 var lgt = sg.last().tiebreak;
                 ngames += sg.length - (lgt ? 1 : 0);
 
@@ -121,8 +122,8 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 var sg = set_objects[s].games();
                 var lgt = sg.last().tiebreak;
                 ngames += sg.length - (lgt ? 1 : 0);
-                var opts = { set: { first_service: (options.match.first_service + ngames) % 2 } };
                 // update first_service of next set based on number of games played this set
+                var opts = { set: { first_service: (options.match.first_service + ngames) % 2 } };
                 if (set_objects[s + 1]) set_objects[s + 1].options(opts);
              }
           }
@@ -671,7 +672,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
    function validGames(game) {
       if (Array.isArray(game)) game = game.join('');
       if (game.indexOf(',') > 0) game = game.split(',').join('');
-      if (game.indexOf(';') > 0) game = game.split(',').join('');
+      if (game.indexOf(';') > 0) game = game.split(';').join('');
       var match = matchObject();
       match.options({set: {first_service: 0}});
       match.points(game.split(''));
