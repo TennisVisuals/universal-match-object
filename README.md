@@ -61,8 +61,9 @@ match.score()                     // display current match score
 The UMO supports the notation used in tennis_pointbypoint files:
 https://github.com/JeffSackmann/tennis_pointbypoint
 ```
-match.push(['S','A','D','R'])
-match.push('SSDRSS'.split(''))
+match.push('A')                   // add a single point (Ace)
+match.push(['S','A','D','R'])     // add an array of points
+match.push('SSDRSS'.split(''))    // add array from string
 ```
 The UMO can be used to validate point-by-point sequences using the following convenience functions:
 ```
