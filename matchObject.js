@@ -92,7 +92,6 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 set_objects[s].players(options.players).options(opts);
                 var result = set_objects[s].points(values);
                 var sg = set_objects[s].games();
-                console.log(sg);
                 var lgt = sg.last().tiebreak;
                 ngames += sg.length - (lgt ? 1 : 0);
 
