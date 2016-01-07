@@ -307,38 +307,22 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              return d;
           }
 
-          function checkSequence(point) {
-             var last_row = points.length ? points[points.length - 1] : { point: '0-0' };
-             var last_point = typeof last_row == 'object' ? last_row.point : last_row;
-             last_point = last_point.indexOf('G') >= 0 ? '0-0' : last_point;
-             if (point.indexOf('T') >= 0 && options.set.tiebreak && set.games().length >= options.set.games) {
-                if (last_point == '0-0' && ['1T-0T', '0T-1T'].indexOf(point) >= 0) { return true; }
-                var score = valid_tiebreak(point);
-                var last_score = valid_tiebreak(last_point);
-                if (score.reduce(function(a, b){return a+b}) == last_score.reduce(function(a, b){return a+b}) + 1) { return true; }
-             }  else {
-                if ( last_point == undefined || last_point.indexOf('G') >= 0 || last_point.indexOf('T') >= 0) { last_point = '0-0'; }
-                if ( progression[last_point].indexOf(point) >= 0 ) { return true; }
-                return false;
-             }
-          }
-
-          function valid_tiebreak(point) {
-             var score = point.split('-').map(function(m) { return m[m.length - 1] == 'T' ? 1 : 0 }).reduce(function(a, b){return a+b;});
-             if (score == 2) return point.split('T').join('').split('-').map(function(m) { return parseInt(m); });
-             return false;
+          function tiebreakGame() {
+             var score = getScore(points.length - 1);
+             var tiebreak = score ? options.set.tiebreak && score.games[0] == (options.set.games / 2) && score.games[1] == (options.set.games / 2) : false;
+             return tiebreak;
           }
 
           function determineWinner(point) {
              var last_point = points.length ? points[points.length - 1].point : '0-0';
              last_point = last_point.indexOf('G') >= 0 ? '0-0' : last_point;
              if (point.indexOf('T') >= 0) {
-                var score = valid_tiebreak(point);
+                var ctv = validTiebreakScoreValue(point);
                 // winner is the score that equals 1
-                if (score && last_point == '0-0') return score[0] == 1 ? 0 : 1;
-                var last_score = valid_tiebreak(last_point);
+                if (ctv && last_point == '0-0') return ctv[0] == 1 ? 0 : 1;
+                var last_ctv = validTiebreakScoreValue(last_point);
                 // winner is whichever score has changed
-                return score[0] != last_score[0] ? 0 : 1;
+                return ctv[0] != last_ctv[0] ? 0 : 1;
              } else {
                 return progression[last_point].indexOf(point);
              }
@@ -380,11 +364,11 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
           function pushRow(value) {
              if (player_data[0].length && (player_data[0].last().pts == 0 || player_data[1].last().pts == 0)) {
-                return { result: false, status: 'eos' };       // set has been completed
+                // set has been completed
+                return { result: false, status: 'eos' };
              }
 
              if (['0', '1', 'S', 'A', 'D', 'R'].indexOf(String(value)) >= 0 ) {
-
                 var server = nextService();
 
                 if (['S', 'A'].indexOf(value) >= 0) { value = server; }
@@ -392,24 +376,74 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
                 var point = determinePoint(value);
                 var row = { winner: parseInt(value), point: point };
-             } else if (valid_points.indexOf(value) >= 0 && checkSequence(value)) {
-                var row = { winner: determineWinner(value), point: value };
-             } else if (typeof value == 'object' && (value.point || ["0", "1"].indexOf(String(value.winner)) >= 0)) {
+                points.push(row);
+                return { result: true };
+             }
+
+             if (typeof value == 'object' && (value.point || ["0", "1"].indexOf(String(value.winner)) >= 0)) {
                 if (value.point) {
-                   var winner = determineWinner(value.point);
-                   if (!checkSequence(value.point)) return { result: false, error: 'sequence' };
-                   if (value.winner != winner) return { result: false, error: 'mismatch' };
+                   var sequence_point = checkSequence(value.point);
+                   if (!sequence_point) return { result: false, error: 'sequence' };
+                   var winner = determineWinner(sequence_point);
+                   if (value.winner && value.winner != winner) return { result: false, error: 'mismatch' };
                    value.winner = winner;
+                   value.point = sequence_point;
                 } else {
                    value.winner = parseInt(value.winner);
                    value.point = determinePoint(value.winner);
                 }
-                var row = value;
-             } else {
-                return { result: false, error: 'invalid point' };
+                points.push(value);
+                return { result: true };
              }
-             points.push(row);
-             return { result: true };
+
+             var sequence_point = checkSequence(value);
+             if (sequence_point) {
+                var row = { winner: determineWinner(sequence_point), point: sequence_point };
+                points.push(row);
+                return { result: true };
+             } 
+             
+             return { result: false, error: 'invalid point' };
+          }
+
+          function checkSequence(point) {
+             var last_row = points.length ? points[points.length - 1] : { point: '0-0' };
+             var last_point = typeof last_row == 'object' ? last_row.point : last_row;
+             last_point = last_point.indexOf('G') >= 0 ? '0-0' : last_point;
+             if (point.indexOf('T') >= 0 && options.set.tiebreak && set.games().length >= options.set.games) {
+                if (checkTiebreak(point)) return point;
+             } else if (tiebreakGame()) {
+                // point score doesn't include 'T', but should be a tiebreak
+                if (point.indexOf('G') >= 0) {
+                   var scores = point.split('-');
+                   var winner = scores.indexOf('G');
+                   var last_value = last_point.split('-')[winner].replace('T', '');
+                   scores[winner] = parseInt(last_value) + 1;
+                   point = scores.join('-');
+                }
+                var tb_point = point.split('-').map(m => m + 'T').join('-');
+                if (checkTiebreak(tb_point)) return tb_point;
+             }  else {
+                if ( last_point == undefined || last_point.indexOf('G') >= 0 || last_point.indexOf('T') >= 0) { last_point = '0-0'; }
+                if ( progression[last_point] && progression[last_point].indexOf(point) >= 0 ) { return point; }
+                return false;
+             }
+
+             function checkTiebreak(tb_point) {
+                if (last_point == '0-0' && ['1T-0T', '0T-1T'].indexOf(tb_point) >= 0) { return true; }
+                var ctv = validTiebreakScoreValue(tb_point);
+                var last_ctv = validTiebreakScoreValue(last_point);
+                // insure the total of the new tiebreak score is one more than previous total
+                var valid_score = (ctv.reduce(function(a, b){return a+b}) == last_ctv.reduce(function(a, b){return a+b}) + 1);
+                // insure that at least one of the tiebreak scores hasn't changed
+                return valid_score && (ctv[0] == last_ctv[0] || ctv[1] == last_ctv[1]);
+             }
+          }
+
+          function validTiebreakScoreValue(point) {
+             var score = point.split('-').map(function(m) { return m[m.length - 1] == 'T' ? 1 : 0 }).reduce(function(a, b){return a+b;});
+             if (score == 2) return point.split('T').join('').split('-').map(function(m) { return parseInt(m); });
+             return false;
           }
 
           function dataCalcs() {
