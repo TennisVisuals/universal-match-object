@@ -136,6 +136,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           for (var s=0; s < options.match.sets; s++) {
              var ngames = 0;
              var result = set_objects[s].push(values);
+             if (result.error) return result;
              if (result.result) {
                 if (typeof update === 'function') update();
                 break;
@@ -300,10 +301,6 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           }
 
           var get_key = function(d) { return d && d.key; };
-
-          function foo(d, i, self) {
-             // console.log(d, points[d].point, game_data[points[d].game].score);
-          }
 
           function add_index(d, i) {
              for (var v=0; v<d.length; v++) { d[v]['_i'] = i; }
