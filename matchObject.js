@@ -35,7 +35,9 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
        // prepare sets
        for (var s=0; s < 5; s++) {
-          set_objects.push(setObject());
+          var so = setObject();
+          so.options({ id: s + 1 })
+          set_objects.push(so);
        }
        set_objects[0].options( { set: {first_service: options.match.first_service }} );
 
@@ -62,11 +64,19 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                  }
               }
            }
-           checkOptions();
+           if (options.set.games % 2 != 0) options.set.games = 12;
            for (var s=0; s < 5; s++) {
               set_objects[s].options( { players: options.players, set: options.set, points: options.points } );
+              if (s + 1 == options.match.sets) {
+                 var opts = { set: { 
+                    tiebreak: options.match.final_set_tiebreak,
+                    tiebreak_to: options.match.final_set_tiebreak_to
+                 } };
+                set_objects[s].options(opts);
+              }
            }
            return match;
+
        }
 
        match.points = function(values) {
@@ -77,31 +87,39 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              }
              return points; 
           }
-          var ngames = 0;
+
+          // add an array of values to the match
+          var previous_set_games = 0;
+          var previous_set_first_service = options.match.first_service;
+          // iterate through sets
           for (var s=0; s < 5; s++) {
              if (values.length) {
-                if (s + 1 == options.match.sets) { 
-                   var opts = { set: { 
-                      first_service: (options.match.first_service + ngames) % 2,
-                      tiebreak: options.match.final_set_tiebreak,
-                      tiebreak_to: options.match.final_set_tiebreak_to
-                   } };
-                } else {
-                   var opts = { set: { first_service: (options.match.first_service + ngames) % 2 } };
-                }
-                set_objects[s].players(options.players).options(opts);
+
+                // set first_service for this set based on the first_service and
+                // number of games in the previous set
+                var opts = { set: { first_service: (previous_set_first_service + previous_set_games) % 2 } };
+                set_objects[s].options(opts);
+
+                // add values to the current set
                 var result = set_objects[s].points(values);
-                var sg = set_objects[s].games();
-                var lgt = sg.last().tiebreak;
-                ngames += sg.length - (lgt ? 1 : 0);
+
+                var previous_set_first_service = set_objects[s].set.first_service;
+                var previous_set_games = set_objects[s].games();
+                previous_set_games = previous_set_games ? previous_set_games.length : 0;
 
                 if (result.result) {
+                   // there was a final result; call update function, if present
                    if (typeof update === 'function') update();
+                   // if there are additional (extra) values, discard them.
                    values = [];
+
                 } else if (result.remnant) {
+                   // there were extra values and the match is not complete
                    values = result.remnant;
                 }
+
              } else {
+                // if there are no (more) values, reset the current set
                 set_objects[s].reset()
              }
           }
@@ -133,22 +151,35 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
        }
 
        match.push = function(values) {
+          var previous_set_games = 0;
+          var previous_set_first_service = options.match.first_service;
+
+          // iterate through all sets
           for (var s=0; s < options.match.sets; s++) {
-             var ngames = 0;
+             // add values to set, if possible
              var result = set_objects[s].push(values);
+
+             // if there is an error, return
              if (result.error) return result;
+
+             // if there was a final result; call update function, if present
              if (result.result) {
                 if (typeof update === 'function') update();
                 break;
+
+             // if there are additional values, continue
              } else if (result.remnant) {
                 values = result.remnant;
              }
+
+             // if the end of current set was reached
              if (result.status == 'eos') {
-                var sg = set_objects[s].games();
-                var lgt = sg.last().tiebreak;
-                ngames += sg.length - (lgt ? 1 : 0);
+                previous_set_first_service = set_objects[s].options().set.first_service;
+                previous_set_games = set_objects[s].games();
+                previous_set_games = previous_set_games ? previous_set_games.length : 0;
+
                 // update first_service of next set based on number of games played this set
-                var opts = { set: { first_service: (options.match.first_service + ngames) % 2 } };
+                var opts = { set: { first_service: (previous_set_first_service + previous_set_games) % 2 } };
                 if (set_objects[s + 1]) set_objects[s + 1].options(opts);
              }
           }
@@ -169,9 +200,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
            if (typeof a == 'string') options.players[0] = a;
            if (typeof b == 'string') options.players[1] = b;
            if (typeof a == 'string' && typeof b == 'string') {
-              for (var s=0; s < 5; s++) {
-                 set_objects[s].players(a, b);
-              }
+              set_objects.forEach(s => s.players(a, b));
            }
            return match;
        }
@@ -201,7 +230,13 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                    match_score += scoreboards[s].score;
                 } else {
                    var score_split = scoreboards[s].score.split(' ');
-                   match_score += score_split[0].split('-').reverse().join('-');
+                   var tbscore = score_split[0].split('(');
+                   if (tbscore) {
+                      match_score += tbscore[0].split('-').reverse().join('-');
+                   } else {
+                      match_score += score_split[0].split('-').reverse().join('-');
+                   }
+                   if (tbscore[1]) match_score += '(' + tbscore[1];
                    if (score_split[1]) match_score += score_split[1];
                 }
                 if (s < scoreboards.length - 1) match_score += ', ';
@@ -214,10 +249,6 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           for (var s=0; s < 5; s++) {
              set_objects[s].reset();
           }
-       }
-
-       function checkOptions() {
-          if (options.set.games % 2 != 0) options.set.games = 12;
        }
 
       return match;
@@ -310,7 +341,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           function tiebreakGame() {
              var score = getScore(points.length - 1);
              var tiebreak = score ? options.set.tiebreak && score.games[0] == (options.set.games / 2) && score.games[1] == (options.set.games / 2) : false;
-             return tiebreak;
+             return tiebreak ? options.id : false;
           }
 
           function determineWinner(point) {
@@ -341,12 +372,19 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
           function nextService() {
              var last_point = set.points().last();
+
+             // if no points yet in set, return first_service value
              if (!last_point) return options.set.first_service;
+
+             // determine which game of the set
              var game_number = last_point.game;
              if (last_point.point.indexOf('G') >= 0) game_number += 1;
+
+             // check if last point was played in a tiebreak
              var tiebreak_game = (last_point.point.indexOf('T') >= 0) ? true : false;
 
              var server = (parseInt(options.set.first_service) + game_number) % 2;
+
              if (tiebreak_game) {
                 var tb_scores = last_point.point.split('T').join('').split('-');
                 var tiebreak_point = tb_scores.reduce((a, b) => parseInt(a) + parseInt(b));;
@@ -355,6 +393,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 // check for last point of tiebreak
                 if (Math.abs(tb_scores[0] - tb_scores[0]) >= 2 
                     && (tb_scores[0] >= options.set.tiebreak_to || tb_scores[1] >= options.set.tiebreak_to)) {
+                       console.log('Last Point of Tiebreak');
                        game_number = last_point.game + 1;
                        server = (parseInt(options.set.first_service) + game_number) % 2;
                 }
@@ -377,42 +416,52 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 var point = determinePoint(value);
                 var row = { winner: parseInt(value), point: point };
                 points.push(row);
-                return { result: true };
+                return { result: true, point: row };
              }
 
-             if (typeof value == 'object' && (value.point || ["0", "1"].indexOf(String(value.winner)) >= 0)) {
+             if (typeof value == 'object' && (value.point || ["0", "1", "S", "A", "D", "R"].indexOf(String(value.winner)) >= 0)) {
                 if (value.point) {
                    var sequence_point = checkSequence(value.point);
-                   if (!sequence_point) return { result: false, error: 'sequence' };
+                   if (!sequence_point) return { result: false, error: 'sequence', point: value.point };
                    var winner = determineWinner(sequence_point);
-                   if (value.winner && value.winner != winner) return { result: false, error: 'mismatch' };
+                   if (value.winner && value.winner != winner) return { result: false, error: 'winner mismatch' };
                    value.winner = winner;
                    value.point = sequence_point;
                 } else {
+                   var server = nextService();
+                   if (['S', 'A'].indexOf(value.winner) >= 0) { value.winner = server; }
+                   if (['D', 'R'].indexOf(value.winner) >= 0) { value.winner = 1 - server; }
                    value.winner = parseInt(value.winner);
                    value.point = determinePoint(value.winner);
                 }
                 points.push(value);
-                return { result: true };
+                return { result: true, point: value };
              }
 
              var sequence_point = checkSequence(value);
              if (sequence_point) {
                 var row = { winner: determineWinner(sequence_point), point: sequence_point };
                 points.push(row);
-                return { result: true };
+                return { result: true, point: row };
              } 
              
-             return { result: false, error: 'invalid point' };
+             return { result: false, error: 'invalid point', point: value };
           }
 
           function checkSequence(point) {
              var last_row = points.length ? points[points.length - 1] : { point: '0-0' };
              var last_point = typeof last_row == 'object' ? last_row.point : last_row;
              last_point = last_point.indexOf('G') >= 0 ? '0-0' : last_point;
+
+             var tiebreak_game = tiebreakGame();
+             var valid_point = (progression[last_point] && progression[last_point].indexOf(point) >= 0);
+
              if (point.indexOf('T') >= 0 && options.set.tiebreak && set.games().length >= options.set.games) {
-                if (checkTiebreak(point)) return point;
-             } else if (tiebreakGame()) {
+                return checkTiebreak(point) ? point : false;
+             }
+
+             // need to handle tiebreak_game && valid_point && final_set no tiebreak
+             if (tiebreak_game && !valid_point) {
                 // point score doesn't include 'T', but should be a tiebreak
                 if (point.indexOf('G') >= 0) {
                    var scores = point.split('-');
@@ -422,18 +471,24 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                    point = scores.join('-');
                 }
                 var tb_point = point.split('-').map(m => m + 'T').join('-');
-                if (checkTiebreak(tb_point)) return tb_point;
-             }  else {
-                if ( last_point == undefined || last_point.indexOf('G') >= 0 || last_point.indexOf('T') >= 0) { last_point = '0-0'; }
-                if ( progression[last_point] && progression[last_point].indexOf(point) >= 0 ) { return point; }
-                return false;
+
+                return checkTiebreak(tb_point) ? tb_point : false;
              }
+
+             if ( last_point == undefined || last_point.indexOf('G') >= 0 || last_point.indexOf('T') >= 0) { last_point = '0-0'; }
+             if ( progression[last_point] && progression[last_point].indexOf(point) >= 0 ) { return point; }
+             return false;
 
              function checkTiebreak(tb_point) {
                 if (last_point == '0-0' && ['1T-0T', '0T-1T'].indexOf(tb_point) >= 0) { return true; }
                 var ctv = validTiebreakScoreValue(tb_point);
                 var last_ctv = validTiebreakScoreValue(last_point);
                 // insure the total of the new tiebreak score is one more than previous total
+
+                if (!ctv || !last_ctv) {
+                   return false;
+                }
+
                 var valid_score = (ctv.reduce(function(a, b){return a+b}) == last_ctv.reduce(function(a, b){return a+b}) + 1);
                 // insure that at least one of the tiebreak scores hasn't changed
                 return valid_score && (ctv[0] == last_ctv[0] || ctv[1] == last_ctv[1]);
@@ -656,7 +711,10 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
           // add a point or array of points
           set.push = function(values) {
-             if (!arguments.length) return false;
+             if (!arguments.length) {
+                console.log('no argument given');
+                return false;
+             }
              var _values = JSON.parse(JSON.stringify(values));
 
              if ( _values.constructor === Array ) {
