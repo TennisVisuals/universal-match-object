@@ -172,6 +172,9 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 values = result.remnant;
              }
 
+             // check for end of match, one player has more than half fo the number of sets
+             if (match.score().winner) { break; }
+
              // if the end of current set was reached
              if (result.status == 'eos') {
                 previous_set_first_service = set_objects[s].options().set.first_service;
@@ -181,6 +184,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 // update first_service of next set based on number of games played this set
                 var opts = { set: { first_service: (previous_set_first_service + previous_set_games) % 2 } };
                 if (set_objects[s + 1]) set_objects[s + 1].options(opts);
+
              }
           }
           return result;
@@ -212,7 +216,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              var score = set_objects[s].score();
              if (score) {
                 scoreboards.push(score);
-                sets_won[score.leader] += 1;
+                if (score.complete) sets_won[score.leader] += 1;
              }
           }
 
@@ -220,7 +224,8 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           var match_winner = '';
           var match_loser = '';
           // check if there is a match winner
-          if (sets_won[0] != sets_won[1]) {
+          // winner has won more than half of the sets for match format
+          if (sets_won[0] > (options.match.sets / 2) || sets_won[1] > (match.options.sets / 2)) {
              var winner = sets_won[0] > sets_won[1] ? 0 : 1;
              match_winner = options.players[winner];
              match_loser = options.players[1 - winner];
@@ -287,7 +292,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           function getScore(point_number) {
             if (!points[point_number]) return;
 
-            var tiebreak = '';
+            var tiebreak;
             var point = points[point_number].point;
 
             if (points[point_number].point.indexOf('T') >= 0) {
@@ -295,7 +300,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                if (Math.max.apply(null, tscore) >= options.set.tiebreak_to && Math.abs(tscore[0] - tscore[1]) > 1) {
                   var game = game_data[points[point_number].game];
                   point = '';
-                  tiebreak = '(' + Number(Math.min.apply(null, tscore)) + ')';
+                  tiebreak = Number(Math.min.apply(null, tscore));
 
                } else {
                   var game = game_data[points[point_number].game - 1];
@@ -317,7 +322,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
             var legend = leader == undefined ? options.players[0].split(' ').last() + '/' + options.players[1].split(' ').last() :
                                                options.players[leader];
 
-            if (tiebreak) score = score + tiebreak;
+            if (tiebreak != undefined) score = score + '(' + tiebreak + ')';
 
             var complete = false;
             if (game) {
@@ -328,7 +333,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                game = { score: [0, 0] };
             }
 
-            return { score: score, point: point, legend: legend, leader: leader, games: game.score, complete: complete };
+            return { score: score, point: point, legend: legend, leader: leader, games: game.score, tiebreak: tiebreak, complete: complete };
           }
 
           var get_key = function(d) { return d && d.key; };
@@ -729,8 +734,8 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 }
                 
              } else {
-                   var result = pushRow(_values);
-                   dataCalcs();
+                var result = pushRow(_values);
+                dataCalcs();
              }
              return result;
           }
