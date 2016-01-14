@@ -225,7 +225,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           var match_loser = '';
           // check if there is a match winner
           // winner has won more than half of the sets for match format
-          if (sets_won[0] > (options.match.sets / 2) || sets_won[1] > (match.options.sets / 2)) {
+          if (sets_won[0] > (options.match.sets / 2) || sets_won[1] > (options.match.sets / 2)) {
              var winner = sets_won[0] > sets_won[1] ? 0 : 1;
              match_winner = options.players[winner];
              match_loser = options.players[1 - winner];
