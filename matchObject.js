@@ -668,7 +668,6 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 line0.push( { pts: pts0 + neg[0] });
                 line1.push( { pts: pts1 + neg[1] });
 
-                // if (server != undefined && points[i].server == undefined) { points[i].server = server; }
                 points[i].server = server;
                 checkBreakpoint(i);
                 points[i].game = game_number;
@@ -682,16 +681,17 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           }
 
           function checkBreakpoint(point_number) {
-             var last_point = (points.length && point_number >= 1) ? points[point_number - 1].point : '0-0';
-             if (progression[last_point]) {
-                if (progression[last_point][0].indexOf('G') >= 0) {
-                   if (points[point_number].server == 1) { 
+             var point = points[point_number].point;
+             var server = points[point_number].server;
+             if (progression[point]) {
+                if (progression[point][0].indexOf('G') >= 0) {
+                   if (server == 1) { 
                       points[point_number].breakpoint = 0; 
                    } else {
                       points[point_number].gamepoint = 0;
                    }
-                } else if (progression[last_point][1].indexOf('G') >= 0) {
-                   if (points[point_number].server == 0) { 
+                } else if (progression[point][1].indexOf('G') >= 0) {
+                   if (server == 0) { 
                       points[point_number].breakpoint = 1; 
                    } else {
                       points[point_number].gamepoint = 1;
