@@ -36,7 +36,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
        // prepare sets
        for (var s=0; s < 5; s++) {
           var so = setObject();
-          so.options({ id: s + 1 })
+          so.options({ id: s })
           set_objects.push(so);
        }
        set_objects[0].options( { set: {first_service: options.match.first_service }} );
@@ -45,6 +45,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
        };
 
        // ACCESSORS
+
        match.options = function(values) {
            if (!arguments.length) return options;
            var vKeys = Object.keys(values);
@@ -256,6 +257,47 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           }
        }
 
+       match.sets = function() {
+          return set_objects.slice(0,options.match.sets);
+       }
+
+       var valid_points = [
+          '0-15', '0-30', '0-40', '0-G', '15-0', '15-15', '15-30', '15-40', '15-G', '30-0', '30-15', '30-30', '30-40', '30-G',
+          '40-0', 'G-0', '40-15', 'G-15', '40-30', 'G-30', '40-40', '40-A', '40-G', 'A-40', 'G-40'
+       ]
+
+       match.pointIndex = function(set, game, score) {
+          if (set < 0 || set > options.match.sets ||
+              game < 0 || !score || valid_points.indexOf(score) < 0) {
+                 return false;
+              }
+          var set_points = match.points().map(p => p.set == set ? p : undefined);
+          var game_points = set_points.map(p => p && p.game == game ? p : undefined);;
+          var points = game_points.map(p => p && p.point == score ? p : undefined);
+          for (var p=0; p < points.length; p++) {
+             if (points[p] != undefined) return p;
+          }
+          return false;
+       }
+
+       match.findPoint = function(set, game, score, lazy) {
+          if (set < 0 || set > options.match.sets ||
+              game < 0 || !score || valid_points.indexOf(score) < 0) {
+                 return false;
+              }
+          var game_points = set_objects[set].points().filter(m => m.game == game);;
+
+          var point = game_points.filter(p => p.point == score);
+          if (!point.length && lazy) {
+             point = game_points.filter(p => p.point == score.split('-').reverse().join('-'));
+          }
+          if (point.length) {
+             return point[0]
+          } else {
+             return false;
+          }
+       }
+
       return match;
 
       function setObject() {
@@ -346,7 +388,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           function tiebreakGame() {
              var score = getScore(points.length - 1);
              var tiebreak = score ? options.set.tiebreak && score.games[0] == (options.set.games / 2) && score.games[1] == (options.set.games / 2) : false;
-             return tiebreak ? options.id : false;
+             return tiebreak ? true : false;
           }
 
           function determineWinner(point) {
@@ -419,7 +461,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 if (['D', 'R'].indexOf(value) >= 0) { value = 1 - server; }
 
                 var point = determinePoint(value);
-                var row = { winner: parseInt(value), point: point };
+                var row = { winner: parseInt(value), point: point, set: options.id };
                 points.push(row);
                 return { result: true, point: row };
              }
@@ -439,13 +481,14 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                    value.winner = parseInt(value.winner);
                    value.point = determinePoint(value.winner);
                 }
+                value.set = options.id;
                 points.push(value);
                 return { result: true, point: value };
              }
 
              var sequence_point = checkSequence(value);
              if (sequence_point) {
-                var row = { winner: determineWinner(sequence_point), point: sequence_point };
+                var row = { winner: determineWinner(sequence_point), point: sequence_point, set: options.id };
                 points.push(row);
                 return { result: true, point: row };
              } 
@@ -769,11 +812,6 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           // DATA
           // -------------
 
-          var valid_points = [
-             '0-15', '0-30', '0-40', '0-G', '15-0', '15-15', '15-30', '15-40', '15-G', '30-0', '30-15', '30-30', '30-40', '30-G',
-             '40-0', 'G-0', '40-15', 'G-15', '40-30', 'G-30', '40-40', '40-A', '40-G', 'A-40', 'G-40'
-          ]
-
           var progression = { 
              '0-0'  : ['15-0',  '0-15'], '0-15' : ['15-15', '0-30'], '0-30' : ['15-30', '0-40'], '0-40' : ['15-40', '0-G'], 
              '15-0' : ['30-0',  '15-15'], '15-15': ['30-15', '15-30'], '15-30': ['30-30', '15-40'], '15-40': ['30-40', '15-G'], 
@@ -784,6 +822,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
           return set;
       }
+
    }
 
    mo.validGames = validGames;

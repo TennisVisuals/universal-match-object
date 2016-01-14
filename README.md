@@ -66,6 +66,9 @@ Here is a quick overview of some of the accessors for the UMO:
 - **players()** returns the names of the players
 - **score()** returns detail about scores for each set and for the match
 - **reset()** will destroy the match / empty the UMO
+- **sets()** accessor for individual set objects
+- **pointIndex(*set*, *game*, *score*)** search for a specific point; returns index
+- **findPoint(*set*, *game*, *score*)** search for a specific point
 
 ### Validate Point-by-Point data published by Jeff Sackmann
 The UMO supports the notation used in tennis_pointbypoint files:
