@@ -57,6 +57,16 @@ match.score()                     // display current match score
   winner: '',
   loser: '' }
 ```
+Here is a quick overview of some of the accessors for the UMO:
+- **options()** returns (and can be used to set) match format
+- **points()** returns an array of all points in a match
+- **winProgression()** and **gameProgression()** provide compact match representations which are used by various visualization components.  An entire match can be recreated from a Win Progression.
+- **push()** was used by the parser to create points
+- **pop()** will alter the match by removing the last point.
+- **players()** returns the names of the players
+- **score()** returns detail about scores for each set and for the match
+- **reset()** will destroy the match / empty the UMO
+
 ### Validate Point-by-Point data published by Jeff Sackmann
 The UMO supports the notation used in tennis_pointbypoint files:
 https://github.com/JeffSackmann/tennis_pointbypoint
