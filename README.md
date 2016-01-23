@@ -6,8 +6,8 @@ it can be used to create new matches and to validate existing point progressions
 
 Node Usage:
 ```
-m = require('./matchObject');
-match = m.matchObject();
+mo = require('./matchObject');
+match = mo.matchObject();
 ```
 
 Browser Usage:
@@ -47,8 +47,8 @@ match.push('40-40')               // checks point validity
 
 match.score()                     // display current match score
 { sets:
-   [ { score: '0-0',
-       point: '30-15',
+   [ { game_score: '0-0',
+       point_score: '30-15',
        legend: 'Djokovic/Williams',
        leader: undefined,
        games: [Object],
@@ -80,14 +80,14 @@ match.push('SSDRSS'.split(''))    // add array from string
 ```
 The UMO can be used to validate point-by-point sequences using the following convenience functions:
 ```
-m.validGames('SSDRSS')            // sequence is a complete game
-m.validGames('SSSS;RRRR')         // sequence consists of complete games
+mo.validGames('SSDRSS')            // sequence is a complete game
+mo.validGames('SSSS;RRRR')         // sequence consists of complete games
 
 // because UMO understands match structure, delimiters are optional
-m.validTiebreak('S/SS/SR/RR/RR/RS/SR/RS/SS/SS/SS/SS/R')
-m.validTiebreak('SSSSRRRRRRSSRRSSSSSSSSSR')
+mo.validTiebreak('S/SS/SR/RR/RR/RS/SR/RS/SS/SS/SS/SS/R')
+mo.validTiebreak('SSSSRRRRRRSSRRSSSSSSSSSR')
 
-m.validSet('')                    // validate an entire set sequence
+mo.validSet('')                    // validate an entire set sequence
 ```
 ### The UMO is configurable:
  - number of games in a match

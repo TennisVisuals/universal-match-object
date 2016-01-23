@@ -107,7 +107,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 // add values to the current set
                 var result = set_objects[s].points(values);
 
-                var previous_set_first_service = set_objects[s].set.first_service;
+                var previous_set_first_service = set_objects[s].options().set.first_service;
                 var previous_set_games = set_objects[s].games();
                 previous_set_games = previous_set_games ? previous_set_games.length : 0;
 
@@ -346,13 +346,13 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
             if (!points[point_number]) return;
 
             var tiebreak;
-            var point = points[point_number].score;
+            var point_score = points[point_number].score;
 
             if (points[point_number].score.indexOf('T') >= 0) {
                var tscore = points[point_number].score.split('-').map(function(m) { return parseInt(m.replace('T', '')); });
                if (Math.max.apply(null, tscore) >= options.set.tiebreak_to && Math.abs(tscore[0] - tscore[1]) > 1) {
                   var game = game_data[points[point_number].game];
-                  point = '';
+                  point_score = '';
                   tiebreak = Number(Math.min.apply(null, tscore));
 
                } else {
@@ -361,7 +361,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
             } else {
                if (points[point_number].score.indexOf('G') >= 0) {
                   var game = game_data[points[point_number].game];
-                  point = '';
+                  point_score = '';
                } else {
                   var game = game_data[points[point_number].game - 1];
                }
@@ -369,13 +369,13 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
             var leader = game == undefined ? undefined : 
                          game.score[0] > game.score[1] ? 0 :
                          game.score[1] > game.score[0] ? 1 : undefined;
-            var score  = game == undefined ? '0-0' :
+            var game_score  = game == undefined ? '0-0' :
                          leader == 0 ? game.score[0] + '-' + game.score[1] : 
                          game.score[1] + '-' + game.score[0];
             var legend = leader == undefined ? options.players[0].split(' ').last() + '/' + options.players[1].split(' ').last() :
                                                options.players[leader];
 
-            if (tiebreak != undefined) score = score + '(' + tiebreak + ')';
+            if (tiebreak != undefined) game_score = game_score + '(' + tiebreak + ')';
 
             var complete = false;
             if (game) {
@@ -386,7 +386,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                game = { score: [0, 0] };
             }
 
-            return { score: score, point: score, legend: legend, leader: leader, games: game.score, tiebreak: tiebreak, complete: complete };
+            return { point_score: point_score, game_score: game_score, legend: legend, leader: leader, games: game.score, tiebreak: tiebreak, complete: complete };
           }
 
           var get_key = function(d) { return d && d.key; };
@@ -472,6 +472,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
              if ('01SAQDRP'.split('').indexOf(String(value)) >= 0 ) {
 
+                player = value;
                 if (['S', 'A', 'Q'].indexOf(value) >= 0) { player = server; }
                 if (['D', 'R', 'P'].indexOf(value) >= 0) { player = 1 - server; }
                 if (['Q', 'P'].indexOf(value) >= 0) { point.result = 'Penalty'; }
