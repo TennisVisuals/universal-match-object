@@ -1,10 +1,13 @@
 // TODO
-// Add setpoint and matchpoint to checkBreakpoint
+// Add setpoint and matchpoint attributes to checkBreakpoint
 
 if (!Array.prototype.last) { Array.prototype.last = function() { return this[this.length - 1]; }; }
 
 !function() { 
    var mo = {};
+
+   // clients can register callbacks for notification when data updates
+   var callbacks = [];
 
    mo.matchObject = matchObject;
    function matchObject() {
@@ -49,6 +52,8 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
        // ACCESSORS
 
+       match.type = 'UMO';
+
        match.options = function(values) {
            if (!arguments.length) return options;
            var vKeys = Object.keys(values);
@@ -80,7 +85,6 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
               }
            }
            return match;
-
        }
 
        match.points = function(values) {
@@ -112,8 +116,6 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 previous_set_games = previous_set_games ? previous_set_games.length : 0;
 
                 if (result.result) {
-                   // there was a final result; call update function, if present
-                   if (typeof update === 'function') update();
                    // if there are additional (extra) values, discard them.
                    values = [];
 
@@ -127,6 +129,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 set_objects[s].reset()
              }
           }
+          match.update();
        }
 
        match.winProgression = function() {
@@ -168,7 +171,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
              // if there was a final result; call update function, if present
              if (result.result) {
-                if (typeof update === 'function') update();
+                match.update();
                 break;
 
              // if there are additional values, continue
@@ -191,6 +194,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
              }
           }
+          match.update();
           return result;
        }
 
@@ -200,7 +204,26 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              row = set_objects[s].pop();
              if (row != undefined) break;
           }
+          match.update();
           return row;
+       }
+
+       match.update = function() {
+          if (!callbacks.length) return;
+          callbacks.forEach(function(c) {
+             if (typeof c == 'function') c();
+          });
+       }
+
+       match.callback = function(callback) {
+          if (!arguments.length) return callbacks;
+          if (typeof callback == 'function') {
+             callbacks.push(callback);
+          } else if (typeof callback == 'array') {
+             callback.foreach(c) (function(c) {
+                if (typeof c == 'function') callbacks.push(c);
+             });
+          }
        }
 
        match.players = function(a, b) {
@@ -227,18 +250,20 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           var match_score = '';
           var match_winner = '';
           var match_loser = '';
+
           // check if there is a match winner
           // winner has won more than half of the sets for match format
           if (sets_won[0] > (options.match.sets / 2) || sets_won[1] > (options.match.sets / 2)) {
              var winner = sets_won[0] > sets_won[1] ? 0 : 1;
              match_winner = options.players[winner];
              match_loser = options.players[1 - winner];
+
              // build match score string
              for (var s=0; s < scoreboards.length; s++) {
                 if (scoreboards[s].leader == winner) {
-                   match_score += scoreboards[s].score;
+                   match_score += scoreboards[s].game_score;
                 } else {
-                   var score_split = scoreboards[s].score.split(' ');
+                   var score_split = scoreboards[s].game_score.split(' ');
                    var tbscore = score_split[0].split('(');
                    if (tbscore) {
                       match_score += tbscore[0].split('-').reverse().join('-');
@@ -254,14 +279,21 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           return { sets: scoreboards, match_score: match_score, winner: match_winner, loser: match_loser };
        }
 
-       match.reset = function() {
-          for (var s=0; s < 5; s++) {
-             set_objects[s].reset();
-          }
-       }
-
        match.sets = function() {
           return set_objects.slice(0,options.match.sets);
+       }
+
+       // simulate rallies for dev purposes
+       match.rr = function() {
+          var points = match.points();
+          var results = ['Ace', 'Winner', 'Serve Winner', 'Forced Error', 'Unforced Error', 'Double Fault', 'Penalty'];
+
+          points.forEach(function(p) {
+             var rr = Math.floor(Math.random() * 25) + 1;
+             p.rally = new Array(rr);
+             var rre = Math.floor(Math.random() * 7) + 1;
+             p.result = results[rre - 1];
+          });
        }
 
        var valid_points = [
@@ -314,9 +346,9 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
       function setObject() {
 
           // options which should be accessible via ACCESSORS
-          var points = [];              // representation of every point in set
-          var player_data = [[], []]; // player specific data
-          var game_data = [];         // game specific data
+          var points = [];             // representation of every point in set
+          var player_data = [[], []];  // player specific data
+          var game_data = [];          // game specific data
 
           var options = {
 
@@ -592,7 +624,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 if (typeof points[i] == 'object') {
                    var pw = String(points[i].winner);
                 } else {
-                   var pw = String(points[i]);      // point winner
+                   var pw = String(points[i]);
                 }
 
                 if (pw == '' || '01SAQDRP'.split('').indexOf(pw) < 0) { continue; }
@@ -701,7 +733,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
           }
 
-          // add setpoint and matchpoint
+          // add setpoint and matchpoint attributes
           function checkBreakpoint(point_number) {
              var score = points[point_number].score;
              var server = points[point_number].server;
@@ -771,12 +803,22 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              return set.push(value);
           };
 
-          set.score = function() {
-             return getScore(points.length - 1);
+          set.score = function(point_number) {
+             if (!arguments.length) {
+                return getScore(points.length - 1);
+             } else if (point_number < points.length) {
+                return getScore(point_number);
+             } else {
+                return false;
+             }
           }
 
           set.games = function() {
              return game_data;
+          }
+
+          set.player_data = function() {
+             return player_data;
           }
 
           // add a point or array of points
@@ -806,20 +848,20 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           }
 
           set.pop = function() {
-              var row = points.pop();
-              if (!points.length) {
-                 set.reset()
-              } else {
-                 // set.update();
-              }
-              return row;
+            var row = points.pop();
+            if (!points.length) {
+               set.reset()
+            } else {
+               dataCalcs();
+            }
+            return row;
           };
 
           set.reset = function() {
              points = [];
              player_data = [[], []];
              game_data = [];
-             // set.update();
+               dataCalcs();
           }
 
           set.players = function(a, b) {
