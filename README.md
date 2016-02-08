@@ -36,7 +36,7 @@ match.players('Novak Djokovic', 'Serena Williams')
 match.players()                   // view player names
 [ 'Novak Djokovic', 'Serena Williams' ]
 
-match.reset()                     // clear point data
+match.points([])                  // clear point data
 match.push(['0-15', '15-15'])     // push point scores
 
 match.push({winner: 0, point: '30-15'})
