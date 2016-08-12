@@ -100,6 +100,11 @@ mo.validSet('')                    // validate an entire set sequence
 match.options()                   // output all configurable options
 match.options({match: {sets: 5}}) // change the number of sets (1 to 5)
 ```
+### The UMO contains match metadata:
+```
+match.metadata()                   // output all configurable options
+match.options({tournament: {name: 'US Open'}})
+```
 ### Origins
 The UMO was originally created for the Points-to-Set component at TennisVisuals.com and is now used by all visual components.
 
