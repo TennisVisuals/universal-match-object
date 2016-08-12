@@ -102,7 +102,7 @@ match.options({match: {sets: 5}}) // change the number of sets (1 to 5)
 ```
 ### The UMO contains match metadata:
 ```
-match.metadata()                   // output all configurable options
+match.metadata()                   // output metadata
 match.metadata({tournament: {name: 'US Open'}})
 ```
 ### Origins
