@@ -3,7 +3,7 @@
 
 if (!Array.prototype.last) { Array.prototype.last = function() { return this[this.length - 1]; }; }
 
-!function() { 
+!function() {
    var mo = {};
 
    // clients can register callbacks for notification when data updates
@@ -12,131 +12,139 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
    mo.matchObject = matchObject;
    function matchObject() {
 
-      var options = {
-    
-          id: 0,
-          players: { 0: 'Player One', 1: 'Player Two'},
-    
-          match: {
-             sets: 3,
-             final_set_tiebreak: true,
-             final_set_tiebreak_to: 7,
-             first_service: 0
-          },
-    
-          set: {
-             games: 12,
-             advantage: true,
-             tiebreak: true,
-             tiebreak_to: 7
-          },
-    
-          points: {
-             to_set: 24
-          }
-       }
-    
-       // programmatic
-       var set_objects = [];
 
-       // prepare sets
-       for (var s=0; s < 5; s++) {
-          var so = setObject();
-          so.options({ id: s })
-          set_objects.push(so);
-       }
-       set_objects[0].options( { set: {first_service: options.match.first_service }} );
+      var options;
+      resetOptions();
 
-       function match() {
-       };
+      var metadata;
+      resetMetadata();
 
-       // ACCESSORS
+      // programmatic
+      var undo_list = [];
+      var set_objects = [];
 
-       match.type = 'UMO';
+      // prepare sets
+      for (var s=0; s < 5; s++) {
+         var so = setObject();
+         so.options({ id: s })
+         set_objects.push(so);
+      }
+      set_objects[0].options( { set: {first_service: options.match.first_service }} );
 
-       match.options = function(values) {
-           if (!arguments.length) return options;
-           var vKeys = Object.keys(values);
-           var oKeys = Object.keys(options);
-           for (var k=0; k < vKeys.length; k++) {
-              if (oKeys.indexOf(vKeys[k]) >= 0) {
-                 if (typeof(options[vKeys[k]]) == 'object') {
-                    var sKeys = Object.keys(values[vKeys[k]]);
-                    var osKeys = Object.keys(options[vKeys[k]]);
-                    for (var sk=0; sk < sKeys.length; sk++) {
-                       if (osKeys.indexOf(sKeys[sk]) >= 0) {
-                          options[vKeys[k]][sKeys[sk]] = values[vKeys[k]][sKeys[sk]];
-                       }
-                    }
-                 } else {
-                    options[vKeys[k]] = values[vKeys[k]];
-                 }
-              }
-           }
-           if (options.set.games % 2 != 0) options.set.games = 12;
-           set_objects[0].options( { set: { first_service: options.match.first_service } } )
-           for (var s=0; s < 5; s++) {
-              set_objects[s].options( { players: options.players, set: options.set, points: options.points } );
-              if (s + 1 == options.match.sets) {
-                 var opts = { set: { 
-                    tiebreak: options.match.final_set_tiebreak,
-                    tiebreak_to: options.match.final_set_tiebreak_to
-                 } };
-                set_objects[s].options(opts);
-              }
-           }
-           return match;
-       }
+      // empty match object
+      function match() { };
 
-       match.points = function(values) {
-          if (!arguments.length) { 
-             var points = [];
-             for (var s=0; s < options.match.sets; s++) {
-               points = points.concat(set_objects[s].points());
-             }
-             return points; 
-          }
+      // ACCESSORS
 
-          // add an array of values to the match
-          var previous_set_games = 0;
-          var previous_set_first_service = options.match.first_service;
-          // iterate through sets
-          for (var s=0; s < 5; s++) {
-             if (values.length) {
+      match.type = 'UMO';
 
-                // set first_service for this set based on the first_service and
-                // number of games in the previous set
-                var opts = { set: { first_service: (previous_set_first_service + previous_set_games) % 2 } };
-                set_objects[s].options(opts);
+      match.metadata = function(values) {
+         if (!arguments.length) return metadata;
+         keyWalk(values, metadata);
+         set_objects.forEach(function(s) {
+            s.options({ players: [metadata.players[0].name, metadata.players[1].name, metadata.players[2].name, metadata.players[3].name] });
+         });
+         return match;
+      }
 
-                // add values to the current set
-                var result = set_objects[s].points(values);
+      function keyWalk(valuesObject, optionsObject) {
+         if (!valuesObject || !optionsObject) return;
+         var vKeys = Object.keys(valuesObject);
+         var oKeys = Object.keys(optionsObject);
+         for (var k=0; k < vKeys.length; k++) {
+            if (oKeys.indexOf(vKeys[k]) >= 0) {
+               var oo = optionsObject[vKeys[k]];
+               var vo = valuesObject[vKeys[k]];
+               if (typeof oo == 'object' && typeof vo !== 'function' && oo.constructor !== Array) {
+                  keyWalk(valuesObject[vKeys[k]], optionsObject[vKeys[k]]);
+               } else {
+                  optionsObject[vKeys[k]] = valuesObject[vKeys[k]];
+               }
+            }
+         }
+      }
 
-                var previous_set_first_service = set_objects[s].options().set.first_service;
-                var previous_set_games = set_objects[s].games();
-                previous_set_games = previous_set_games ? previous_set_games.length : 0;
+      match.options = function(values) {
+          if (!arguments.length) return options;
+          keyWalk(values, options);
 
-                if (result.result) {
-                   // if there are additional (extra) values, discard them.
-                   values = [];
+          // if the number of games is not even, set to default
+          if (options.set.games % 2 != 0) options.set.games = 12;
 
-                } else if (result.remnant) {
-                   // there were extra values and the match is not complete
-                   values = result.remnant;
-                }
+          set_objects[0].options({ set: { first_service: options.match.first_service } });
+          set_objects.forEach(function(s, i) {
+             s.options({ set: options.set, points: options.points });
 
+             // FINAL SET
+             // if this set's number is same as options.match.sets and if it is odd
+             if (i + 1 == options.match.sets && ((i + 1) % 2)) {
+                var opts = { set: { 
+                   tiebreak: options.match.final_set_tiebreak,
+                   tiebreak_to: options.match.final_set_tiebreak_to,
+                   tiebreak_only: options.match.final_set_tiebreak_only
+                } };
+                s.options(opts);
              } else {
-                // if there are no (more) values, reset the current set
-                set_objects[s].reset()
+                var opts = { set: { 
+                   tiebreak: options.set.tiebreak,
+                   tiebreak_to: options.set.tiebreak_to,
+                   tiebreak_only: false
+                  
+                } };
+                s.options(opts);
              }
-          }
-          match.update();
-       }
+          });
+          return match;
+      }
+
+      match.points = function(values) {
+         if (!arguments.length) { 
+            var points = [];
+            for (var s=0; s < options.match.sets; s++) {
+              points = points.concat(set_objects[s].points());
+            }
+            return points; 
+         }
+
+         // add an array of values to the match
+         var previous_set_games = 0;
+         var previous_set_first_service = options.match.first_service;
+         // iterate through sets
+         for (var s=0; s < 5; s++) {
+            if (values.length) {
+
+               // set first_service for this set based on the first_service and
+               // number of games in the previous set
+               var opts = { set: { first_service: (previous_set_first_service + previous_set_games) % 2 } };
+               set_objects[s].options(opts);
+
+               // add values to the current set
+               var result = set_objects[s].points(values);
+
+               var previous_set_first_service = set_objects[s].options().set.first_service;
+               var previous_set_games = set_objects[s].games();
+               previous_set_games = previous_set_games ? previous_set_games.length : 0;
+
+               if (result.result) {
+                  // if there are additional (extra) values, discard them.
+                  values = [];
+
+               } else if (result.remnant) {
+                  // there were extra values and the match is not complete
+                  values = result.remnant;
+               }
+
+            } else {
+               // if there are no (more) values, reset the current set
+               set_objects[s].reset()
+            }
+         }
+         match.update();
+      }
 
        match.winProgression = function() {
           var points = match.points();
           var wp = '';
-          // points.forEach(p => wp += p.winner);
           points.forEach(function(p) { wp += p.winner });
           return wp;
        }
@@ -150,8 +158,8 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 var tb_scores = p.score.split('T').join('').split('-');
 
                 // check for last point of tiebreak
-                if (Math.abs(tb_scores[0] - tb_scores[0]) >= 2 
-                    && (tb_scores[0] >= options.set.tiebreak_to || tb_scores[1] >= options.set.tiebreak_to)) {
+                if ((Math.abs(tb_scores[0] - tb_scores[0]) >= 2) &&
+                    (tb_scores[0] >= options.set.tiebreak_to || tb_scores[1] >= options.set.tiebreak_to)) {
                        gp += p.winner;
                 }
              }
@@ -196,18 +204,36 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
              }
           }
-          match.update();
+          // match.update();
           return result;
        }
 
        match.pop = function() {
-          var row = undefined;
+          var point = undefined;
           for (var s = options.match.sets - 1; s >= 0; s--) {
-             row = set_objects[s].pop();
-             if (row != undefined) break;
+             point = set_objects[s].pop();
+             if (point != undefined) {
+                undo_list.push(point);
+                break;
+             }
           }
           match.update();
-          return row;
+          return point;
+       }
+
+       match.redo = function() {
+          if (!undo_list.length) return false;
+          var point = undo_list.pop();
+          var result = match.push(point);
+          return result;
+       }
+
+       match.reset = function() {
+          undo_list = [];
+          set_objects.forEach(function(e) { e.reset(); });
+          resetOptions();
+          resetMetadata();
+          match.update();
        }
 
        match.update = function() {
@@ -228,12 +254,32 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           }
        }
 
-       match.players = function(a, b) {
-          if (!arguments.length) return [options.players[0], options.players[1]];
-          if (typeof a == 'string') options.players[0] = a;
-          if (typeof b == 'string') options.players[1] = b;
+       match.teams = function() {
+          var teams = [];
+          var plyrs = [0,1,2,3].map(function(m) { return metadata.players[m].name }).filter(function(f) { return f ? f.length : 0 });
+          if (plyrs.length > 2) {
+             teams.push(plyrs[0].split(' ').last() + ' / ' + plyrs[2].split(' ').last());
+             teams.push(plyrs[1].split(' ').last() + ' / ' + plyrs[3].split(' ').last());
+          } else {
+             teams = [plyrs[0], plyrs[1]];
+          }
+          return teams;
+       }
+
+       // match.players() should be replaced with match\.teams() for player
+       // names that will be displayed
+       // match.players() should only return a list of player names
+       
+       match.players = function(a, b, c, d) {
+          if (!arguments.length) return [metadata.players[0].name, metadata.players[1].name];
+
+          if (typeof a == 'string') { metadata.players[0].name = a; }
+          if (typeof b == 'string') { metadata.players[1].name = b; }
+          if (typeof c == 'string') { metadata.players[2].name = b; }
+          if (typeof d == 'string') { metadata.players[3].name = b; }
+
+          // TODO: set objects should have function to grab names from match object
           if (typeof a == 'string' && typeof b == 'string') {
-             // set_objects.forEach(s => s.players(a, b));
              set_objects.forEach(function(s) { s.players(a, b) });
           }
           match.update();
@@ -259,31 +305,25 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           // winner has won more than half of the sets for match format
           if (sets_won[0] > (options.match.sets / 2) || sets_won[1] > (options.match.sets / 2)) {
              var winner = sets_won[0] > sets_won[1] ? 0 : 1;
-             match_winner = options.players[winner];
-             match_loser = options.players[1 - winner];
 
-             // build match score string
-             for (var s=0; s < scoreboards.length; s++) {
-                match_score += scoreboards[s].game_score;
-                /*
-                if (scoreboards[s].leader == winner) {
-                   match_score += scoreboards[s].game_score;
-                } else {
-                   var score_split = scoreboards[s].game_score.split(' ');
-                   var tbscore = score_split[0].split('(');
-                   if (tbscore) {
-                      match_score += tbscore[0].split('-').reverse().join('-');
-                   } else {
-                      match_score += score_split[0].split('-').reverse().join('-');
-                   }
-                   if (tbscore[1]) match_score += '(' + tbscore[1];
-                   if (score_split[1]) match_score += score_split[1];
-                }
-                */
-                if (s < scoreboards.length - 1) match_score += ', ';
-             }
+             match_winner = metadata.players[winner].name;
+             match_loser = metadata.players[1 - winner].name;
+
           }
-          return { sets: scoreboards, match_score: match_score, winner: match_winner, loser: match_loser };
+          // build match score string
+          for (var s=0; s < scoreboards.length; s++) {
+             match_score += scoreboards[s].game_score;
+             if (s < scoreboards.length - 1) match_score += ', ';
+          }
+          var point_score = scoreboards.length ? scoreboards[scoreboards.length - 1].point_score : '';
+          return { 
+             sets: scoreboards, 
+             match_score: match_score, 
+             winner: match_winner, 
+             loser: match_loser, 
+             score: sets_won,
+             point_score: point_score
+          };
        }
 
        match.sets = function() {
@@ -303,6 +343,12 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           });
        }
 
+       match.rallies = function() {
+          return match.points()
+                      .map(function(m) { if (m.rally && m.rally.length) { return m.rally.length; } })
+                      .filter(function(f) { return f; });
+       }
+
        match.nextService = function() {
           var sets = match.score().sets.length;
           if (sets == 0) {
@@ -317,17 +363,33 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           '40-0', 'G-0', '40-15', 'G-15', '40-30', 'G-30', '40-40', '40-A', '40-G', 'A-40', 'G-40'
        ]
 
+       function validPoint(score) {
+          return ((valid_points.indexOf(score) >= 0) ||
+                  (score.split('-').filter(function(f) { return f.indexOf('T') >= 0; }).length == 2));
+       }
+
+       match.decoratePoint = function(index, decoration) {
+          if (!decoration || typeof decoration !== 'object' || !Object.keys(decoration).length) return false;
+          for (var s=0; s < set_objects.length; s++) {
+             var num_set_points = set_objects[s].points().length;
+             if (index + 1 > num_set_points) {
+                index -= num_set_points;
+             } else {
+                break;
+             }
+          }
+          if (s == set_objects.length) return false;
+          return set_objects[s].decoratePoint(index, decoration);
+       }
+
        match.pointIndex = function(set, game, score) {
           if (set < 0 || set > options.match.sets || game < 0) {
                  return false;
               }
-          // var set_points = match.points().map(p => p.set == set ? p : undefined);
           var set_points = match.points().map(function(p) { return p.set == set ? p : undefined });
-          // var game_points = set_points.map(p => p && p.game == game ? p : undefined);
           var game_points = set_points.map(function(p) { return p && p.game == game ? p : undefined });
 
-          if (score && valid_points.indexOf(score) >= 0) {
-             // var points = game_points.map(p => p && p.score == score ? p : undefined);
+          if (score && validPoint(score)) {
              var points = game_points.map(function(p) { return p && p.score == score ? p : undefined });
              for (var p=0; p < points.length; p++) {
                 if (points[p] != undefined) return p;
@@ -342,18 +404,16 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           return false;
        }
 
+       // lazy means to look for point score regardless of orientation
        match.findPoint = function(set, game, score, lazy) {
           if (set < 0 || set > options.match.sets ||
-              game < 0 || !score || valid_points.indexOf(score) < 0) {
+              game < 0 || !score || !validPoint(score)) {
                  return false;
               }
-          // var game_points = set_objects[set].points().filter(m => m.game == game);;
           var game_points = set_objects[set].points().filter(function(m) { return m.game == game });;
 
-          // var point = game_points.filter(p => p.score == score);
           var point = game_points.filter(function(p) { return p.score == score });
           if (!point.length && lazy) {
-             // point = game_points.filter(p => p.score == score.split('-').reverse().join('-'));
              point = game_points.filter(function(p) { return p.score == score.split('-').reverse().join('-') });
           }
           if (point.length) {
@@ -372,26 +432,12 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           var player_data = [[], []];  // player specific data
           var game_data = [];          // game specific data
 
-          var options = {
+          var options;
+          resetSetOptions();
 
-            id: 0,
-            players: { 0: 'Player One', 1: 'Player Two'},
-
-            set: {
-               games: 12,
-               advantage: true,
-               tiebreak: true,
-               tiebreak_to: 7,
-               first_service: undefined
-            },
-
-            points: {
-               to_set: 24
-            }
-          }
-
-          function set() {
-          };
+          // define empty container
+          // function set() { };
+          var set = {};
 
           // REUSABLE functions
           // ------------------
@@ -401,10 +447,11 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
             var tiebreak;
             var point_score = points[point_number].score;
+            var teams = match.teams();
 
             if (points[point_number].score.indexOf('T') >= 0) {
                var tscore = points[point_number].score.split('-').map(function(m) { return parseInt(m.replace('T', '')); });
-               if (Math.max.apply(null, tscore) >= options.set.tiebreak_to && Math.abs(tscore[0] - tscore[1]) > 1) {
+               if (Math.max.apply(null, tscore) >= +options.set.tiebreak_to && Math.abs(tscore[0] - tscore[1]) > 1) {
                   var game = game_data[points[point_number].game];
                   point_score = '';
                   tiebreak = Number(Math.min.apply(null, tscore));
@@ -425,10 +472,8 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                          game.score[1] > game.score[0] ? 1 : undefined;
             var game_score  = game == undefined ? '0-0' :
                          game.score[0] + '-' + game.score[1];
-                         // leader == 0 ? game.score[0] + '-' + game.score[1] : 
-                         // game.score[1] + '-' + game.score[0];
-            var legend = leader == undefined ? options.players[0].split(' ').last() + '/' + options.players[1].split(' ').last() :
-                                               options.players[leader];
+            var legend = leader == undefined ? metadata.players[0].name.split(' ').last() + '/' + metadata.players[1].name.split(' ').last() :
+                                               teams[leader];
 
             if (tiebreak != undefined) game_score = game_score + '(' + tiebreak + ')';
 
@@ -439,6 +484,11 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                if (game.score[1] == (options.set.games / 2) && game.score[0] < (options.set.games / 2) - 1) complete = true;
             } else {
                game = { score: [0, 0] };
+            }
+
+            // this needs to be beefed up to recognize end of supertiebreak set
+            if (options.set.tiebreak_only) {
+               game.score = tscore;
             }
 
             return { point_score: point_score, game_score: game_score, legend: legend, leader: leader, games: game.score, tiebreak: tiebreak, complete: complete };
@@ -468,31 +518,57 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 // winner is whichever score has changed
                 return ctv[0] != last_ctv[0] ? 0 : 1;
              } else {
-                return progression[last_score].indexOf(score);
+                if (!options.set.advantage && last_score == '40-40') {
+                   return noADprogression[last_score].indexOf(score);
+                } else {
+                   return progression[last_score].indexOf(score);
+                }
              }
           }
 
-          // determin the point score based on previous score and point winner
+          // determine the point score based on previous score and point winner
           function determineScore(winner) {
              var last_score = points.length ? points[points.length - 1].score : '0-0';
              last_score = last_score.indexOf('G') >= 0 ? '0-0' : last_score;
              var games = points.length ? points.map(function(m) { return m.score.indexOf('G') >= 0 ? 1 : 0; }).reduce(function(a, b){return a+b;}) : 0;
-             if (games < options.set.games || !options.set.tiebreak) return progression[last_score][winner];
-             if (last_score == '0-0') last_score = '0T-0T';
-             var score = last_score.split('-');
-             score[winner] = (parseInt(score[winner].replace('T','')) + 1) + 'T';
-             return score.join('-');
+
+             if (options.set.tiebreak_only) { return tiebreakScore(); }
+             if (games < options.set.games || !options.set.tiebreak) { 
+                return scoreProgression(last_score, winner); 
+             } else {
+                return tiebreakScore();
+             }
+
+             function tiebreakScore() {
+                if (last_score == '0-0') last_score = '0T-0T';
+                var score = last_score.split('-');
+                score[winner] = (parseInt(score[winner].replace('T','')) + 1) + 'T';
+                return score.join('-');
+             }
+          }
+
+          function scoreProgression(last_score, winner) {
+             if (!options.set.advantage && last_score == '40-40') {
+                return noADprogression[last_score][winner];
+             } else {
+                return progression[last_score][winner];
+             }
           }
 
           function pushRow(value) {
              if (player_data[0].length && (player_data[0].last().pts == 0 || player_data[1].last().pts == 0)) {
-                // set has been completed
-                return { result: false, status: 'eos' };
+                return { result: false, status: 'eos' }; // set has been completed
              }
 
              var player;
-             var point = { set: options.id };
              var server = nextService();
+             var rallyLength = function() {
+                var serve_winner = this.serves && this.serves[0] ? (this.serves[0].indexOf('#') > 0 || this.serves[0].indexOf('*') > 0) : 0;
+                var rl = this.rally ? this.rally.length : 0;
+                rl += (rl > 0 || serve_winner) ? 1 : 0;
+                return rl;
+             }
+             var point = { set: options.id, rallyLength: rallyLength };
 
              if ('01SAQDRP'.split('').indexOf(String(value)) >= 0 ) {
 
@@ -505,8 +581,10 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
                 point.score = determineScore(player);
                 point.winner = parseInt(player);
+
+                // was this ever necessary?
                 if ('01'.indexOf(value) >= 0) {
-                   point.code = server == point.winner ? 'S' : 'R';
+                   point.code = (server == point.winner) ? 'S' : 'R';
                 } else {
                    point.code = value;
                 }
@@ -531,28 +609,35 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                    if (value.winner == 'D') point.result = 'Double Fault';
                    value.score = determineScore(value.winner);
                    value.winner = parseInt(value.winner);
-                   if ('01'.indexOf(value) >= 0) {
-                      value.code = server == value.winner ? 'S' : 'R';
-                   } else if ('01SAQDRP'.indexOf(value) >= 0) {
-                      value.code = value;
+
+                   // was this ever necessary?
+                   if (value.code == undefined) {
+                      if ('01'.indexOf(value.winner) >= 0) {
+                          value.code = server == value.winner ? 'S' : 'R';
+                      } else if ('SAQDRP'.indexOf(value.winner) >= 0) {
+                          value.code = value.winner;
+                      }
                    }
                 }
                 value.set = options.id;
+                value.rallyLength = rallyLength;
                 points.push(value);
                 return { result: true, point: value };
              }
 
              var sequence_score = checkSequence(value);
              if (sequence_score) {
-                var point = { winner: determineWinner(sequence_score), score: sequence_score, set: options.id };
+                point.winner = determineWinner(sequence_score), 
+                point.score = sequence_score;
                 points.push(point);
                 return { result: true, point: point };
              } 
-             
+            
              return { result: false, error: 'invalid point', value: value };
           }
 
           function checkSequence(score) {
+             if (typeof score == 'object') return false;
              var last_row = points.length ? points[points.length - 1] : { score: '0-0' };
              var last_score = typeof last_row == 'object' ? last_row.score : last_row;
              last_score = last_score.indexOf('G') >= 0 ? '0-0' : last_score;
@@ -581,7 +666,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              }
 
              if ( last_score == undefined || last_score.indexOf('G') >= 0 || last_score.indexOf('T') >= 0) { last_score = '0-0'; }
-             if ( progression[last_score] && progression[last_score].indexOf(score) >= 0 ) { return score; }
+             if (valid_point) { return score; }
              return false;
 
              function checkTiebreak(tb_point) {
@@ -606,64 +691,92 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              return false;
           }
 
+          // calculate games within a single set
           function dataCalcs() {
              game_data = [];
              if (!points.length) return;
-             var line0 = [{pts: options.points.to_set}];
-             var line1 = [{pts: options.points.to_set}];
+
+             var points_to_set = (options.set.games / 2) * 4;
+             var line0 = [{pts: points_to_set }];
+             var line1 = [{pts: points_to_set }];
              var pw = undefined;                  // point winner
              var lpw = undefined;                 // last point winner
-             var pc  = [0, 0];                    // points counted
-             var gp  = [0, 0];                    // game points
-             var gpc = [0, 0];                    // game points counted
+
+             var pc  = [0, 0];                    // points counted towards pts
+             var gp  = [0, 0];                    // game points accumulated
+             var gpc = [0, 0];                    // game points counted toward game win
+
              var game_number = 0;
              var match_game_number = 0;
-             var game_first_point = 0;
+             var game_first_point = 0;            // index number in all points
              var game_count = [0, 0];
-             var game_goal = 4;
-             var tiebreak_game = false;
+
+             var min_points_for_game = options.set.tiebreak_only ? +options.set.tiebreak_to : 4;
+             var tiebreak_game = options.set.tiebreak_only;
 
              for (var i=0; i < points.length; i++) {
-                var neg = {0: 0, 1: 0};
-                if (typeof points[i] == 'object') {
-                   var pw = String(points[i].winner);
-                } else {
-                   var pw = String(points[i]);
-                }
-
+                // set point winner
+                var pw = (typeof points[i] == 'object') ? String(points[i].winner) : String(points[i]);
+                // if point winner is not a recognized type ignore and continue
                 if (pw == '' || '01SAQDRP'.split('').indexOf(pw) < 0) { continue; }
 
-                // check for new game
-                if (Math.abs(gpc[0] - gpc[1]) == game_goal) {        
-                   if (lpw) {
-                      game_count[lpw] += 1;
+                // points which will be added to points_to_set calculation (because of advantages)
+                var addpts = {0: 0, 1: 0};
+
+                if (checkNewGame()) {
+                   // whomever won the last point won the last game, increment their total
+                   if (lpw) { 
+                      game_count[lpw] += 1; 
+                      pc[lpw] += min_points_for_game;
                    }
+
+                   // add the latest game to game_data
                    game_data.push({range: [game_first_point, i - 1], winner: lpw, score: game_count.slice(), tiebreak: tiebreak_game });
-                   tiebreak_game = false;
+
+                   // initialize the next game
                    game_first_point = i;
                    game_number += 1;
-                   if (gp[0] >= game_goal && gp[0] > gp[1] + 1) { 
-                      pc[0] += game_goal; 
+
+                   // game scores are even
+                   if (game_count[0] == game_count[1]) {
+                      // checks for e.g. 5-5 and decrements points counted towards pts
+                      // to reflect the fact that the end of the set is now further away
+                    
+                      /*
+                      // ATTEMPT TO IMPLEMENT TIEBREAK_AT games - 1
+                      if (options.set.tiebreak) {
+                         if (game_count[0] == options.set.tiebreak_at) {
+                            tiebreak_game = true;
+                            min_points_for_game = +options.set.tiebreak_to;
+                            pc[0] -= 3;
+                            pc[1] -= 3;
+                         } else if (options.set.tiebreak_at == (options.set.games / 2)) {
+                            pc[0] -= min_points_for_game;
+                            pc[1] -= min_points_for_game;
+                         }
+                      } else {
+                         tiebreak_game = false;
+                      }
+                      */
+
+                      if (game_count[0] == ((options.set.games - 2) / 2)) { 
+                         pc[0] -= min_points_for_game;
+                         pc[1] -= min_points_for_game;
+                      } else if (game_count[0] == (options.set.games / 2) && options.set.tiebreak) {
+                         tiebreak_game = true;
+                         min_points_for_game = +options.set.tiebreak_to;
+                         pc[0] -= 3;
+                         pc[1] -= 3;
+                      } else {
+                         tiebreak_game = false;
+                      }
                    }
-                   if (gp[1] >= game_goal && gp[1] > gp[0] + 1) { 
-                      pc[1] += game_goal; 
-                   }
-       
-                   if (game_count[0] == ((options.set.games - 2) / 2) && game_count[0] == game_count[1]) { 
-                      pc[0] -= game_goal;
-                      pc[1] -= game_goal;
-                   }
-                   if (game_count[0] == (options.set.games / 2) && game_count[0] == game_count[1] && options.set.tiebreak) { 
-                      tiebreak_game = true;
-                      game_goal = options.set.tiebreak_to;
-                      pc[0] -= 3;
-                      pc[1] -= 3;
-                   }
+
                    // final set no tiebreak
                    if (game_count[0] + game_count[1] >= options.set.games && !options.set.tiebreak) { 
                       if (game_count[0] == game_count[1]) { 
-                         pc[0] -= game_goal;
-                         pc[1] -= game_goal;
+                         pc[0] -= min_points_for_game;
+                         pc[1] -= min_points_for_game;
                       }
                    }
                    gp  = [0, 0]; 
@@ -681,60 +794,69 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 if (['D', 'R', 'P'].indexOf(pw) >= 0) { pw = 1 - server; }
 
                 lpw = pw;
-
                 gp[pw] += 1;
 
-                if (Math.abs(gp[0] + gp[1] < (game_goal * 2 - 2))) {
-                   // e.g. not yet to 3-3
-                   gpc[0] = (gp[1] == game_goal) ? 0 : gp[0];
-                   gpc[1] = (gp[0] == game_goal) ? 0 : gp[1];
+                if (options.set.advantage) {
+                   if (Math.abs(gp[0] + gp[1] < (min_points_for_game * 2 - 2))) {
+                      gpc[0] = (gp[1] == min_points_for_game) ? 0 : gp[0];
+                      gpc[1] = (gp[0] == min_points_for_game) ? 0 : gp[1];
 
-                   if (options.set.advantage && gp[0] == game_goal - 1) {
-                      neg[1] = 1;
-                   } else if (options.set.advantage && gp[1] == game_goal - 1) {
-                      neg[0] = 1;
+                      if (gp[0] == min_points_for_game - 1) {
+                         addpts[1] = 1;
+                      } else if (gp[0] == min_points_for_game - 1) {
+                         addpts[0] = 1;
+                      }
+
+                   } else {
+                      // e.g. deuce or beyond
+                      if (gp[0] == gp[1]) {
+                         // scores are equal
+                         gpc[0] = min_points_for_game - 2;
+                         gpc[1] = min_points_for_game - 2;
+                      } else if (gp[0] > gp[1]) {
+                         if (gp[0] == gp[1] + 2) {
+                            gpc[0] = min_points_for_game;
+                            gpc[1] = 0;
+                         } else {
+                            gpc[0] = min_points_for_game - 1;
+                            gpc[1] = min_points_for_game - 3;
+                         }
+                      } else {
+                         if (gp[1] == gp[0] + 2) {
+                            gpc[1] = min_points_for_game;
+                            gpc[0] = 0;
+                         } else {
+                            gpc[1] = min_points_for_game - 1;
+                            gpc[0] = min_points_for_game - 3;
+                         }
+                      }
                    }
                 } else {
-                   // e.g. deuce or beyond
-                   if (gp[0] == gp[1]) {
-                      // scores are equal
-                      gpc[0] = game_goal - 2;
-                      gpc[1] = game_goal - 2;
-                   } else if (gp[0] > gp[1]) {
-                      if (gp[0] == gp[1] + 2) {
-                         gpc[0] = game_goal;
-                         gpc[1] = 0;
-                      } else {
-                         gpc[0] = game_goal - 1;
-                         gpc[1] = game_goal - 3;
-                      }
-                   } else {
-                      if (gp[1] == gp[0] + 2) {
-                         gpc[1] = game_goal;
-                         gpc[0] = 0;
-                      } else {
-                         gpc[1] = game_goal - 1;
-                         gpc[0] = game_goal - 3;
-                      }
-                   }
+                   gpc[0] = (gp[1] == min_points_for_game) ? 0 : gp[0];
+                   gpc[1] = (gp[0] == min_points_for_game) ? 0 : gp[1];
                 }
 
-                var pts0 = options.points.to_set - (pc[0] + gpc[0]);
-                var pts1 = options.points.to_set - (pc[1] + gpc[1]);
+                var pts0 = points_to_set - (pc[0] + gpc[0]);
+                var pts1 = points_to_set - (pc[1] + gpc[1]);
 
-                line0.push( { pts: pts0 + neg[0] });
-                line1.push( { pts: pts1 + neg[1] });
+                line0.push( { pts: pts0 + addpts[0] });
+                line1.push( { pts: pts1 + addpts[1] });
 
                 points[i].server = server;
                 checkBreakpoint(i);
                 points[i].game = game_number;
              }
-             if (pw) {
-                game_count[pw] += 1; // only add if end of game
-             }
+             if (checkNewGame()) { game_count[pw] += 1; }
              game_data.push({range: [game_first_point, i - 1], winner: pw, score: game_count.slice(), tiebreak: tiebreak_game });
              player_data = [line0, line1];
 
+             function checkNewGame() {
+                if (options.set.advantage) {
+                   return new_game = Math.abs(gpc[0] - gpc[1]) == min_points_for_game;
+                } else {
+                   return new_game = gp[0] == min_points_for_game || gp[1] == min_points_for_game;
+                }
+             }
           }
 
           // add setpoint and matchpoint attributes
@@ -794,26 +916,32 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              var last_point = set.points().last();
 
              // if no points yet in set, return first_service value
-             if (!last_point) return options.set.first_service;
-
-             // determine which game of the set
-             var game_number = last_point.game;
-             if (last_point.score.indexOf('G') >= 0) game_number += 1;
+             if (!last_point) {
+                if (!options.set.tiebreak_only) {
+                   return options.set.first_service;
+                } else {
+                   last_point = { game: 0, score: '0T-0T' };
+                   var game_number = 0;
+                }
+             } else {
+                // determine which game of the set
+                var game_number = last_point.game;
+                if (last_point.score.indexOf('G') >= 0) game_number += 1;
+             }
 
              // check if last point was played in a tiebreak
-             var tiebreak_game = (last_point.score.indexOf('T') >= 0) ? true : false;
+             var tiebreak_game = (options.set.tiebreak_only || last_point.score.indexOf('T') >= 0) ? true : false;
 
              var server = (parseInt(options.set.first_service) + game_number) % 2;
 
              if (tiebreak_game) {
                 var tb_scores = last_point.score.split('T').join('').split('-');
-                // var tiebreak_point = tb_scores.reduce((a, b) => parseInt(a) + parseInt(b));;
                 var tiebreak_point = tb_scores.reduce(function(a, b) { return parseInt(a) + parseInt(b) });;
                 var server = ((tiebreak_point + 1) % 4) < 2 ? server : 1 - server;
 
                 // check for last point of tiebreak
                 if (Math.abs(tb_scores[0] - tb_scores[1]) >= 2 
-                    && (tb_scores[0] >= options.set.tiebreak_to || tb_scores[1] >= options.set.tiebreak_to)) {
+                    && (tb_scores[0] >= +options.set.tiebreak_to || tb_scores[1] >= +options.set.tiebreak_to)) {
                        game_number = last_point.game + 1;
                        server = (parseInt(options.set.first_service) + game_number) % 2;
                 }
@@ -859,6 +987,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
           // add a point or array of points
           set.push = function(values) {
+
              if (!arguments.length) {
                 console.log('no argument given');
                 return false;
@@ -897,21 +1026,50 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              points = [];
              player_data = [[], []];
              game_data = [];
-               dataCalcs();
+             dataCalcs();
           }
 
           set.players = function(a, b) {
-              if (!arguments.length) return [options.players[0], options.players[1]];
-              if (typeof a == 'string') options.players[0] = a;
-              if (typeof b == 'string') options.players[1] = b;
+              if (!arguments.length) return [metadata.players[0].name, metadata.players[1].name];
+              if (typeof a == 'string') metadata.players[0].name = a;
+              if (typeof b == 'string') metadata.players[1].name = b;
               return set;
           }
 
+          set.decoratePoint = function(index, decoration) {
+             var decorations = 0;
+             if (decoration.score && points[index].score && decoration.score != points[index].score) return false;
+             var oKeys = Object.keys(decoration);
+             for (var k=0; k < oKeys.length; k++) {
+                // check for validity?
+                points[index][oKeys[k]] = decoration[oKeys[k]];
+                decorations += 1;
+             }
+             return decorations;
+          }
+
           // END ACCESSORS
+
+          function resetSetOptions() {
+             options = {
+
+               id: 0,
+               players: { 0: 'Player One', 1: 'Player Two'},
+
+               set: {
+                  games: 12,
+                  advantage: true,
+                  tiebreak: true,
+                  tiebreak_at: 6,
+                  tiebreak_to: 7,
+                  tiebreak_only: false,
+                  first_service: undefined
+               },
+             }
+          }
+
           
           // DATA
-          // -------------
-
           var progression = { 
              '0-0'  : ['15-0',  '0-15'], '0-15' : ['15-15', '0-30'], '0-30' : ['15-30', '0-40'], '0-40' : ['15-40', '0-G'], 
              '15-0' : ['30-0',  '15-15'], '15-15': ['30-15', '15-30'], '15-30': ['30-30', '15-40'], '15-40': ['30-40', '15-G'], 
@@ -920,10 +1078,62 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              'A-40' : ['G-40',  '40-40'], '40-A' : ['40-40', '40-G']
           };
 
+          var noADprogression = { '40-40' : ['G-40', '40-G'] };
+
           return set;
+
+      } // set object
+
+      function resetMetadata() {
+         metadata = {
+            players: { 
+               0: { name: 'Player One', fname: '', lname: '', hand: '' },
+               1: { name: 'Player Two', fname: '', lname: '', hand: '' },
+               // names must be blank for getScore() to work properly
+               2: { name: '', fname: '', lname: '', hand: '' },
+               3: { name: '', fname: '', lname: '', hand: '' }
+            },
+            gender: '',
+            tournament: {
+               date: '',
+               name: '',
+               tour: '',
+               court: '',
+               surface: '',
+               draw: '',
+               round: '', 
+               umpire: ''
+            },
+            charter: ''
+         };
       }
 
-   }
+      function resetOptions() {
+         options = {
+       
+             id: 0, // to differentiate between multiple match objects
+       
+             match: {
+                sets:                     3,
+                description:              undefined,
+                final_set_tiebreak:       true,
+                final_set_tiebreak_to:    7,
+                final_set_tiebreak_only:  false,
+                first_service:            0
+             },
+       
+             set: {
+                games:                    12,
+                advantage:                true,
+                lets:                     true,
+                tiebreak:                 true,
+                tiebreak_at:              6,
+                tiebreak_to:              7
+             },
+          }
+      }
+
+   }  // match object
 
    mo.validGames = validGames;
    function validGames(game) {

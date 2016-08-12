@@ -101,10 +101,9 @@ match.options()                   // output all configurable options
 match.options({match: {sets: 5}}) // change the number of sets (1 to 5)
 ```
 ### Origins
-The UMO is derived from the Points-to-Set component at TennisVisuals.com, which dynamically updates whenever points are added to or removed from the UMO:
-http://tennisvisuals.com/examples/pointsToSet.html
+The UMO was originally created for the Points-to-Set component at TennisVisuals.com and is now used by all visual components.
 
-As TennisVisuals matures more visualizations will utilize the UMO and it's functions will expand to include layering of more point detail, often derived from disparate sources.
+As TennisVisuals matures the UMO's functions will expand to include layering of more point detail, often derived from disparate sources.
 
 ### Vision
 Eventually TennisVisuals will deliver real-time visualizations of in-process Tennis Matches, regardless of source.
