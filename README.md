@@ -114,15 +114,21 @@ match.addPoints('SSDRSS')             // add multiple from string
 ```
 
 Here is a quick overview of some of the accessors for the UMO:
-- **.format()** as above, including setting for singles/doubles
-- **.metadata()** set or display players/match/tournament metadata, including service order, receiving order (for doubles), and doubles teams
+- **.format** as above, including setting for singles/doubles
+- **.metadata** set or display players/match/tournament metadata, including service order, receiving order (for doubles), and doubles teams
 - **set()** which player serves first and whether to display scores from the perspective of the current server
+- **addPoint()** add an individual point
+- **addPoints()** add an array of points
+- **decoratePoint()** add detail to an existing point
+- **undo(*num*)** undo last point (or *num* points)
+- **complete()** boolean whether match is complete
 - **score()** returns detail about scores for each set and for the match
+- **nextService()** which player is serving next
 - **reset(*format*)** remove all points; optionally change format
 - **sets()** accessor for individual set objects
 - **events()** and **notify()** for 'subscribing' to addPoint and undo events.  See ```test``` for example.
-- **change()** allows set/game/point score to be altered without adding points
-- **decorate()** add detail to an existing point
+- **change** allows set/game/point score to be altered without adding points
+- **history** enables access to various views of match progress
 
 ### Origins
 The UMO was originally created for the Points-to-Set component at TennisVisuals.com and is now used by all visual components.
