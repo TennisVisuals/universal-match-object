@@ -1,0 +1,27 @@
+/* 
+ * Universal Match Object - UMO
+ * ----------------------------
+ *
+ * Designed as a factory for Game, Set, and Match objects.
+ *
+ * mo.Match() -> factory function for matches
+ * mo.Set()   -> factory function for sets
+ * mo.Game()  -> factory function for game
+ *
+ * mo.matchFormat() -> factory function for match formats
+ *    format.hasDecider()  -> BOOLEAN whether match format includes a deciding set
+ *    format.sets         -> setFormat() object
+ *    format.decidingChild   -> setFormat() object for deciding sets
+ *
+ * mo.setFormat() ->   factory function for set formats
+ *    format.hasDecider() -> BOOLEAN whether set format includes a deciding game
+ *    format.games        -> gameFormat() object
+ *    format.decidingChild  -> gameFormat() object for deciding games
+ *
+ * mo.gameFormat() ->  factory function for game formats
+ *    format.hasDecider() -> BOOLEAN whether game format includes a deciding point
+ *
+ * mo.pointParser() -> default parser accepts:
+ *    0, 1 : indicates point winner
+ *    S, R, A, D, Q, P : Server, Receiver, Ace, Dbl Fault
+*/
