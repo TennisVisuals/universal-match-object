@@ -69,7 +69,7 @@ https://github.com/JeffSackmann/tennis_pointbypoint
 ```
 match.addPoint('A')                   // add a single point (Ace)
 match.addPoint(['S','A','D','R'])     // add an array of points
-match.addPoints('SSDRSS'.split(''))   // add array from string
+match.addPoints('SSDRSS')             // add multiple from string
 ```
 
 ### The UMO is configurable:
@@ -104,13 +104,13 @@ match.addPoints('SSDRSS'.split(''))   // add array from string
 [ 'AdSetsTo6tb7', 'NoAdSetsTo6tb7', 'supertiebreak', 'pro10a12' ]
 
 > match.format.decidingChild.settings()
-  { name: 'Advantage, 6 games for set, Tiebreak to 7',
-    code: 'AdSetsTo6tb7',
-    players: 2,
-    threshold: 6,
-    has_decider: true,
-    min_diff: 2,
-    tiebreak: undefined }
+{ name: 'Advantage, 6 games for set, Tiebreak to 7',
+  code: 'AdSetsTo6tb7',
+  players: 2,
+  threshold: 6,
+  has_decider: true,
+  min_diff: 2,
+  tiebreak: undefined }
 ```
 
 Here is a quick overview of some of the accessors for the UMO:
