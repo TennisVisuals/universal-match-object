@@ -26,6 +26,10 @@
             name: 'No-Ad, 6 games for set, Tiebreak to 7',
             hasDecider: true, threshold: 6, minDiff: 2, children: 'noAdvantage', decidingChild: 'tiebreak7a', 
          },
+         'longSetTo6by2': { 
+            name: 'Advantage, 6 games for set, win by 2 games',
+            hasDecider: false, threshold: 6, minDiff: 2, children: 'advantage', decidingChild: 'advantage', 
+         },
          'supertiebreak': { 
             name: 'Supertiebreak',
             hasDecider: true, threshold: 1, minDiff: 1, children: 'tiebreak10a',  decidingChild: 'tiebreak10a', 
@@ -47,6 +51,14 @@
          '3_6n_10': { 
             name: 'best of 3 sets, No-Ad, 6 games for set, Tiebreak to 7, final set Supertiebreak', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'NoAdSetsTo6tb7', decidingChild: 'supertiebreak',
+         },
+         '5_6a_7': { 
+            name: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7', 
+            hasDecider: true, threshold: 3, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'AdSetsTo6tb7',
+         },
+         '5_6a_7_long': { 
+            name: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
+            hasDecider: true, threshold: 3, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'longSetTo6by2',
          },
       },
    }
@@ -567,8 +579,13 @@
       }
 
       function formatScore([p0score, p1score], [t0score, t1score], tiebreak_to) {
-         if ((t1score == tiebreak_to) || (t0score > t1score && t0score != tiebreak_to)) p0score += `(${t0score})`;
-         if ((t0score == tiebreak_to) || (t1score > t0score && t1score != tiebreak_to)) p1score += `(${t1score})`;
+         if (t0score > tiebreak_to && t1score > tiebreak_to) {
+            if (t0score > t1score) p1score += `(${t1score})`;
+            if (t1score > t0score) p0score += `(${t0score})`;
+         } else {
+            if ((t1score == tiebreak_to) || (t0score > t1score && t0score != tiebreak_to)) p0score += `(${t0score})`;
+            if ((t0score == tiebreak_to) || (t1score > t0score && t1score != tiebreak_to)) p1score += `(${t1score})`;
+         }
          return `${p0score}-${p1score}`
       }
 
