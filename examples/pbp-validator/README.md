@@ -19,7 +19,7 @@ node install
 > p = require("./pbp_validator")
 
 > r = p.validateArchive('./pbp_validator/data/pbp_matches_atp_main_current.csv');0
-Valid Matches: 1479 (60%), Invalid Matches: 987
+Valid Matches: 2257 (92%), Invalid Matches: 209
 
 > p.writeValidArchive('./pbp_validator/data/pbp_matches_atp_main_current.csv', 'validated_matches.csv')
 ```
