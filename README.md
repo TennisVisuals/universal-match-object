@@ -89,7 +89,12 @@ match.addPoints('SSDRSS')             // add multiple from string
   tiebreak: undefined }
 
 > match.format.types()
-[ '3_6a_7', '3_6n_7', '3_6n_10' ]
+[ '3_6a_7',
+  '3_6n_7',
+  '3_6n_10',
+  '5_6a_7',
+  '3_6a_7_long',
+  '5_6a_7_long' ]
 
 > match.format.children.settings()
 { name: 'Advantage, 6 games for set, Tiebreak to 7',
