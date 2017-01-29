@@ -56,6 +56,10 @@
             name: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7', 
             hasDecider: true, threshold: 3, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'AdSetsTo6tb7',
          },
+         '3_6a_7_long': { 
+            name: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
+            hasDecider: true, threshold: 2, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'longSetTo6by2',
+         },
          '5_6a_7_long': { 
             name: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
             hasDecider: true, threshold: 3, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'longSetTo6by2',
