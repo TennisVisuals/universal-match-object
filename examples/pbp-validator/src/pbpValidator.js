@@ -86,7 +86,7 @@
 
       for (var s=0; s < sets.length; s++) {
          if (sets[s] == '' || !score[s]) { continue; } // Blank Set; No Score
-         if (s == 4 && (score[4][0] > 7 || score[4][1] > 7)) format = 'longSetTo6by2';
+         if (score[s][0] > 7 || score[s][1] > 7) format = 'longSetTo6by2';
          var result = pbp.validSet(sets[s], format);
          if (!result.complete) {
             errors.push('incomplete set');
