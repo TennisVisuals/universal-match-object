@@ -1,0 +1,15 @@
+{
+  "name": "pbp-parser",
+  "version": "2.0.0",
+  "description": "Point-by-Point Match Parser",
+  "main": "src/pbpValidator.js",
+  "private": true,
+  "author": "charles@tennisvisuals.com",
+  "repository": "https://github.com/TennisVisuals/universal-match-object",
+  "dependencies": {
+    "chardet": "^0.1.0",
+    "d3-dsv": "^1.0.3",
+    "diacritics": "^1.3.0",
+    "progress": "^1.1.8"
+  }
+}
