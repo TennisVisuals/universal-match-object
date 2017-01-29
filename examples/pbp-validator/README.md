@@ -12,6 +12,7 @@ Change into the package directory and install dependencies
 node install
 ```
 ### Usage
+Copy files from https://github.com/JeffSackmann/tennis_pointbypoint into project ```data``` directory
 
 ```
 > node
@@ -21,5 +22,8 @@ node install
 > r = p.validateArchive('./pbp_validator/data/pbp_matches_atp_main_current.csv');0
 Valid Matches: 2466 (100%), Invalid Matches: 0
 
-> p.writeValidArchive('./pbp_validator/data/pbp_matches_atp_main_current.csv', 'validated_matches.csv')
+> r = p.validateArchive('./pbp_validator/data/pbp_matches_itf_qual_archive.csv');0
+Valid Matches: 437 (31%), Invalid Matches: 991
+
+> p.writeValidArchive('./pbp_validator/data/pbp_matches_itf_qual_archive.csv', 'validated_matches.csv')
 ```
