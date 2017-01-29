@@ -75,16 +75,19 @@
          } else {
             sets_won[1] +=1;
          }
-         score.push({ player0: player0_score, player1: player1_score, tiebreak: tiebreak_score });
+         score.push({ '0': player0_score, '1': player1_score, tiebreak: tiebreak_score });
       }
 
+   
+      let format = 'AdSetsTo6tb7';
       var score_progression = [];
       var sets = row.pbp.split('.').filter(s => s);    // filter out empty sets
       var valid_match = true;
 
       for (var s=0; s < sets.length; s++) {
          if (sets[s] == '' || !score[s]) { continue; } // Blank Set; No Score
-         var result = pbp.validSet(sets[s]);
+         if (s == 4 && (score[4][0] > 7 || score[4][1] > 7)) format = 'longSetTo6by2';
+         var result = pbp.validSet(sets[s], format);
          if (!result.complete) {
             errors.push('incomplete set');
             valid_match = false;
@@ -104,9 +107,9 @@
       return { errors };
    }
 
-   pbp.validSet = function(points) {
-      points = points.split(';').join('');
-      let set = umo.Set();
+   pbp.validSet = function(points, format) {
+      points = points.split(';').join('').split('/').join('');
+      let set = umo.Set({type: format});
       set.addPoints(points);
       return { complete: set.complete(), score: set.scoreboard() };
    }
@@ -129,7 +132,9 @@
          var player1_score = set_score.split('-')[1].split('(')[0].trim();
          if (set_score.indexOf('(') > 0) { tiebreak = set_score.split('(')[1].split(')')[0]; }
 
-         if (tiebreak != score[s].tiebreak) { return { error: 'Tiebreak Mismatch', error_code: 3 }; }
+         if (tiebreak != score[s].tiebreak) { 
+            return { error: 'Tiebreak Mismatch', error_code: 3 }; 
+         }
          if (score[s].player0 == player0_score && score[s].player1 != player1_score) { return { error: 'Score mismatch', error_code: 4 }; }
          if (score[s].player1 == player1_score && score[s].player0 != player0_score) { return { error: 'Score mismatch', error_code: 4 }; }
          if (score[s].player0 == player1_score && score[s].player1 != player0_score) { return { error: 'Score mismatch', error_code: 4 }; }

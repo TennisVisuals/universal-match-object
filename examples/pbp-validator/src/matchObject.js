@@ -283,7 +283,8 @@
             index: so.history.points().length,
             [object.toLowerCase()]: index,
          }
-         
+        
+         if (so.format.tiebreak()) attributes.tiebreak = true;
          if (common.metadata.timestamps()) attributes.uts = new Date();
          Object.assign(point, attributes);
          so.local_history.push(point);
@@ -579,12 +580,9 @@
       }
 
       function formatScore([p0score, p1score], [t0score, t1score], tiebreak_to) {
-         if (t0score > tiebreak_to && t1score > tiebreak_to) {
+         if (t0score || t1score) {
             if (t0score > t1score) p1score += `(${t1score})`;
             if (t1score > t0score) p0score += `(${t0score})`;
-         } else {
-            if ((t1score == tiebreak_to) || (t0score > t1score && t0score != tiebreak_to)) p0score += `(${t0score})`;
-            if ((t0score == tiebreak_to) || (t1score > t0score && t1score != tiebreak_to)) p1score += `(${t1score})`;
          }
          return `${p0score}-${p1score}`
       }
