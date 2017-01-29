@@ -619,24 +619,24 @@ Match_multipleSetPerspectives = function() {
    assert.equal(scoreboard,'6-6 (7-6)');
    match.addPoint(0);
    scoreboard = match.scoreboard();
-   assert.equal(scoreboard,'6-7(8)');
+   assert.equal(scoreboard,'6(6)-7');
    match.addPoints('SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS');
    scoreboard = match.scoreboard();
-   assert.equal(scoreboard,'7(8)-6, 6-6 (6-6)');
+   assert.equal(scoreboard,'7-6(6), 6-6 (6-6)');
    scoreboard = match.scoreboard(1);
-   assert.equal(scoreboard,'6-7(8), 6-6 (6-6)');
+   assert.equal(scoreboard,'6(6)-7, 6-6 (6-6)');
    match.addPoints('11'); 
    scoreboard = match.scoreboard();
-   assert.equal(scoreboard,'7(8)-6, 6-7(8)');
+   assert.equal(scoreboard,'7-6(6), 6(6)-7');
    scoreboard = match.scoreboard(1);
-   assert.equal(scoreboard,'6-7(8), 7(8)-6');
+   assert.equal(scoreboard,'6(6)-7, 7-6(6)');
    assert.equal(match.nextService(), 0);
    match.addPoints('SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS');
    let action = match.addPoints('AAAARRRRPQPQDDDD');
    assert.equal(action.result, 10);
    assert.equal(action.rejected.length, 6);
    scoreboard = match.scoreboard();
-   assert.equal(scoreboard,'7(8)-6, 6-7(8), 6-7(12)');
+   assert.equal(scoreboard,'7-6(6), 6(6)-7, 6(10)-7');
 }
 
 disablePerspective = function() {
