@@ -1,7 +1,7 @@
 {
-  "name": "pbp-parser",
+  "name": "pbp-validator",
   "version": "2.0.0",
-  "description": "Point-by-Point Match Parser",
+  "description": "Point-by-Point Match Validator",
   "main": "src/pbpValidator.js",
   "private": true,
   "author": "charles@tennisvisuals.com",
