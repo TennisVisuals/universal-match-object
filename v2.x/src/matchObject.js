@@ -10,71 +10,71 @@
 
    let formats = {
       games: {
-         'advantage': { name: 'Advantage Game', tiebreak: false, hasDecider: false, threshold: 4, minDiff: 2, },
-         'noAdvantage': { name: 'No Advantage Game', tiebreak: false, hasDecider: true, threshold: 4, minDiff: 1, },
-         'tiebreak7a': { name: 'Tiebreak to 7', tiebreak: true, hasDecider: false, threshold: 7, minDiff: 2,  },
-         'tiebreak10a': { name: 'Tiebreak to 10', tiebreak: true, hasDecider: false, threshold: 10, minDiff: 2, },
-         'tiebreak12a': { name: 'Tiebreak to 10', tiebreak: true, hasDecider: false, threshold: 12, minDiff: 2, },
-         'tiebreak9n': { name: 'Tiebreak to 9, Golden Point', tiebreak: true, hasDecider: true, threshold: 9, minDiff: 1, },
+         'advantage': { description: 'Advantage Game', tiebreak: false, hasDecider: false, threshold: 4, minDiff: 2, },
+         'noAdvantage': { description: 'No Advantage Game', tiebreak: false, hasDecider: true, threshold: 4, minDiff: 1, },
+         'tiebreak7a': { description: 'Tiebreak to 7', tiebreak: true, hasDecider: false, threshold: 7, minDiff: 2,  },
+         'tiebreak10a': { description: 'Tiebreak to 10', tiebreak: true, hasDecider: false, threshold: 10, minDiff: 2, },
+         'tiebreak12a': { description: 'Tiebreak to 10', tiebreak: true, hasDecider: false, threshold: 12, minDiff: 2, },
+         'tiebreak9n': { description: 'Tiebreak to 9, Golden Point', tiebreak: true, hasDecider: true, threshold: 9, minDiff: 1, },
       },
       sets: {
          'AdSetsTo6tb7': { 
-            name: 'Advantage, 6 games for set, Tiebreak to 7',
+            description: 'Advantage, 6 games for set, Tiebreak to 7',
             hasDecider: true, threshold: 6, minDiff: 2, children: 'advantage', decidingChild: 'tiebreak7a', 
          },
          'NoAdSetsTo6tb7': { 
-            name: 'No-Ad, 6 games for set, Tiebreak to 7',
+            description: 'No-Ad, 6 games for set, Tiebreak to 7',
             hasDecider: true, threshold: 6, minDiff: 2, children: 'noAdvantage', decidingChild: 'tiebreak7a', 
          },
          'longSetTo6by2': { 
-            name: 'Advantage, 6 games for set, win by 2 games',
+            description: 'Advantage, 6 games for set, win by 2 games',
             hasDecider: false, threshold: 6, minDiff: 2, children: 'advantage', decidingChild: 'advantage', 
          },
          'supertiebreak': { 
-            name: 'Supertiebreak',
+            description: 'Supertiebreak',
             hasDecider: true, threshold: 1, minDiff: 1, children: 'tiebreak10a',  decidingChild: 'tiebreak10a', 
          },
          'pro10a12': { 
-            name: '10 Game No Ad Pro Set',
+            description: '10 Game No Ad Pro Set',
             hasDecider: true, threshold: 10, minDiff: 2, children: 'noAdvantage', decidingChild: 'tiebreak12a',
          },
       },
       matches: {
          '3_6a_7': { 
-            name: 'best of 3 sets, Advantage, 6 games for set, Tiebreak to 7', 
+            description: 'best of 3 sets, Advantage, 6 games for set, Tiebreak to 7', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'AdSetsTo6tb7',
          },
          '3_6n_7': { 
-            name: 'best of 3 sets, No Advantage, 6 games for set, Tiebreak to 7', 
+            description: 'best of 3 sets, No Advantage, 6 games for set, Tiebreak to 7', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'NoAdSetsTo6tb7', decidingChild: 'NoAdSetsTo6tb7',
          },
          '3_6n_10': { 
-            name: 'best of 3 sets, No-Ad, 6 games for set, Tiebreak to 7, final set Supertiebreak', 
+            description: 'best of 3 sets, No-Ad, 6 games for set, Tiebreak to 7, final set Supertiebreak', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'NoAdSetsTo6tb7', decidingChild: 'supertiebreak',
          },
          '5_6a_7': { 
-            name: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7', 
+            description: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7', 
             hasDecider: true, threshold: 3, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'AdSetsTo6tb7',
          },
          '3_6a_7_long': { 
-            name: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
+            description: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'longSetTo6by2',
          },
          '5_6a_7_long': { 
-            name: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
+            description: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
             hasDecider: true, threshold: 3, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'longSetTo6by2',
          },
       },
    }
 
-   mo.format = function(type, code, name, tiebreak, hasDecider, threshold, minDiff, children, decidingChild) {
+   mo.format = function(type, code, description, tiebreak, hasDecider, threshold, minDiff, children, decidingChild) {
       if (!arguments.length) return formats;
       let hasType = Object.keys(formats).indexOf(type) >= 0;
       let hasCode = hasType && Object.keys(formats[type]).indexOf(code) >= 0;
       if (arguments.length == 1) return hasType ? formats[type] : false;
       if (arguments.length == 2) return (hasType && hasCode) ? formats[type][code] : false;
       if (hasType && hasCode) return false;
-      formats[type][code] = { name, tiebreak, hasDecider, threshold, minDiff, children, decidingChild };
+      formats[type][code] = { description, tiebreak, hasDecider, threshold, minDiff, children, decidingChild };
       return true;
    }
 
@@ -82,7 +82,7 @@
       let so = {};
       so.child = child;
       so.format = format;
-      so.child_attributes = ['hasDecider', 'threshold', 'minDiff', 'tiebreak', 'code', 'name'];
+      so.child_attributes = ['hasDecider', 'threshold', 'minDiff', 'tiebreak', 'code', 'description'];
 
       (so.reset = function(format) {
          so.children = [];
@@ -763,7 +763,7 @@
       mf.init(type);
 
       return { 
-         name: mf.name, singles: mf.singles, doubles: mf.doubles, settings: mf.settings, 
+         description: mf.description, singles: mf.singles, doubles: mf.doubles, settings: mf.settings, 
          type: mf.type, types: mf.types, threshold: mf.threshold, hasDecider: mf.hasDecider, 
          minDiff: mf.minDiff, children: mf.children, decidingChild: mf.decidingChild, 
       }
@@ -776,7 +776,7 @@
       sf.init(type);
 
       return { 
-         name: sf.name, singles: sf.singles, doubles: sf.doubles, settings: sf.settings, 
+         description: sf.description, singles: sf.singles, doubles: sf.doubles, settings: sf.settings, 
          type: sf.type, types: sf.types, threshold: sf.threshold, hasDecider: sf.hasDecider, 
          minDiff: sf.minDiff, children: sf.children, decidingChild: sf.decidingChild, 
       }
@@ -787,7 +787,7 @@
       gf.init(type);
 
       return { 
-         name: gf.name, settings: gf.settings, singles: gf.singles, doubles: gf.doubles,
+         description: gf.description, settings: gf.settings, singles: gf.singles, doubles: gf.doubles,
          type: gf.type, types: gf.types, threshold: gf.threshold, hasDecider: gf.hasDecider, 
          minDiff: gf.minDiff, tiebreak: gf.tiebreak,
       }
@@ -815,7 +815,7 @@
                if (f.tiebreak != undefined) fo.tiebreak(f.tiebreak);
 
                // must be set after all other attributes!
-               fo.name(f.name);
+               fo.description(f.description);
                fo.values.code = format_type;
 
                if (f.children) fo.children.type(f.children);
@@ -826,38 +826,38 @@
          settings() {
             let number_of_players = typeof common.singles == 'function' ? common.singles() ? 2 : 4 : '';
             let settings = { 
-               name: fo.values.name, code: fo.values.code, players: number_of_players,
+               description: fo.values.description, code: fo.values.code, players: number_of_players,
                threshold: fo.values.threshold, has_decider: fo.values.has_decider, 
                min_diff: fo.values.min_diff, tiebreak: fo.values.tiebreak,
             };
             return settings;
          },
-         name(value) {
-            if (!arguments.length) return fo.values.name;
-            if (typeof value == 'string') fo.values.name = value;
+         description(value) {
+            if (!arguments.length) return fo.values.description;
+            if (typeof value == 'string') fo.values.description = value;
             return fo;
          },
          tiebreak(value) {
             if (!arguments.length) return fo.values.tiebreak;
-            fo.values.name = fo.values.code = undefined;
+            fo.values.description = fo.values.code = undefined;
             if ([true, false].indexOf(value) >= 0) fo.values.tiebreak = value;
             return fo;
          },
          threshold(value) {
             if (!arguments.length) return fo.values.threshold;
-            fo.values.name = fo.values.code = undefined;
+            fo.values.description = fo.values.code = undefined;
             if (!isNaN(value)) fo.values.threshold = value;
             return fo;
          },
          minDiff(value) {
             if (!arguments.length) return fo.values.min_diff;
-            fo.values.name = fo.values.code = undefined;
+            fo.values.description = fo.values.code = undefined;
             if (!isNaN(value)) fo.values.min_diff = value;
             return fo;
          },
          hasDecider(value) {
             if (!arguments.length) return fo.values.has_decider;
-            fo.values.name = fo.values.code = undefined;
+            fo.values.description = fo.values.code = undefined;
             if ([true, false].indexOf(value) >= 0) fo.values.has_decider = value;
             return fo;
          },

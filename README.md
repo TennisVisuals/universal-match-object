@@ -80,7 +80,7 @@ match.addPoints('SSDRSS')             // add multiple from string
 
 ```
 > match.format.settings()
-{ name: 'best of 3 sets, Advantage, 6 games for set, Tiebreak to 7',
+{ description: 'best of 3 sets, Advantage, 6 games for set, Tiebreak to 7',
   code: '3_6a_7',
   players: 2,
   threshold: 2,
@@ -97,7 +97,7 @@ match.addPoints('SSDRSS')             // add multiple from string
   '5_6a_7_long' ]
 
 > match.format.children.settings()
-{ name: 'Advantage, 6 games for set, Tiebreak to 7',
+{ description: 'Advantage, 6 games for set, Tiebreak to 7',
   code: 'AdSetsTo6tb7',
   players: 2,
   threshold: 6,
@@ -109,7 +109,7 @@ match.addPoints('SSDRSS')             // add multiple from string
 [ 'AdSetsTo6tb7', 'NoAdSetsTo6tb7', 'supertiebreak', 'pro10a12' ]
 
 > match.format.decidingChild.settings()
-{ name: 'Advantage, 6 games for set, Tiebreak to 7',
+{ description: 'Advantage, 6 games for set, Tiebreak to 7',
   code: 'AdSetsTo6tb7',
   players: 2,
   threshold: 6,

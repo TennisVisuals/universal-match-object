@@ -10,7 +10,7 @@ discreetGameFormatChanges = function() {
    let gf = matchObject.gameFormat();
 
    var settings = gf.settings();
-   assert.equal(settings.name, 'Advantage Game');
+   assert.equal(settings.description, 'Advantage Game');
    assert.equal(settings.threshold, 4);
    assert.equal(settings.has_decider, false);
    assert.equal(settings.min_diff, 2);
@@ -24,11 +24,11 @@ discreetGameFormatChanges = function() {
    assert.equal(gf.hasDecider(), true);
    gf.tiebreak(true);
    assert.equal(gf.tiebreak(), true);
-   gf.name('Foo');
-   assert.equal(gf.name(), 'Foo');
+   gf.description('Foo');
+   assert.equal(gf.description(), 'Foo');
 
    var settings = gf.settings();;
-   assert.equal(settings.name, 'Foo');
+   assert.equal(settings.description, 'Foo');
    assert.equal(settings.threshold, 8);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 4);
@@ -42,11 +42,11 @@ discreetGameFormatChanges = function() {
    assert.equal(gf.hasDecider(), false);
    gf.tiebreak(false);
    assert.equal(gf.tiebreak(), false);
-   gf.name('Boo');
-   assert.equal(gf.name(), 'Boo');
+   gf.description('Boo');
+   assert.equal(gf.description(), 'Boo');
 
    var settings = gf.settings();
-   assert.equal(settings.name, 'Boo');
+   assert.equal(settings.description, 'Boo');
    assert.equal(settings.threshold, 6);
    assert.equal(settings.has_decider, false);
    assert.equal(settings.min_diff, 2);
@@ -59,7 +59,7 @@ namedGameFormatChanges = function() {
 
    gf.type('noAdvantage');
    var settings = gf.settings();
-   assert.equal(settings.name, 'No Advantage Game');
+   assert.equal(settings.description, 'No Advantage Game');
    assert.equal(settings.threshold, 4);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 1);
@@ -67,7 +67,7 @@ namedGameFormatChanges = function() {
 
    gf.type('tiebreak7a');
    var settings = gf.settings();
-   assert.equal(settings.name, 'Tiebreak to 7');
+   assert.equal(settings.description, 'Tiebreak to 7');
    assert.equal(settings.threshold, 7);
    assert.equal(settings.has_decider, false);
    assert.equal(settings.min_diff, 2);
@@ -75,7 +75,7 @@ namedGameFormatChanges = function() {
 
    gf.type('noAdvantage');
    var settings = gf.settings();
-   assert.equal(settings.name, 'No Advantage Game');
+   assert.equal(settings.description, 'No Advantage Game');
    assert.equal(settings.threshold, 4);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 1);
@@ -83,7 +83,7 @@ namedGameFormatChanges = function() {
 
    gf.type('tiebreak10a');
    var settings = gf.settings();
-   assert.equal(settings.name, 'Tiebreak to 10');
+   assert.equal(settings.description, 'Tiebreak to 10');
    assert.equal(settings.threshold, 10);
    assert.equal(settings.has_decider, false);
    assert.equal(settings.min_diff, 2);
@@ -91,7 +91,7 @@ namedGameFormatChanges = function() {
 
    gf.type('advantage');
    var settings = gf.settings();
-   assert.equal(settings.name, 'Advantage Game');
+   assert.equal(settings.description, 'Advantage Game');
    assert.equal(settings.threshold, 4);
    assert.equal(settings.has_decider, false);
    assert.equal(settings.min_diff, 2);
@@ -101,7 +101,7 @@ namedGameFormatChanges = function() {
 
 discreetSetFormatChanges = function() {
    set.reset(true);
-   set.format.hasDecider(true).threshold(4).minDiff(2).name('Cyprus Kids League');
+   set.format.hasDecider(true).threshold(4).minDiff(2).description('Cyprus Kids League');
    set.format.singles(true);
    set.format.children.type('advantage');
    set.format.decidingChild.type('tiebreak4a');
@@ -123,7 +123,7 @@ discreetSetFormatChanges = function() {
    assert.equal(set.scoreboard(), '4-1');
 
    set.reset();
-   set.format.hasDecider(true).threshold(8).minDiff(2).name('8 Game Pro Set');
+   set.format.hasDecider(true).threshold(8).minDiff(2).description('8 Game Pro Set');
    set.format.singles(true);
    set.format.children.type('advantage');
    set.format.decidingChild.type('tiebreak7a');
@@ -140,7 +140,7 @@ discreetSetFormatChanges = function() {
    assert.equal(set.complete(), true);
 
    set.reset(true);
-   set.format.hasDecider(true).threshold(4).minDiff(0).name('Under 10 Set to 4, tiebreak at 3-3');
+   set.format.hasDecider(true).threshold(4).minDiff(0).description('Under 10 Set to 4, tiebreak at 3-3');
    set.format.singles(true);
    set.format.children.type('noAdvantage');
    set.format.decidingChild.type('tiebreak7a');
@@ -161,7 +161,7 @@ discreetSetFormatChanges = function() {
    assert.equal(set.complete(), true);
 
    set.reset(true);
-   set.format.hasDecider(true).threshold(4).minDiff(2).name('Under 10 Set to 4, tiebreak at 4-4');
+   set.format.hasDecider(true).threshold(4).minDiff(2).description('Under 10 Set to 4, tiebreak at 4-4');
    set.format.singles(true);
    set.format.children.type('noAdvantage');
    set.format.decidingChild.type('tiebreak7a');
@@ -179,7 +179,7 @@ namedSetFormatChanges = function() {
    set.reset(true);
    set.format.type('AdSetsTo6tb7');
    var settings = set.format.settings();
-   assert.equal(settings.name, 'Advantage, 6 games for set, Tiebreak to 7');
+   assert.equal(settings.description, 'Advantage, 6 games for set, Tiebreak to 7');
    assert.equal(settings.threshold, 6);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 2);
@@ -190,7 +190,7 @@ namedSetFormatChanges = function() {
    set.reset();
    set.format.type('NoAdSetsTo6tb7');
    var settings = set.format.settings();
-   assert.equal(settings.name, 'No-Ad, 6 games for set, Tiebreak to 7');
+   assert.equal(settings.description, 'No-Ad, 6 games for set, Tiebreak to 7');
    assert.equal(settings.threshold, 6);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 2);
@@ -201,7 +201,7 @@ namedSetFormatChanges = function() {
    set.reset();
    set.format.type('supertiebreak');
    var settings = set.format.settings();
-   assert.equal(settings.name, 'Supertiebreak');
+   assert.equal(settings.description, 'Supertiebreak');
    assert.equal(settings.threshold, 1);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 1);
@@ -212,7 +212,7 @@ namedSetFormatChanges = function() {
    set.reset();
    set.format.type('pro10a12');
    var settings = set.format.settings();
-   assert.equal(settings.name, '10 Game No Ad Pro Set');
+   assert.equal(settings.description, '10 Game No Ad Pro Set');
    assert.equal(settings.threshold, 10);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 2);
@@ -227,7 +227,7 @@ discreetMatchFormatChanges = function() {
    match.format.children.type('supertiebreak');
    match.format.decidingChild.type('supertiebreak');
    let settings = match.format.settings();
-   assert.equal(settings.name, undefined);
+   assert.equal(settings.description, undefined);
    assert.equal(settings.code, undefined);
    assert.equal(settings.threshold, 1);
    assert.equal(settings.min_diff, 1);
@@ -244,7 +244,7 @@ namedMatchFormatChanges = function() {
    match.reset(true);
    match.format.type('3_6n_10');
    var settings = match.format.settings();
-   assert.equal(settings.name, 'best of 3 sets, No-Ad, 6 games for set, Tiebreak to 7, final set Supertiebreak');
+   assert.equal(settings.description, 'best of 3 sets, No-Ad, 6 games for set, Tiebreak to 7, final set Supertiebreak');
    assert.equal(settings.threshold, 2);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 0);
@@ -254,7 +254,7 @@ namedMatchFormatChanges = function() {
 
    match.format.type('3_6n_7');
    var settings = match.format.settings();
-   assert.equal(settings.name, 'best of 3 sets, No Advantage, 6 games for set, Tiebreak to 7');
+   assert.equal(settings.description, 'best of 3 sets, No Advantage, 6 games for set, Tiebreak to 7');
    assert.equal(settings.threshold, 2);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 0);
@@ -264,7 +264,7 @@ namedMatchFormatChanges = function() {
 
    match.format.type('3_6a_7');
    var settings = match.format.settings();
-   assert.equal(settings.name, 'best of 3 sets, Advantage, 6 games for set, Tiebreak to 7');
+   assert.equal(settings.description, 'best of 3 sets, Advantage, 6 games for set, Tiebreak to 7');
    assert.equal(settings.threshold, 2);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 0);
@@ -850,15 +850,15 @@ Match_doubles3_6n_10 = function() {
 
 customizedFormatPropagation = function() {
    match.reset(true);
-   match.format.threshold(3).hasDecider(true).minDiff(0).name('Wonky Match, Best of 5 Sets');
+   match.format.threshold(3).hasDecider(true).minDiff(0).description('Wonky Match, Best of 5 Sets');
 
-   match.format.children.threshold(2).hasDecider(true).minDiff(2).name('Best of 3 Games');
-   match.format.children.children.threshold(4).hasDecider(false).minDiff(2).tiebreak(true).name('Tiebreak to 4, win by 2');
-   match.format.children.decidingChild.threshold(8).hasDecider(true).minDiff(0).tiebreak(true).name('Tiebreak to 8, win by 1');
+   match.format.children.threshold(2).hasDecider(true).minDiff(2).description('Best of 3 Games');
+   match.format.children.children.threshold(4).hasDecider(false).minDiff(2).tiebreak(true).description('Tiebreak to 4, win by 2');
+   match.format.children.decidingChild.threshold(8).hasDecider(true).minDiff(0).tiebreak(true).description('Tiebreak to 8, win by 1');
 
-   match.format.decidingChild.threshold(3).hasDecider(true).minDiff(1).name('Best of 5 Games');
-   match.format.decidingChild.children.threshold(9).hasDecider(false).minDiff(2).tiebreak(true).name('Tiebreak to 9, win by 2');
-   match.format.decidingChild.decidingChild.threshold(12).hasDecider(true).minDiff(0).tiebreak(true).name('Tiebreak to 12, win by 1');
+   match.format.decidingChild.threshold(3).hasDecider(true).minDiff(1).description('Best of 5 Games');
+   match.format.decidingChild.children.threshold(9).hasDecider(false).minDiff(2).tiebreak(true).description('Tiebreak to 9, win by 2');
+   match.format.decidingChild.decidingChild.threshold(12).hasDecider(true).minDiff(0).tiebreak(true).description('Tiebreak to 12, win by 1');
 
    match.addPoints('0000111100001111');
    // match.scoreboard(); //FIXME: not displaying scoreboard properly for set which is composed of only tiebreak games
