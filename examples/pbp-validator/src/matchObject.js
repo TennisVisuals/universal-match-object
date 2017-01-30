@@ -198,7 +198,7 @@
 
          if (object == 'Game') {
             if (!so.format.tiebreak()) return so.first_service;
-            return common.nextTiebreakService(so.local_history);
+            return common.nextTiebreakService(so.local_history, so.first_service);
          }
 
          if (!last_child) return so.first_service;
@@ -978,7 +978,7 @@
          let last_position = pos(progression.length);
          let next_position = ((progression.length + 1) % 4) < 2;
          let last_score = progression[progression.length - 1];
-         let last_service = last_score != undefined ? last_score : (first_service || metadata.service_order[0]);
+         let last_service = last_score != undefined ? last_score : (first_service != undefined ? first_service : metadata.service_order[0]);
          let next_service = (next_position == last_position) ? last_service : pub.advanceService(last_service);
          return next_service;
       }

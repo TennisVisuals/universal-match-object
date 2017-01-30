@@ -10,11 +10,12 @@
 
    pbp.validateArchive = function(archive_name) {
       let matches = d3Dsv.csvParse(pbp.loadFile(archive_name));
-      let errors = pbp.validateMatchArray(matches);
+      let results = pbp.validateMatchArray(matches);
+      let errors = results.filter(f=>f.results.errors.length);
       let valid = matches.length - errors.length;
       let pct_valid = (valid / matches.length).toFixed(2) * 100;
       console.log(`Valid Matches: ${valid} (${pct_valid}%), Invalid Matches: ${errors.length}`);
-      return errors;
+      return results;
    }
 
    pbp.loadFile = function(file_name) {
@@ -28,10 +29,10 @@
       var results = [];
       var bar = new ProgressBar(':bar', { total: match_array.length });
       for (var i=0; i < match_array.length; i++) {
-         results.push({ i, errors: pbp.validateMatch(match_array[i]).errors });
+         results.push({ i, results: pbp.validateMatch(match_array[i]) });
          bar.tick();
       }
-      return results.filter(f=>f.errors.length);
+      return results;
    }
 
    pbp.writeValidArchive = function(source, destination) {
@@ -75,72 +76,125 @@
          } else {
             sets_won[1] +=1;
          }
-         score.push({ '0': player0_score, '1': player1_score, tiebreak: tiebreak_score });
+         score.push({ '0': parseInt(player0_score), '1': parseInt(player1_score), tiebreak: tiebreak_score ? parseInt(tiebreak_score) : undefined });
       }
-
    
-      let format = 'AdSetsTo6tb7';
-      var score_progression = [];
-      var sets = row.pbp.split('.').filter(s => s);    // filter out empty sets
       var valid_match = true;
+      let points = row.pbp;    
 
+      // first test individual sets
+      var sets = points.split('.').filter(s => s);
       for (var s=0; s < sets.length; s++) {
-         if (sets[s] == '' || !score[s]) { continue; } // Blank Set; No Score
-         if (score[s][0] > 7 || score[s][1] > 7) format = 'longSetTo6by2';
+         let format = (score[s][0] > 7 || score[s][1] > 7) ? 'longSetTo6by2' : 'AdSetsTo6tb7';
+
+         // valid set is a complete set with no extra points
          var result = pbp.validSet(sets[s], format);
-         if (!result.complete) {
-            errors.push('incomplete set');
+         if (!result.valid) {
+            errors.push('invalid set');
             valid_match = false;
-         } else {
-            score_progression.push(result.score);
          }
-      }
-      var validation = validateScore(score, winner, score_progression);
-      if (valid_match) {
-         if (validation.error) {
-            errors.push(validation.error);
-         }
-      } else {
-         errors.push('invalid match');
       }
 
-      return { errors };
+      let games_data = pbp.processGames(points);
+      let match_data = pbp.processMatch(sets, sets_won, score);
+      if (match_data.rejected.length) errors.push('excess points');
+      let valid_score = pbp.validScore(match_data.sets, score);
+      if (!valid_score) {
+         errors.push('invalid score');
+         if (games_data.missing_points) errors.push('games missing points');
+         if (games_data.excess_points) errors.push('excess game points');
+      }
+
+      return { errors, format: match_data.format, match_score: match_data.sets.map(m=>m.games), score, valid_score, points };
+   }
+
+   pbp.validScore = function(match_score, score) {
+      if (match_score.length != score.length) { return false; }
+      let valid = score.map((set_score, i) => {
+         let games_equal = set_score[0] == match_score[i].games[0] && set_score[1] == match_score[i].games[1]; 
+         let tb_equal = true;
+         if (set_score.tiebreak != undefined) {
+            if (!match_score[i].tiebreak) {
+               tb_equal = false;
+            } else {
+               tb_equal = match_score[i].tiebreak.indexOf(parseInt(set_score.tiebreak)) >= 0;
+            }
+         }
+         return games_equal && tb_equal;
+      });
+      return valid.filter(f=>!f).length == 0;
+   }
+
+   pbp.processGames = function(points) {
+      let game = umo.Game();
+      let games = points.split('.').join(';').split(';');
+      let valid_games = 0;
+      let excess_points = 0;
+      let missing_points = 0;
+
+      games.forEach(g => {
+         if (g.indexOf('/') > 0) {
+            game.reset('tiebreak7a');
+            test(g.split('/').join(''));
+         } else {
+            game.reset('advantage');
+            test(g);
+         }
+      });
+
+      return { valid_games, excess_points, missing_points };
+
+      function test(pts) {
+         let result = game.addPoints(pts);
+         if (game.complete()) {
+            if (!result.rejected.length) {
+               valid_games += 1;
+            } else {
+               excess_points += 1;
+            }
+         } else {
+            missing_points += 1;
+         }
+      }
+   }
+
+   pbp.processMatch = function(sets, sets_won, score) {
+      // if either player won > 2 sets, then it must be 5-set format
+      let five_sets = Math.max(...sets_won) > 2 ? true : false;
+      let supertiebreak = false;
+      let final_set_long = false;
+      for (var s=0; s < sets.length; s++) {
+         let num_points = sets[s].split(';').join('').split('/').join('').length;
+
+         // differentiate between final set supertiebreak and long set
+         if ((score[s][0] > 7 || score[s][1] > 7) && Math.abs(score[s][0] - score[s][1]) == 2) {
+            if (num_points > 50) {
+               final_set_long = true;
+            } else {
+               supertiebreak = true;
+            }
+         }
+      }
+
+      let format;
+      if (five_sets) {
+         format = final_set_long ? '5_6a_7_long' : '5_6a_7';
+      } else {
+         format = final_set_long ? '3_6a_7_long' : supertiebreak ? '3_6n_10' : '3_6a_7';
+      }
+      let match = umo.Match({type: format});
+      match.set.perspectiveScore(false);
+      let points = sets.join('').split(';').join('').split('/').join('');
+      let result = match.addPoints(points);
+      return { rejected: result.rejected, sets: match.score().components.sets, format };
    }
 
    pbp.validSet = function(points, format) {
       points = points.split(';').join('').split('/').join('');
       let set = umo.Set({type: format});
-      set.addPoints(points);
-      return { complete: set.complete(), score: set.scoreboard() };
-   }
-
-   function validateScore(score, winner, score_progression) {
-      if (score.length != score_progression.length) {
-         return { error: 'Discrepancy in number of Sets', error_code: 0 };
-      }
-      for (var s=0; s < score.length; s++) {
-
-         if (score[s].player0 > 7 || score[s].player1 > 7) {
-            return { error: 'Erroneous Score', error_code: 5 };
-         }
-
-         var set_score = score_progression[s];
-         if (!set_score) return { error: 'No Score', error_code: 1 };
-
-         var tiebreak = undefined;
-         var player0_score = set_score.split('-')[0];
-         var player1_score = set_score.split('-')[1].split('(')[0].trim();
-         if (set_score.indexOf('(') > 0) { tiebreak = set_score.split('(')[1].split(')')[0]; }
-
-         if (tiebreak != score[s].tiebreak) { 
-            return { error: 'Tiebreak Mismatch', error_code: 3 }; 
-         }
-         if (score[s].player0 == player0_score && score[s].player1 != player1_score) { return { error: 'Score mismatch', error_code: 4 }; }
-         if (score[s].player1 == player1_score && score[s].player0 != player0_score) { return { error: 'Score mismatch', error_code: 4 }; }
-         if (score[s].player0 == player1_score && score[s].player1 != player0_score) { return { error: 'Score mismatch', error_code: 4 }; }
-         if (score[s].player1 == player0_score && score[s].player0 != player1_score) { return { error: 'Score mismatch', error_code: 4 }; }
-      }
-      return {};
+      let result = set.addPoints(points);
+      let valid = set.complete() && !result.rejected.length;
+      return { valid, score: set.scoreboard() };
    }
 
    if (typeof define === "function" && define.amd) define(pbp); else if (typeof module === "object" && module.exports) module.exports = pbp;
