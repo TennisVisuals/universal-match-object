@@ -608,7 +608,7 @@ Set_testPerspectiveChange = function() {
 
 Match_multipleSetPerspectives = function() {
    match.reset(true);
-   match.format.type('singles3_6a_7');
+   match.format.type('3_6a_7');
    match.addPoints('SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS');
    let scoreboard = match.scoreboard();
    assert.equal(scoreboard,'6-6 (6-6)');
@@ -622,9 +622,11 @@ Match_multipleSetPerspectives = function() {
    assert.equal(scoreboard,'6(6)-7');
    match.addPoints('SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS');
    scoreboard = match.scoreboard();
-   assert.equal(scoreboard,'7-6(6), 6-6 (6-6)');
+   assert.equal(scoreboard,'6(6)-7, 6-6 (6-6)');
    scoreboard = match.scoreboard(1);
    assert.equal(scoreboard,'6(6)-7, 6-6 (6-6)');
+   scoreboard = match.scoreboard(0);
+   assert.equal(scoreboard,'7-6(6), 6-6 (6-6)');
    match.addPoints('11'); 
    scoreboard = match.scoreboard();
    assert.equal(scoreboard,'7-6(6), 6(6)-7');
