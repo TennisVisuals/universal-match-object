@@ -1,6 +1,6 @@
 ## PBP Validator
 
-Utilizes the "Universal Match Object" to analyze point-by-point files: https://github.com/JeffSackmann/tennis_pointbypoint
+Utilizes the "Universal Match Object" to analyze [point-by-point files](https://github.com/JeffSackmann/tennis_pointbypoint)
 
 Exports new .csv files containing only validated matches.
 
@@ -12,7 +12,7 @@ Change into the package directory and install dependencies
 node install
 ```
 ### Usage
-Copy files from https://github.com/JeffSackmann/tennis_pointbypoint into project ```data``` directory
+Copy files from [Jeff Sackmann's GitHub Repository](https://github.com/JeffSackmann/tennis_pointbypoint) into project ```data``` directory
 
 ```
 > node
@@ -38,7 +38,7 @@ invalid_matches = matches.filter(f=>f.results.errors.length);
   'invalid score',
   'excess game points' ]
 ```
-In this archive there are 44 matches which have valid scores but excess points:
+In this archive there are 44 matches which have valid scores but excess points. A score is valid when all calculated set scores match the 'official' score reported in the archive:
 ```
 with_excess_points = matches.filter(f=>f.results.valid_score && f.results.errors.length);
 ```
