@@ -2,9 +2,12 @@
 
 Utilizes the "Universal Match Object" to analyze the validity of [point-by-point files](https://github.com/JeffSackmann/tennis_pointbypoint).
 
-- Exports new .csv files containing only validated matches.
+- Exports new archives containing only validated matches.
+- Exports expanded match formats for validated matches.
 
 [PBP Analysis](https://github.com/TennisVisuals/universal-match-object/blob/master/examples/pbp-validator/PBP%20Analysis.md) provides an overview of the validation results for all files.
+
+[PBP Expanded Matches](https://github.com/TennisVisuals/universal-match-object/blob/master/examples/pbp-validator/PBP%20Expanded%20Export.md) details how to use expanded match export.
 
 According to [Jeff Sackmann](https://github.com/JeffSackmann), the original data was sourced from XML files provided by a 3rd party.  Errors in the data were present in the source files.
 
