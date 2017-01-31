@@ -1,15 +1,16 @@
 !function() {
 
    let pbp = function() {};
-   var fs               = require('fs');
-   var umo              = require('./matchObject');
-   var d3Dsv            = require('d3-dsv');
-   var chardet          = require('chardet');
-   var removeDiacritics = require('diacritics').remove;
-   var ProgressBar      = require('progress');
+   let fs               = require('fs');
+   let umo              = require('./matchObject');
+   let d3Dsv            = require('d3-dsv');
+   let chardet          = require('chardet');
+   let removeDiacritics = require('diacritics').remove;
+   let ProgressBar      = require('progress');
 
    pbp.validateArchive = function(archive_name) {
       let matches = d3Dsv.csvParse(pbp.loadFile(archive_name));
+      console.log(`Validating ${matches.length} matches`);
       let results = pbp.validateMatchArray(matches);
       let errors = results.filter(f=>f.results.errors.length);
       let valid = matches.length - errors.length;
@@ -18,18 +19,38 @@
       return results;
    }
 
+   pbp.expandedArchive = function(archive_name) {
+      let matches = d3Dsv.csvParse(pbp.loadFile(archive_name));
+      console.log(`Validating ${matches.length} matches`);
+      let results = pbp.validateMatchArray(matches, true);
+      let valid = results.filter(f=>!f.results.errors.length).map(m=>m.results);
+      return valid;
+   }
+
+   pbp.writeExpandedArchive = function(archive_name, destination) {
+      let valid = pbp.expandedArchive(archive_name);
+      console.log('Generating CSV');
+      // let bar = new ProgressBar(':bar', { total: valid.length });
+      let csv = valid.map((match, i) => {
+         return pbp.expandedCSV(match, i == 0)
+        //  bar.tick();
+      }).join('\r\n');
+      fs.writeFileSync(destination, csv);
+      return;
+   }
+
    pbp.loadFile = function(file_name) {
-      var targetFile = file_name;
-      var chard = chardet.detectFileSync(targetFile);
-      var encoding = (chard.indexOf('ISO') >= 0 || chard == 'UTF-8' || chard == 'windows-1252') ? 'utf8' : 'utf16le';
+      let targetFile = file_name;
+      let chard = chardet.detectFileSync(targetFile);
+      let encoding = (chard.indexOf('ISO') >= 0 || chard == 'UTF-8' || chard == 'windows-1252') ? 'utf8' : 'utf16le';
       return fs.readFileSync(targetFile, encoding);
    }
 
-   pbp.validateMatchArray = function(match_array) { 
-      var results = [];
-      var bar = new ProgressBar(':bar', { total: match_array.length });
-      for (var i=0; i < match_array.length; i++) {
-         results.push({ i, results: pbp.validateMatch(match_array[i]) });
+   pbp.validateMatchArray = function(match_array, expand) { 
+      let results = [];
+      let bar = new ProgressBar(':bar', { total: match_array.length });
+      for (let i=0; i < match_array.length; i++) {
+         results.push({ i, results: pbp.validateMatch(match_array[i], expand) });
          bar.tick();
       }
       return results;
@@ -51,44 +72,45 @@
       return false;
    }
 
-   pbp.validateMatch = function(row) {
+   pbp.validateMatch = function(row, expand) {
       let errors = [];
-      var match = {};
-      var winner = parseInt(row.winner) - 1;
-      var player_array = [];
+      let match = {};
+      let winner = parseInt(row.winner) - 1;
+      let player_array = [];
       player_array.push(removeDiacritics(row.server1));
       player_array.push(removeDiacritics(row.server2));
 
-      var sets_won = [0, 0];
-      var scores = row.score.split(' ');
-      var score = [];
-      for (var c=0; c < scores.length; c++) {
-         var tiebreak_score = scores[c].indexOf('(') >= 0 ? scores[c].split('(')[1].split(')')[0] : undefined;
+      let sets_won = [0, 0];
+      let scores = row.score.split(' ');
+      let score = [];
+      for (let c=0; c < scores.length; c++) {
+         let tiebreak_score = scores[c].indexOf('(') >= 0 ? scores[c].split('(')[1].split(')')[0] : undefined;
+         let player_scores = [];
          if (winner == 0) {
-            var player0_score = scores[c].split('-')[0];
-            var player1_score = scores[c].split('-')[1].split('(')[0];
+            player_scores[0] = scores[c].split('-')[0];
+            player_scores[1] = scores[c].split('-')[1].split('(')[0];
          } else {
-            var player1_score = scores[c].split('-')[0];
-            var player0_score = scores[c].split('-')[1].split('(')[0];
+            player_scores[1] = scores[c].split('-')[0];
+            player_scores[0] = scores[c].split('-')[1].split('(')[0];
          }
-         if (player0_score > player1_score) {
+         if (player_scores[0] > player_scores[1]) {
             sets_won[0] +=1;
          } else {
             sets_won[1] +=1;
          }
-         score.push({ '0': parseInt(player0_score), '1': parseInt(player1_score), tiebreak: tiebreak_score ? parseInt(tiebreak_score) : undefined });
+         score.push({ '0': parseInt(player_scores[0]), '1': parseInt(player_scores[1]), tiebreak: tiebreak_score ? parseInt(tiebreak_score) : undefined });
       }
    
-      var valid_match = true;
+      let valid_match = true;
       let points = row.pbp;    
 
       // first test individual sets
-      var sets = points.split('.').filter(s => s);
-      for (var s=0; s < sets.length; s++) {
+      let sets = points.split('.').filter(s => s);
+      for (let s=0; s < sets.length; s++) {
          let format = (score[s][0] > 7 || score[s][1] > 7) ? 'longSetTo6by2' : 'AdSetsTo6tb7';
 
          // valid set is a complete set with no extra points
-         var result = pbp.validSet(sets[s], format);
+         let result = pbp.validSet(sets[s], format);
          if (!result.valid) {
             errors.push('invalid set');
             valid_match = false;
@@ -105,7 +127,8 @@
          if (games_data.excess_points) errors.push('excess game points');
       }
 
-      return { errors, format: match_data.format, match_score: match_data.sets.map(m=>m.games), score, valid_score, points };
+      if (expand) return { errors, points: match_data.history, format: match_data.format, metadata: row };
+      return { errors, format: match_data.format, match_score: match_data.sets.map(m=>m.games), score, valid_score, points, };
    }
 
    pbp.validScore = function(match_score, score) {
@@ -163,7 +186,7 @@
       let five_sets = Math.max(...sets_won) > 2 ? true : false;
       let supertiebreak = false;
       let final_set_long = false;
-      for (var s=0; s < sets.length; s++) {
+      for (let s=0; s < sets.length; s++) {
          let num_points = sets[s].split(';').join('').split('/').join('').length;
 
          // differentiate between final set supertiebreak and long set
@@ -186,7 +209,7 @@
       match.set.perspectiveScore(false);
       let points = sets.join('').split(';').join('').split('/').join('');
       let result = match.addPoints(points);
-      return { rejected: result.rejected, sets: match.score().components.sets, format };
+      return { rejected: result.rejected, sets: match.score().components.sets, format, history: match.history.common() };
    }
 
    pbp.validSet = function(points, format) {
@@ -196,6 +219,56 @@
       let valid = set.complete() && !result.rejected.length;
       return { valid, score: set.scoreboard() };
    }
+
+   pbp.expandedCSV = function(valid_match, attach_header) {
+      let meta = valid_match.metadata;
+      let match_id = [meta.tny_name, meta.server1, meta.server2].join('').split('').filter(f=>isUpperCase(f)).join('');
+      match_id = match_id + [meta.score, meta.date].join('').split('').filter(f=>f.match(/[0-9]/)).reduce((a, b) => (+a + +b));
+      let header = 'match_id,date,tournament,point_idx,set_num,game_num,point_num,player0,player1,server,winner,score0,score1,tiebreak,points0,points1,games0,games1,sets0,sets1,pts0,pts1,total_points0,total_points1,best_of_sets,sets_to,tiebreaks_to,final_set_long';
+      let total_points = [0, 0];
+      let format = valid_match.format.split('').filter(f=>f.match(/[0-9]/));
+      let rows = valid_match.points.map(data => {
+         let point = data.point;
+         let score = point.score.split('-');
+         let points_to_set = data.needed && data.needed.points_to_set ? data.needed.points_to_set : ['', ''];
+         total_points[point.winner] += 1;
+         let row = [
+            match_id,
+            meta.date,
+            meta.tny_name,
+            point.index + 1,
+            point.set + 1,
+            point.game + 1,
+            point.number + 1,
+            meta.server1,
+            meta.server2,
+            point.server,
+            point.winner,
+            score[0],
+            score[1],
+            point.tiebreak ? true : false,
+            point.points[0],
+            point.points[1],
+            data.game.games[0],
+            data.game.games[1],
+            data.set.sets[0],
+            data.set.sets[1],
+            points_to_set[0],
+            points_to_set[1],
+            total_points[0],
+            total_points[1],
+            format[0],
+            format[1],
+            format[2],
+            valid_match.format.indexOf('long') > 0
+         ];
+         return row.join(',');
+      });
+      if (attach_header) rows.unshift(header);
+      return rows.join('\r\n');
+   }
+
+   var isUpperCase = (letter) => (letter === letter.toUpperCase() && letter.match(/[A-Z]/));
 
    if (typeof define === "function" && define.amd) define(pbp); else if (typeof module === "object" && module.exports) module.exports = pbp;
    this.pbp = pbp;

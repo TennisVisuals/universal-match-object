@@ -19,7 +19,9 @@ Alternatively, you can first create an in-memory array of validated matches and 
 ```
 e = p.expandedArchive('./pbp_validator/data/pbp_matches_atp_main_current.csv')
 
-csv = p.expandedCSV(e[0])
+csv = p.expandedCSV(e[0], true)
+
+fs.writeFileSync('./match.csv', csv)
 ```
 
 ### Notes:
