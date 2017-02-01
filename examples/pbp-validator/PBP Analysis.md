@@ -10,11 +10,11 @@ The WTA Main Archive has many matches which are missing a single point, often in
 
 According to Jeff, the original data was sourced from XML files provided by a 3rd party.  Errors in the data were present in the source files.
 
-**A fork of Jeff's repository with numerous fixes to player names is available [here](https://github.com/TennisVisuals/tennis_pointbypoint).*
+**A fork of Jeff's repository with numerous fixes to player names is available [here](https://github.com/TennisVisuals/tennis_pointbypoint).**
 
 ```
-pbp_matches_atp_main_current.csv
-Valid Matches: 2466 (100%), Invalid Matches: 0
+pbp_matches_atp_main_archive.csv
+Valid Matches: 8238 (100%), Invalid Matches: 5
 
 pbp_matches_atp_main_current.csv
 Valid Matches: 2466 (100%), Invalid Matches: 0
