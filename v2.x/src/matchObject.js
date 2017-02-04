@@ -702,15 +702,19 @@
       }
 
       function parseCode(code) {
-         code = code.toUpperCase();
-         if ('SAQDRP'.split('').indexOf(String(code)) >= 0 ) {
-            if (['S', 'A', 'Q'].indexOf(code) >= 0) { winning_team = serving_team; }
-            if (['D', 'R', 'P'].indexOf(code) >= 0) { winning_team = 1 - serving_team; }
-            if (['Q', 'P'].indexOf(code) >= 0) { point.result = 'Penalty'; }
-            if (code == 'A') point.result = 'Ace';
-            if (code == 'D') point.result = 'Double Fault';
+         upper_code = code.toUpperCase();
+         if ('SAQDRP'.split('').indexOf(String(upper_code)) >= 0 ) {
+            if (['S', 'A', 'Q'].indexOf(upper_code) >= 0) { winning_team = serving_team; }
+            if (['D', 'R', 'P'].indexOf(upper_code) >= 0) { winning_team = 1 - serving_team; }
+            if (['Q', 'P'].indexOf(upper_code) >= 0) { point.result = 'Penalty'; }
+            if (upper_code == 'A') point.result = 'Ace';
+            if (upper_code == 'D') {
+               point.first_serve = { error: 'Error', serves: [ '0e'] };
+               point.result = 'Double Fault';
+            }
             point.code = code;
             point.winner = parseInt(winning_team);
+            if (code === code.toLowerCase()) point.first_serve = { error: 'Error', serves: [ '0e'] };
             return point;
          }
       }
@@ -924,8 +928,8 @@
             metadata.players[index] = player;
             return { index, player };
          },
-         defineTournament({ name, tuid, tour, rank, surface, draw, round,} = {}) {
-            let definition = {name, tuid, tour, rank, surface, draw, round,};
+         defineTournament({ name, tuid, start_date, tour, rank, surface, draw, round,} = {}) {
+            let definition = {name, tuid, start_date, tour, rank, surface, draw, round,};
             Object.keys(definition).forEach(function(key) { if (definition[key]) metadata.tournament[key] = definition[key] });
             return metadata.tournament;
          },
