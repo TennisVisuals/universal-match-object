@@ -732,7 +732,7 @@
             point.winner = change.indexOf(1);
             return point;
          }
-         let progression = adProgression;
+         let progression = Object.assign({}, adProgression);
          if (format.hasDecider()) Object.keys(noAdProgression).forEach(function(key) { progression[key] = noAdProgression[key]; });
 
          if (value == '0-0' && progression[last_score].join('-').indexOf('G') >= 0) {
