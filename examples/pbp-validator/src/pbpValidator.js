@@ -190,8 +190,8 @@
          let num_points = sets[s].split(';').join('').split('/').join('').length;
 
          // differentiate between final set supertiebreak and long set
-         if ((score[s][0] > 7 || score[s][1] > 7) && Math.abs(score[s][0] - score[s][1]) == 2) {
-            if (num_points > 50) {
+         if (score[s][0] > 7 || score[s][1] > 7) {
+            if (Math.abs(score[s][0] - score[s][1]) == 2 && num_points > 50) {
                final_set_long = true;
             } else {
                supertiebreak = true;
@@ -224,7 +224,7 @@
       let meta = valid_match.metadata;
       let match_id = [meta.tny_name, meta.server1, meta.server2].join('').split('').filter(f=>isUpperCase(f)).join('');
       match_id = match_id + [meta.score, meta.date].join('').split('').filter(f=>f.match(/[0-9]/)).reduce((a, b) => (+a + +b));
-      let header = 'match_id,date,tournament,point_idx,set_num,game_num,point_num,player0,player1,server,winner,score0,score1,tiebreak,points0,points1,games0,games1,sets0,sets1,pts0,pts1,total_points0,total_points1,best_of_sets,sets_to,tiebreaks_to,final_set_long';
+      let header = 'match_id,date,tournament,point_idx,set_num,game_num,point_num,player0,player1,server,winner,score0,score1,breakpoint,tiebreak,points0,points1,games0,games1,sets0,sets1,pts0,pts1,total_points0,total_points1,best_of_sets,sets_to,tiebreaks_to,final_set_long';
       let total_points = [0, 0];
       let format = valid_match.format.split('').filter(f=>f.match(/[0-9]/));
       let rows = valid_match.points.map(data => {
@@ -246,6 +246,7 @@
             point.winner,
             score[0],
             score[1],
+            point.breakpoint ? true : false,
             point.tiebreak ? true : false,
             point.points[0],
             point.points[1],
