@@ -1385,7 +1385,7 @@ pluggableParser = function() {
    let action = match.addPoint('X');
    assert.equal(action.result, true);
 
-   function customParser(value, server, last_point, format, teams, perspective) {
+   function customParser(value, server, last_point, format, teams, perspective, score_object) {
       let winning_team;
       let serving_team = teams.map(function(team) { return team.indexOf(server) >=0 }).indexOf(true);
       let point = { server: server };
