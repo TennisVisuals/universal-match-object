@@ -272,11 +272,11 @@
          function countersAtValue(value) { return so.counter[0] == value && so.counter[1] == value; }
       }
 
-      let addPoint = function(value) {
+      function addPoint(value) {
          if (so.complete()) return { result: false };
 
          let server = so.nextService();
-         let point = common.pointParser(value, server, so.history.lastPoint(), so.format, common.metadata.teams(), so.set.perspectiveScore());
+         let point = common.pointParser(value, server, so.history.lastPoint(), so.format, common.metadata.teams(), so.set.perspectiveScore(), so.score());
          if (!point) return { result: false };
          so.counter[point.winner] += 1;
 
@@ -332,13 +332,44 @@
          return action;
       }
 
-      so.addPoints = function(values = []) {
+      so.addPoints = function(values = []) { return so.addMultiple({values}); }
+
+      so.addScore = function(value) {
+         let action = so.addPoint(value);
+         if (action.result) return action;
+         let last_point = so.history.lastPoint();
+         let last_points = !last_point || last_point.score == '0-0' ? [0, 0] : last_point.points;
+         let total_points = last_points.reduce((a, b) => (a + b));
+         let attempt = so.change.pointScore(value);
+         if (attempt.result) {
+            so.undo();
+            let new_points = attempt.pointChange.to;
+            let new_total = new_points.reduce((a, b) => (a + b));
+            let change = new_points.map((p, i) => { return { diff: p - last_points[i], i } }).filter(f=>f.diff);
+            if (change.length == 1 && change[0].diff > 0) {
+               let result;
+               let player = change[0].i;
+               let points_to_player = change[0].diff;
+               for (let p=0; p < points_to_player; p++) {
+                  result = so.addPoint(player);
+                  if (!result.result) return result;
+                  if (result.game.complete) return result;
+               }
+               return result;
+            }
+         }
+         return { result: false };
+      }
+
+      so.addScores = function(values = []) { return so.addMultiple({values, fx: so.addScore}); }
+
+      so.addMultiple = function({ values = [], fx = so.addPoint }) {
          if (typeof values == 'string') values = values.split('');
          let added = [];
          let rejected = [];
          while (values.length) {
             let value = values.shift();
-            let action = so.addPoint(value);
+            let action = fx(value);
             if (action.result) {
                added.push(action);
             } else {
@@ -362,8 +393,10 @@
       so.change = {};
       so.change.points = function(values) {
          if (!numbersArray(values) || values.length != 2) return false;
-         if (so.thresholdMet() && Math.abs(values[0] - values[1]) > so.format.minDiff()) return false;
          if (object == 'Game') {
+            let past_threshold = Math.max(...values) > so.format.threshold();
+            let value_difference = Math.abs(values[0] - values[1]);
+            if (past_threshold && value_difference > so.format.minDiff()) return false;
             if (so.complete()) return { result: false };
             let action = { action: 'changePoints', result: true, pointChange: { from: so.counter, to: values } };
             so.local_history.push(action);
@@ -383,12 +416,16 @@
          if (object == 'Game') {
             if (so.format.tiebreak()) return so.change.points(value.split('-').map(function(v) { return parseInt(v); }));
             value = value.replace(':', '-').split('-').map(function(m) { return m.trim(); }).join('-').split('D').join('40');
-            let progression = adProgression;
+            let progression = Object.assign({}, adProgression);
             if (so.format.hasDecider()) Object.keys(noAdProgression).forEach(function(key) { progression[key] = noAdProgression[key]; });
             let valid_values = [].concat(...Object.keys(progression).map(function(key) { return progression[key]; }));
             if (valid_values.indexOf(value) < 0) return false;
             let point_value = ['0', '15', '30', '40', 'A', 'G'];
             let values = value.split('-').map(function(v) { return point_value.indexOf(v); });
+
+            // correct for advantage games that don't reach deuce
+            if (values[0] == 5 && values[1] != 3) values[0] = 4;
+            if (values[1] == 5 && values[0] != 3) values[1] = 4;
             return so.change.points(values);
          }
          return so.propagatePointChange(value, 'pointScore');
@@ -500,14 +537,13 @@
       return { 
          set: match.set, reset: match.reset, format: match.format, 
          events: common.events, notify: common.notify, assignParser: common.assignParser, metadata: common.metadata, 
-         nextService: match.nextService, addPoint: match.addPoint, addPoints: match.addPoints, 
-         change: match.change, undo: match.undo, 
+         nextService: match.nextService, change: match.change, undo: match.undo, 
+         addPoint: match.addPoint, addPoints: match.addPoints, decoratePoint: match.decoratePoint,
+         addScore: match.addScore, addScores: match.addScores, 
          complete: match.complete, winner: match.winner, 
          score: match.score, scoreboard: match.scoreboard,
          [match.child.plural]: match.accessChildren, 
          history: match.history,
-
-         decoratePoint: match.decoratePoint,
       }
    }
 
@@ -594,13 +630,14 @@
       return { 
          set: set.set, reset: set.reset, format: set.format, 
          events: common.events, notify: common.notify, assignParser: common.assignParser, metadata: common.metadata, 
-         nextService: set.nextService, addPoint: set.addPoint, addPoints: set.addPoints, change: set.change, undo: set.undo, 
+         nextService: set.nextService, change: set.change, undo: set.undo, 
+         addPoint: set.addPoint, addPoints: set.addPoints, decoratePoint: set.decoratePoint,
+         addScore: set.addScore, addScores: set.addScores, 
          complete: set.complete, winner: set.winner, 
          score: set.score, scoreboard: set.scoreboard, 
          [set.child.plural]: set.accessChildren, children: set.accessChildren, lastChild: set.lastChild, newChild: set.newChild,
          history: set.history,
          pointsNeeded: set.pointsNeeded, 
-         decoratePoint: set.decoratePoint,
       }
    }
 
@@ -664,19 +701,20 @@
       return { 
          set: game.set, reset: game.reset, format: game.format, 
          events: common.events, notify: common.notify, assignParser: common.assignParser, metadata: common.metadata,
-         nextService: game.nextService, addPoint: game.addPoint, addPoints: game.addPoints, change: game.change, undo: game.undo,
+         nextService: game.nextService, change: game.change, undo: game.undo,
+         addPoint: game.addPoint, addPoints: game.addPoints, decoratePoint: game.decoratePoint,
+         addScore: game.addScore, addScores: game.addScores, 
          complete: game.complete, winner: game.winner,
          score: game.score, scoreboard: game.scoreboard,
          history: game.history,
          lastChild: game.lastChild,
          pointsToGame: game.pointsToGame, 
-         decoratePoint: game.decoratePoint,
       };
    }
 
    // necessary to define it this way so that hoisting works!
    mo.defaultPointParser = defaultPointParser;
-   function defaultPointParser(value, server, last_point, format, teams, perspective) {
+   function defaultPointParser(value, server, last_point, format, teams, perspective, score_object) {
       if (value == undefined) return false;
       if ((value).toString().length == 1 && !isNaN(value)) { 
          let code = +value == server ? 'S' : 'R';
@@ -721,7 +759,7 @@
 
       function combinedTotal(score) { return score.reduce(function(a, b) { return a + b; }); }
       function parseScore(value) {
-         let last_score = last_point.score;
+         let last_score = score_object.points;
          value = value.replace(':', '-').split('-').map(function(m) { return m.trim(); }).join('-').split('D').join('40');
          if (format.tiebreak()) {
             let values = value.split('-').map(function(m) { return parseInt(m); });;
