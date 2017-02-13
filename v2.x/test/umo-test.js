@@ -212,7 +212,6 @@ namedSetFormatChanges = function() {
    set.reset();
    set.format.type('pro10a12');
    var settings = set.format.settings();
-   assert.equal(settings.description, '10 Game No Ad Pro Set');
    assert.equal(settings.threshold, 10);
    assert.equal(settings.has_decider, true);
    assert.equal(settings.min_diff, 2);
@@ -1356,8 +1355,18 @@ UndoGamesChange = function() {
 
 addNewTypes = function() {
    var mo = matchObject;
-   mo.format('sets', 'pro8a7', '8 Game Pro Set', false, true, 8, 2, 'advantage', 'tiebreak7a');
-   set = matchObject.Set({type: 'pro8a7'});
+   mo.newFormat({
+      type: 'sets', 
+      code: 'pro8a7 - tester', 
+      description: '8 Game Pro Set', 
+      tiebreak: false, 
+      hasDecider: true, 
+      threshold: 8, 
+      minDiff: 2, 
+      children: 'advantage', 
+      decidingChild: 'tiebreak7a'
+   });
+   set = mo.Set({type: 'pro8a7'});
    set.addPoints('0000000000000000000000000000');
    let scoreboard = set.scoreboard();
    assert.equal(scoreboard, '0-7');
