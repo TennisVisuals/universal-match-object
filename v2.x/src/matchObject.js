@@ -5,6 +5,7 @@
    // these events will propagate to all objects created with factory functions
    mo.addPoint_events = [];
    mo.undo_events = [];
+   mo.reset_events = [];
 
    mo.pointParser = defaultPointParser;
 
@@ -95,6 +96,7 @@
             common.metadata.resetStats();
             common.history = [];
             common.perspective_score = true;
+            common.events.reset().forEach(fx => fx());
          }
          if (!parent_object && format) {
             so.format.singles(true);
@@ -114,7 +116,7 @@
             if ([true, false].indexOf(value) < 0) return false;
             if (value && !common.live_stats && so.history.points().length) {
                common.metadata.resetStats();
-               common.statsPoints();
+               common.stats.counters();
             }
             if (!value && common.live_stats) common.metadata.resetStats();
             common.live_stats = value;
@@ -181,6 +183,7 @@
       so.winner = () => (so.complete()) ? (so.counter[0] > so.counter[1] ? 0 : 1) : undefined;
       so.reverseScore = () => common.perspective_score && (so.nextTeamServing() % 2) == 1;
       so.nextTeamServing = () => common.metadata.teams().map(team => team.indexOf(so.nextService()) >= 0).indexOf(true);
+      so.nextTeamReceiving = () => common.metadata.teams().map(team => team.indexOf(so.nextService()) >= 0).indexOf(false);
       so.perspectiveScore = (counter = so.counter, force) => {
          if (force != undefined) return force ? counter.slice().reverse() : counter;
          return so.reverseScore() ? counter.slice().reverse() : counter; 
@@ -296,7 +299,7 @@
 
          if (breakpoint) attributes.breakpoint = true;
          if (so.format.tiebreak()) attributes.tiebreak = true;
-         if (common.metadata.timestamps()) attributes.uts = new Date();
+         if (common.metadata.timestamps() && !point.uts) attributes.uts = new Date();
          Object.assign(point, attributes);
          so.local_history.push(point);
 
@@ -308,8 +311,6 @@
          };
 
          common.history.push(episode);
-         if (!parent_object) common.events.addPoint.forEach(fx => fx(episode));
-         common.addStatPoint(episode);
          return episode;
       }
 
@@ -319,33 +320,34 @@
 
          let child = so.currentChild();
          if (!child) return { result: false };
-         let action = child.addPoint(value);
-         if (!action.result) return action;
+         let episode = child.addPoint(value);
+         if (!episode.result) return episode;
 
          if (child.complete()) {
-            so.counter[action.point.winner] += 1;
-            so.local_history.push({ winner: action.point.winner, [so.child.plural]: so.counter.slice(), index: child.set.index() });
+            so.counter[episode.point.winner] += 1;
+            so.local_history.push({ winner: episode.point.winner, [so.child.plural]: so.counter.slice(), index: child.set.index() });
          }
-         action.complete = so.complete();
-         action.next_service = so.nextService();
+         episode.complete = so.complete();
+         episode.next_service = so.nextService();
          let points_to_set = so.pointsNeeded ? so.pointsNeeded() : undefined;
-         if (points_to_set) action.needed = Object.assign({}, action.needed, points_to_set);
-         action.point[so.child.label] = child.set.index();
-         action[so.child.label] = { 
+         if (points_to_set) episode.needed = Object.assign({}, episode.needed, points_to_set);
+         episode.point[so.child.label] = child.set.index();
+         episode[so.child.label] = { 
             complete: child.complete(), 
             winner: child.winner(), 
             [so.child.plural]: so.counter.slice(), 
             index: child.set.index() 
          };
-         if (!parent_object) common.events.addPoint.forEach(fx =>  fx(action));
-         return action;
+         if (!parent_object) common.addStatPoint(episode);
+         if (!parent_object) common.events.addPoint().forEach(fx => fx(episode));
+         return episode;
       }
 
       so.addPoints = (values = []) => so.addMultiple({values});
 
       so.addScore = (value) => {
-         let action = so.addPoint(value);
-         if (action.result) return action;
+         let episode = so.addPoint(value);
+         if (episode.result) return episode;
          let last_point = so.history.lastPoint();
          let last_points = !last_point || last_point.score == '0-0' ? [0, 0] : last_point.points;
          let total_points = last_points.reduce((a, b) => (a + b));
@@ -373,14 +375,14 @@
       so.addScores = (values = []) => so.addMultiple({values, fx: so.addScore});
 
       so.addMultiple = ({ values = [], fx = so.addPoint }) => {
-         if (typeof values == 'string') values = values.split('');
+         if (typeof values == 'string') values = values.match(/[01A-Za-z][\*\#\@]*/g);
          let added = [];
          let rejected = [];
          while (values.length) {
             let value = values.shift();
-            let action = fx(value);
-            if (action.result) {
-               added.push(action);
+            let episode = fx(value);
+            if (episode.result) {
+               added.push(episode);
             } else {
                values.unshift(value);
                rejected = values.slice();
@@ -407,16 +409,16 @@
             let value_difference = Math.abs(values[0] - values[1]);
             if (past_threshold && value_difference > so.format.minDiff()) return false;
             if (so.complete()) return { result: false };
-            let action = { action: 'changePoints', result: true, pointChange: { from: so.counter, to: values } };
-            so.local_history.push(action);
-            common.history.push(action);
+            let episode = { action: 'changePoints', result: true, pointChange: { from: so.counter, to: values } };
+            so.local_history.push(episode);
+            common.history.push(episode);
             so.counter = values;
             if (so.complete()) { 
                let winner = parseInt(so.winner());
                parent_object.counter[winner] += 1;
                parent_object.local_history.push({ winner: winner, games: parent_object.counter.slice(), index: index });
             }
-            return action;
+            return episode;
          }
          return so.propagatePointChange(values, 'points');
       }
@@ -454,11 +456,11 @@
          if (object == 'Game') return { result: false };
          if (object == 'Set') {
             if (so.complete()) return { result: false };
-            let action = { action: 'changeGames', result: true, gameChange: { from: so.counter, to: values } };
-            so.local_history.push(action);
-            common.history.push(action);
+            let episode = { action: 'changeGames', result: true, gameChange: { from: so.counter, to: values } };
+            so.local_history.push(episode);
+            common.history.push(episode);
             so.counter = values;
-            return action;
+            return episode;
          }
          let last_child = so.lastChild();
          if (!last_child && object == 'Match') { return so.newChild().change.games(values); };
@@ -473,7 +475,6 @@
          if (!common.history.length) return false;
          let undo = () => {
             let action = common.history[common.history.length - 1].action;
-            common.events.undo.forEach(fx => fx(action));
             return undo_actions[action]();
          }
          let undone = [...Array(count).keys()].map(i => undo());
@@ -488,6 +489,7 @@
             let common_episode = common.history.pop();
             so.counter[common_episode.point.winner] -= 1;
             common.removeStatPoint(common_episode);
+            common.events.undo().forEach(fx => fx(common_episode.point));
             return common_episode.point;
          }
          return so.propagateUndo();
@@ -544,15 +546,15 @@
 
       return { 
          set: match.set, reset: match.reset, format: match.format, 
-         events: common.events, notify: common.notify, assignParser: common.assignParser, metadata: common.metadata, 
-         nextService: match.nextService, change: match.change, undo: match.undo, 
+         events: common.events, assignParser: common.assignParser, metadata: common.metadata, 
+         nextService: match.nextService, nextTeamServing: match.nextTeamServing, nextTeamReceiving: match.nextTeamReceiving,
+         change: match.change, undo: match.undo, 
          addPoint: match.addPoint, addPoints: match.addPoints, decoratePoint: match.decoratePoint,
          addScore: match.addScore, addScores: match.addScores, 
          complete: match.complete, winner: match.winner, 
          score: match.score, scoreboard: match.scoreboard,
          [match.child.plural]: match.accessChildren, 
-         history: match.history,
-         stats: common.stats, statsPoints: common.statsPoints,
+         history: match.history, stats: common.stats,
       }
    }
 
@@ -638,8 +640,9 @@
 
       return { 
          set: set.set, reset: set.reset, format: set.format, 
-         events: common.events, notify: common.notify, assignParser: common.assignParser, metadata: common.metadata, 
-         nextService: set.nextService, change: set.change, undo: set.undo, 
+         events: common.events, assignParser: common.assignParser, metadata: common.metadata, 
+         nextService: set.nextService, nextTeamServing: set.nextTeamServing, nextTeamReceiving: set.nextTeamReceiving,
+         change: set.change, undo: set.undo, 
          addPoint: set.addPoint, addPoints: set.addPoints, decoratePoint: set.decoratePoint,
          addScore: set.addScore, addScores: set.addScores, 
          complete: set.complete, winner: set.winner, 
@@ -709,8 +712,9 @@
 
       return { 
          set: game.set, reset: game.reset, format: game.format, 
-         events: common.events, notify: common.notify, assignParser: common.assignParser, metadata: common.metadata,
-         nextService: game.nextService, change: game.change, undo: game.undo,
+         events: common.events, assignParser: common.assignParser, metadata: common.metadata,
+         nextService: game.nextService, nextTeamServing: game.nextTeamServing, nextTeamReceiving: game.nextTeamReceiving,
+         change: game.change, undo: game.undo,
          addPoint: game.addPoint, addPoints: game.addPoints, decoratePoint: game.decoratePoint,
          addScore: game.addScore, addScores: game.addScores, 
          complete: game.complete, winner: game.winner,
@@ -738,6 +742,8 @@
          if (value.winner != undefined && [0, 1].indexOf(+value.winner) >= 0) {
             value.winner = parseInt(value.winner);
             value.code = !value.code ? (value.winner == server ? 'S' : 'R') : value.code;
+            // lowercase indicates that point was played on second serve
+            if (value.first_serve) value.code = value.code.toLowerCase();
             return Object.assign({}, value, point);
          }
          if (value.code && parseCode(value.code)) return Object.assign({}, value, point);
@@ -749,7 +755,10 @@
       }
 
       function parseCode(code) {
-         upper_code = code.toUpperCase();
+         let upper_code = code.toUpperCase().match(/[A-Za-z]/g);
+         let modifier = code.match(/[*#@]/g);
+         if (upper_code) upper_code = upper_code.join('');
+         if (modifier) modifier = modifier.join('');
          if ('SAQDRP'.split('').indexOf(String(upper_code)) >= 0 ) {
             if (['S', 'A', 'Q'].indexOf(upper_code) >= 0) { winning_team = serving_team; }
             if (['D', 'R', 'P'].indexOf(upper_code) >= 0) { winning_team = 1 - serving_team; }
@@ -758,6 +767,11 @@
             if (upper_code == 'D') {
                point.first_serve = { error: 'Error', serves: [ '0e'] };
                point.result = 'Double Fault';
+            }
+            if (modifier && !point.result) {
+               if (modifier == '*') point.result = 'Winner';
+               if (modifier == '#') point.result = 'Forced Error';
+               if (modifier == '@') point.result = 'Unforced Error';
             }
             point.code = code;
             point.winner = parseInt(winning_team);
@@ -920,6 +934,7 @@
       let number_of_players = 2;
       let addPoint_events = mo.addPoint_events.slice();
       let undo_events = mo.undo_events.slice();
+      let reset_events = mo.reset_events.slice();
       let metadata = {};
       let stat_points;
       let last_episode;
@@ -1055,7 +1070,7 @@
       }
 
       let addEvent = (add_event) => {
-         if (!arguments.length) return addPoint_events;
+         if (!add_event) return addPoint_events;
          if (typeof add_event == 'function') {
             addPoint_events.push(add_event);
          } else if (typeof add_event == 'array') {
@@ -1064,7 +1079,7 @@
       }
 
       let undoEvent = (undo_event) => {
-         if (!arguments.length) return undo_events;
+         if (!undo_event) return undo_events;
          if (typeof undo_event == 'function') {
             undo_events.push(undo_event);
          } else if (typeof undo_event == 'array') {
@@ -1072,16 +1087,25 @@
          }
       }
 
+      let resetEvent = (reset_event) => {
+         if (!reset_event) return reset_events;
+         if (typeof reset_event == 'function') {
+            reset_events.push(reset_event);
+         } else if (typeof reset_event == 'array') {
+            reset_event.foreach(e) (e => { if (typeof e == 'function') reset_events.push(c); });
+         }
+      }
+
       let clearEvents = () => {
          addPoint_events = [];
          undo_events = [];
+         reset_events = [];
       }
 
       let pub = {
          metadata: accessors,
          pointParser: mo.pointParser,
-         events: { addPoint: addPoint_events, undo: undo_events },
-         notify: { addPoint: addEvent, undo: undoEvent, clearEvents },
+         events: { addPoint: addEvent, undo: undoEvent, clearEvents, reset: resetEvent },
          history: [],
          live_stats: false,
          perspective_score: true,
@@ -1106,31 +1130,59 @@
             setServiceOrder();
             return pub;
          },
-         stats() {
-            // generate statistics from stat_points
-         },
-         statsPoints() { 
-            if (!stat_points) {
-               pub.live_stats = true;
-               let points = pub.history.filter(episode => episode.action == 'addPoint');
-               points.forEach(point => pub.addStatPoint(point));
-            }
-            return stat_points; 
+         stats: {
+            calculated() { return calculatedStats(match.stats.counters()); },
+            counters() {
+               if (!stat_points) {
+                  pub.live_stats = true;
+                  let points = pub.history.filter(episode => episode.action == 'addPoint');
+                  points.forEach(point => pub.addStatPoint(point));
+               }
+               return stat_points; 
+            },
          },
          addStatPoint(episode) {
             if (!pub.live_stats) return;
             let point = episode.point;
             if (!stat_points) stat_points = { players: {}, teams: {} };
-            addStat(point.server, episode, 'pointsServed');
-            addStat(point.winner, episode, 'pointsWon');
-            if (point.result == 'Ace') addStat(point.server, episode, 'aces');
-            if (point.result == 'Double Fault') addStat(point.server, episode, 'doubleFaults');
-            if (!point.first_serve) addStat(point.server, episode, 'serves1stIn');
-            if (!point.first_serve && point.winner == point.server) addStat(point.server, episode, 'serves1stWon');
-            if (point.breakpoint) addStat(point.server, episode, 'breakpointsFaced');
-            if (last_episode && last_episode.point.breakpoint && last_episode.point.server == point.server) {
-               addStat(point.server, episode, 'breakpointsSaved');
+            let server_team = accessors.playerTeam(point.server);
+            let team_winner = accessors.playerTeam(point.winner);
+            let team_loser = 1 - team_winner;
+
+            addStat({ player: point.server, episode, stat: 'pointsServed' });
+            addStat({ team: team_winner, episode, stat: 'pointsWon' });
+            if (point.result == 'Ace') addStat({ player: point.server, episode, stat: 'aces' });
+            if (point.result == 'Double Fault') addStat({ player: point.server, episode, stat: 'doubleFaults' });
+            if (point.result == 'Winner') addStat({ player: point.winner, episode, stat: 'winners' });
+
+            if (point.result == 'Unforced Error') addStat({ team: team_loser, episode, stat: 'unforcedErrors' });
+            if (point.result == 'Forced Error') addStat({ team: team_loser, episode, stat: 'forcedErrors' });
+
+            if (!point.first_serve) addStat({ player: point.server, episode, stat: 'serves1stIn' });
+            if (!point.first_serve && point.winner == server_team) {
+               addStat({ player: point.server, episode, stat: 'serves1stWon' });
+               addStat({ team: team_loser, undefined, stat: 'received1stWon' });
+               addStat({ team: team_loser, undefined, stat: 'received2ndWon' });
             }
+            if (!point.first_serve && point.winner != server_team) addStat({ team: team_winner, episode, stat: 'received1stWon' });
+            if (point.first_serve && !point.result != 'Double Fault') addStat({ player: point.server, episode, stat: 'serves2ndIn' });
+            if (point.first_serve && !point.result != 'Double Fault' && point.winner == point.server) {
+               addStat({ player: point.server, episode, stat: 'serves2ndWon' });
+               addStat({ team: team_loser, undefined, stat: 'received1stWon' });
+               addStat({ team: team_loser, undefined, stat: 'received2ndWon' });
+            }
+            if (point.first_serve && !point.result != 'Double Fault' && point.winner != server_team) {
+               addStat({ team: team_winner, episode, stat: 'received2ndWon' });
+            }
+            if (point.breakpoint) {
+               addStat({ player: point.server, undefined, stat: 'breakpointsSaved' });
+               addStat({ player: point.server, episode, stat: 'breakpointsFaced' });
+            }
+            if (last_episode && last_episode.point.breakpoint && last_episode.point.server == point.winner) {
+               addStat({ player: point.server, episode, stat: 'breakpointsSaved' });
+            }
+
+            if (episode.game && episode.game.complete) { addStat({ team: team_winner, episode, stat: 'gamesWon' }); }
             last_episode = episode;
          },
          removeStatPoint(episode) {
@@ -1151,14 +1203,129 @@
       accessors.reset();
       return pub;
 
-      function addStat(player, episode, stat) {
-         if (!stat_points.players[player]) stat_points.players[player] = {};
-         if (!stat_points.players[player][stat]) stat_points.players[player][stat] = [];
-         stat_points.players[player][stat].push(episode);
-         let team = accessors.playerTeam(player);
-         if (!stat_points.teams[team]) stat_points.teams[team] = {};
-         if (!stat_points.teams[team][stat]) stat_points.teams[team][stat] = [];
-         stat_points.teams[team][stat].push(episode);
+      function calculatedStats(stats) {
+         if (!stats || !stats.teams) return [];
+
+         // prefix of '-' indicates that value for opposing team should be used
+         // '*' indicates that value is optional
+         let calculated_stats = {
+            'Aces': { numerators: ['aces'], calc: 'number', },
+            'Double Faults': { numerators: ['doubleFaults'], calc: 'number',  },
+            'First Serve %': { numerators: ['serves1stIn'], denominators: ['pointsServed'], calc: 'percentage', },
+            'Unforced Errors': { numerators: ['unforcedErrors'], calc: 'number', },
+            'Forced Errors': { numerators: ['forcedErrors'], calc: 'number', },
+            'Winners': { numerators: ['winners'], calc: 'number', },
+            'Total Points Won': { numerators: ['pointsWon'], calc: 'number', },
+            'Max Pts/Row': { numerators: ['pointsWon'], calc: 'maxConsecutive', attribute: 'index', },
+            'Max Games/Row': { numerators: ['gamesWon'], calc: 'maxConsecutive', attribute: 'game', },
+            'Total Points Won': { numerators: ['pointsWon'], calc: 'number', },
+            'Points Won 1st': { numerators: ['serves1stWon'], denominators: ['serves1stIn'], calc: 'percentage', },
+            'Points Won 2nd': { numerators: ['serves2ndWon'], denominators: ['serves2ndIn'], calc: 'percentage', },
+            'Points Won Receiving': { numerators: ['received1stWon', 'received2ndWon'], denominators: ['-pointsServed'], calc: 'percentage', },
+            'Breakpoints Saved': { numerators: ['breakpointsSaved'], denominators: ['breakpointsFaced'], calc: 'percentage', },
+            'Breakpoints Converted': { numerators: ['-breakpointsSaved'], denominators: ['-breakpointsFaced'], calc: 'difference', },
+            'Aggressive Margin': { 
+               calc: 'aggressiveMargin', 
+               numerators: ['*doubleFaults', '*unforcedErrors'], 
+               denominators: ['*aces', '*winners', '-*forcedErrors'], 
+            },
+         };
+
+         let reduceComponents = (components, teams, team) => {
+            if (!components) return undefined;
+            let values = components.map(component => {
+               let counter = component.split('-').reverse()[0].split('*').join('');
+               let component_team = teams[component.indexOf('-') == 0 ? 1 - team : team];
+               return component_team && component_team[counter] ? component_team[counter].length : 0;
+            });
+            return [].concat(0, 0, ...values).reduce((a, b) => a + b);
+         }
+
+         let numeratorDenominator = (stat_obj, teams, team) => {
+            let numerator = reduceComponents(stat_obj.numerators, teams, team);
+            let denominator = reduceComponents(stat_obj.denominators, teams, team);
+            return { numerator, denominator };
+         }
+
+         let displayPct = (numerator, denominator) => {
+            let pct = Math.round((numerator / denominator) * 100);
+            return { value: pct, display: `${pct}% (${numerator}/${denominator})` };
+         }
+
+         let stat_calcs = {
+            number(stat_obj, teams, team) {
+               ({numerator, denominator} = numeratorDenominator(stat_obj, teams, team));
+               return { display: numerator, value: numerator, numerators: stat_obj.numerators };
+            },
+            maxConsecutive(stat_obj, teams, team) {
+               let stat = stat_obj.numerators[0];
+               let attribute = stat_obj.attribute;
+               let episodes = teams[team][stat];
+               if (!episodes) return { value: 0, display: 0 };
+               let current = undefined;
+               let max_consecutive = 0;
+               let consecutive = episodes.length ? 1 : 0;
+               episodes.forEach(episode => {
+                  if (current + 1 == episode.point[attribute]) {
+                     consecutive += 1;
+                  } else {
+                     if (consecutive > max_consecutive) max_consecutive = consecutive;
+                     consecutive = 1;
+                  }
+                  current = episode.point[attribute];
+               });
+               if (consecutive > max_consecutive) max_consecutive = consecutive;
+               return { display: max_consecutive, value: max_consecutive };
+            },
+            percentage(stat_obj, teams, team) {
+               ({numerator, denominator} = numeratorDenominator(stat_obj, teams, team));
+               if (numerator == undefined || !denominator) return { value: 0, display: 0 };
+               return Object.assign(displayPct(numerator, denominator), { numerators: stat_obj.numerators });
+            },
+            difference(stat_obj, teams, team) {
+               ({numerator, denominator} = numeratorDenominator(stat_obj, teams, team));
+               if (numerator == undefined || !denominator) return { value: 0, display: 0 };
+               let diff = Math.abs(denominator - numerator);
+               return Object.assign(displayPct(diff, denominator), { numerators: stat_obj.numerators });
+            },
+            aggressiveMargin(stat_obj, teams, team) {
+               ({numerator, denominator} = numeratorDenominator(stat_obj, teams, team));
+               let diff = denominator - numerator;
+               let point_counts = Object.keys(teams).map(team => teams[team].pointsWon ? teams[team].pointsWon.length : 0);
+               let total_points = [].concat(0, 0, ...point_counts).reduce((a, b) => a + b);
+               return Object.assign(displayPct(diff, total_points), { numerators: stat_obj.numerators });
+            }
+         }
+
+         let teams_counters = [].concat(...Object.keys(stats.teams).map(team => Object.keys(stats.teams[team])));
+         let available_stats = Object.keys(calculated_stats).map(stat => {
+            let stat_obj = calculated_stats[stat];
+            if (!stat_obj.denominators) stat_obj.denominators = [];
+            // must remove any '-' indicators to invert
+            let required_counters = [].concat(...stat_obj.numerators, ...stat_obj.denominators).map(m=>m.split('-').reverse()[0]);
+            required_counters = required_counters.filter(counter => counter.indexOf('*') < 0);
+            let counters_exist = required_counters.map(counter => teams_counters.indexOf(counter) < 0).filter(f=>f).length < 1;
+            if (!counters_exist) return false;
+            let team_stats = [0, 1].map(team => { return stat_calcs[stat_obj.calc](stat_obj, stats.teams, team); });
+            return { name: stat, team_stats };
+         }).filter(f=>f);
+
+         return available_stats;
+      }
+
+      function addStat({player, team, episode, stat}) {
+         // stat object is created even if there is no episode to add (=0)
+         if (player != undefined) {
+            if (!stat_points.players[player]) stat_points.players[player] = {};
+            if (!stat_points.players[player][stat]) stat_points.players[player][stat] = [];
+            if (episode) stat_points.players[player][stat].push(episode);
+            team = accessors.playerTeam(player);
+         }
+         if (team != undefined) {
+            if (!stat_points.teams[team]) stat_points.teams[team] = {};
+            if (!stat_points.teams[team][stat]) stat_points.teams[team][stat] = [];
+            if (episode) stat_points.teams[team][stat].push(episode);
+         }
       }
    }
 
