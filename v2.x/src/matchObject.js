@@ -1,13 +1,13 @@
 !function() {
 
-   let mo = function() {};
+   let umo = function() {};
 
    // these events will propagate to all objects created with factory functions
-   mo.addPoint_events = [];
-   mo.undo_events = [];
-   mo.reset_events = [];
+   umo.addPoint_events = [];
+   umo.undo_events = [];
+   umo.reset_events = [];
 
-   mo.pointParser = defaultPointParser;
+   umo.pointParser = defaultPointParser;
 
    let formats = {
       games: {
@@ -72,8 +72,8 @@
       },
    }
 
-   mo.formats = () => formats;
-   mo.newFormat = ({type, code, description, tiebreak, hasDecider, threshold, minDiff, children, decidingChild} = {}) => {
+   umo.formats = () => formats;
+   umo.newFormat = ({type, code, description, tiebreak, hasDecider, threshold, minDiff, children, decidingChild} = {}) => {
       let hasType = Object.keys(formats).indexOf(type) >= 0;
       let hasCode = hasType && Object.keys(formats[type]).indexOf(code) >= 0;
       if (hasType && hasCode) return false;
@@ -81,7 +81,7 @@
       return true;
    }
 
-   mo.stateObject = ({index, object, parent_object, child, format, common = mo.common()} = {}) => {
+   umo.stateObject = ({index, object, parent_object, child, format, common = umo.common()} = {}) => {
       let so = {};
       so.child = child;
       so.format = format;
@@ -250,7 +250,7 @@
          let code = (deciding_child_required) ? so.format.decidingChild.settings().code : so.format.children.settings().code;
          let total_children = so.children.length;
 
-         let new_child = mo[so.child.object]({index: total_children, parent_object: so, type: code, common: common, });
+         let new_child = umo[so.child.object]({index: total_children, parent_object: so, type: code, common: common, });
          new_child.set.firstService(next_first_service);
 
          if (!code) {
@@ -533,10 +533,10 @@
       return so;
    }
 
-   mo.Match = ({index, type, common = mo.common()} = {}) => {
+   umo.Match = ({index, type, common = umo.common()} = {}) => {
       let child = { object: 'Set', label: 'set', plural: 'sets' }
-      let format = mo.matchFormat({type, common});
-      let match = mo.stateObject({index, object: 'Match', format, child, common});
+      let format = umo.matchFormat({type, common});
+      let match = umo.stateObject({index, object: 'Match', format, child, common});
 
       match.scoreboard = (perspective) => { 
          if (!match.children.length) return '0-0';
@@ -558,10 +558,10 @@
       }
    }
 
-   mo.Set = ({index, parent_object, type, common = mo.common()} = {}) => {
+   umo.Set = ({index, parent_object, type, common = umo.common()} = {}) => {
       let child = { object: 'Game', label: 'game', plural: 'games' }
-      let format = mo.setFormat({type, common});
-      let set = mo.stateObject({index, parent_object, object: 'Set', format, child, common});
+      let format = umo.setFormat({type, common});
+      let set = umo.stateObject({index, parent_object, object: 'Set', format, child, common});
 
       set.pointsNeeded = () => {
          if (set.complete()) return undefined;
@@ -653,10 +653,10 @@
       }
    }
 
-   mo.Game = ({index, parent_object, type, common = mo.common()} = {}) => {
+   umo.Game = ({index, parent_object, type, common = umo.common()} = {}) => {
       let child = { object: 'Point', label: 'point', plural: 'points' }
-      let format = mo.gameFormat({type, common});
-      let game = mo.stateObject({index, object: 'Game', parent_object, format, child, common});
+      let format = umo.gameFormat({type, common});
+      let game = umo.stateObject({index, object: 'Game', parent_object, format, child, common});
 
       game.pointsToGame = () => {
          if (game.complete()) return undefined;
@@ -726,7 +726,7 @@
    }
 
    // necessary to define it this way so that hoisting works!
-   mo.defaultPointParser = defaultPointParser;
+   umo.defaultPointParser = defaultPointParser;
    function defaultPointParser(value, server, last_point, format, teams, perspective, score_object) {
       if (value == undefined) return false;
       if ((value).toString().length == 1 && !isNaN(value)) { 
@@ -821,10 +821,10 @@
       'A-40' : ['G-40',  '40-40'], '40-A' : ['40-40', '40-G']
    };
 
-   mo.matchFormat = ({type = '3_6a_7', common} = {}) => {
-      let mf = mo.formatObject({plural: 'matches', common});
-      mf.children = mo.setFormat({common});
-      mf.decidingChild = mo.setFormat({common});
+   umo.matchFormat = ({type = '3_6a_7', common} = {}) => {
+      let mf = umo.formatObject({plural: 'matches', common});
+      mf.children = umo.setFormat({common});
+      mf.decidingChild = umo.setFormat({common});
       mf.init(type);
 
       return { 
@@ -834,10 +834,10 @@
       }
    }
 
-   mo.setFormat = ({type = 'AdSetsTo6tb7', common} = {}) => {
-      let sf = mo.formatObject({plural: 'sets', common});
-      sf.children = mo.gameFormat({common});
-      sf.decidingChild = mo.gameFormat({common, type: 'tiebreak7a'});
+   umo.setFormat = ({type = 'AdSetsTo6tb7', common} = {}) => {
+      let sf = umo.formatObject({plural: 'sets', common});
+      sf.children = umo.gameFormat({common});
+      sf.decidingChild = umo.gameFormat({common, type: 'tiebreak7a'});
       sf.init(type);
 
       return { 
@@ -847,8 +847,8 @@
       }
    }
 
-   mo.gameFormat = ({type = 'advantage', common} = {}) => {
-      let gf = mo.formatObject({plural: 'games', common});
+   umo.gameFormat = ({type = 'advantage', common} = {}) => {
+      let gf = umo.formatObject({plural: 'games', common});
       gf.init(type);
 
       return { 
@@ -858,7 +858,7 @@
       }
    }
 
-   mo.formatObject = ({plural, common = mo.common()} = {}) => {
+   umo.formatObject = ({plural, common = umo.common()} = {}) => {
       let fo = {
          values: { plural: plural },
          singles: common.singles,
@@ -930,11 +930,11 @@
       return fo;
    }
 
-   mo.common = () => {
+   umo.common = () => {
       let number_of_players = 2;
-      let addPoint_events = mo.addPoint_events.slice();
-      let undo_events = mo.undo_events.slice();
-      let reset_events = mo.reset_events.slice();
+      let addPoint_events = umo.addPoint_events.slice();
+      let undo_events = umo.undo_events.slice();
+      let reset_events = umo.reset_events.slice();
       let metadata = {};
       let stat_points;
       let last_episode;
@@ -1104,7 +1104,7 @@
 
       let pub = {
          metadata: accessors,
-         pointParser: mo.pointParser,
+         pointParser: umo.pointParser,
          events: { addPoint: addEvent, undo: undoEvent, clearEvents, reset: resetEvent },
          history: [],
          live_stats: false,
@@ -1335,7 +1335,7 @@
       return true;
    }
 
-   if (typeof define === "function" && define.amd) define(mo); else if (typeof module === "object" && module.exports) module.exports = mo;
-   this.mo = mo;
+   if (typeof define === "function" && define.amd) define(umo); else if (typeof module === "object" && module.exports) module.exports = umo;
+   this.umo = umo;
  
 }();

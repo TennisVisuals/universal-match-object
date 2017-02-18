@@ -791,7 +791,7 @@ Game_supertiebreakFormat = function() {
 }
 
 Match_singles3_6a_7 = function() {
-   match = mo.Match();
+   match = umo.Match();
    match.format.type('3_6a_7');
    match.format.singles(true);
    let action = match.addPoints('00001111000011110000111100001111');
@@ -827,7 +827,7 @@ Match_singles3_6a_7 = function() {
 }
 
 Match_doubles3_6n_10 = function() {
-   match = mo.Match();
+   match = umo.Match();
    match.format.type('3_6n_10');
    match.format.doubles(true);
    match.addPoints('000100001000010000100001000010');
@@ -878,7 +878,7 @@ customizedFormatPropagation = function() {
 }
 
 Set_AdSetsTo6tb7 = function() {
-   set = mo.Set();
+   set = umo.Set();
    set.format.type('AdSetsTo6tb7');
    set.addPoints('ARSRSRSSARSRSRSSARSRSRSSARSRSRSSARSRSRSSARSRSRSS');
    let game_score = set.score().counters.games;
@@ -904,7 +904,7 @@ Set_AdSetsTo6tb7 = function() {
 }
 
 Set_NoAdSetsTo6tb7 = function() {
-   set = mo.Set();
+   set = umo.Set();
    set.format.type('NoAdSetsTo6tb7');
    set.addPoints('010101101010110101011010101101010110101011');
    assert.equal(set.complete(), true);
@@ -925,7 +925,7 @@ Set_NoAdSetsTo6tb7 = function() {
 }
 
 Set_supertiebreak = function() {
-   set = mo.Set();
+   set = umo.Set();
    set.format.type('supertiebreak');
    set.addPoints('01010101010101');
    let point_score = set.score().counters.points;
@@ -1012,8 +1012,8 @@ queryCommands = function() {
 }
 
 CommonAttributeClosure = function() {
-   let g1 = mo.Game();
-   let g2 = mo.Game();
+   let g1 = umo.Game();
+   let g2 = umo.Game();
    g1.metadata.definePlayer({name: 'foo'});
    let g1players = g1.metadata.players();
    assert.equal(g1players[0].name, 'foo');
@@ -1354,8 +1354,8 @@ UndoGamesChange = function() {
 }
 
 addNewTypes = function() {
-   var mo = matchObject;
-   mo.newFormat({
+   var umo = matchObject;
+   umo.newFormat({
       type: 'sets', 
       code: 'pro8a7 - tester', 
       description: '8 Game Pro Set', 
@@ -1366,7 +1366,7 @@ addNewTypes = function() {
       children: 'advantage', 
       decidingChild: 'tiebreak7a'
    });
-   set = mo.Set({type: 'pro8a7'});
+   set = umo.Set({type: 'pro8a7'});
    set.addPoints('0000000000000000000000000000');
    let scoreboard = set.scoreboard();
    assert.equal(scoreboard, '0-7');
@@ -1381,11 +1381,12 @@ addNewTypes = function() {
 }
 
 eventHooks = function() {
-   let new_match = mo.Match();
+   let new_match = umo.Match();
    function notifyAdd(point) { console.log('Point Added!'); }
    function notifyUndo(point) { console.log('Point Undone!'); }
-   new_match.notify.addPoint(notifyAdd);
-   new_match.notify.undo(notifyUndo);
+   new_match.events.addPoint(notifyAdd);
+   new_match.events.undo(notifyUndo);
+   // TODO: FINISH THIS!
 }
 
 pluggableParser = function() {
