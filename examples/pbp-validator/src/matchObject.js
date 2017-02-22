@@ -177,7 +177,7 @@
          if (object == 'Match' && so.children.length) {
             score.components.sets = so.children.map(set => {
                let map = { games: set.score().counters.local };
-               if (set.lastChild().format.tiebreak()) map.tiebreak = set.lastChild().score().counters.local;
+               if (set.lastChild() && set.lastChild().format.tiebreak()) map.tiebreak = set.lastChild().score().counters.local;
                return map;
             });
          }
