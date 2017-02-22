@@ -46,28 +46,39 @@
       },
       matches: {
          '3_6a_7': { 
+            name: 'Standard Advantage',
             description: 'best of 3 sets, Advantage, 6 games for set, Tiebreak to 7', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'AdSetsTo6tb7',
          },
          '3_6n_7': { 
+            name: 'Standard No-Advantage',
             description: 'best of 3 sets, No Advantage, 6 games for set, Tiebreak to 7', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'NoAdSetsTo6tb7', decidingChild: 'NoAdSetsTo6tb7',
          },
          '3_6n_10': { 
+            name: 'No-Ad, 3rd Set Supertiebreak',
             description: 'best of 3 sets, No-Ad, 6 games for set, Tiebreak to 7, final set Supertiebreak', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'NoAdSetsTo6tb7', decidingChild: 'supertiebreak',
          },
          '5_6a_7': { 
+            name: 'US Open Men',
             description: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7', 
             hasDecider: true, threshold: 3, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'AdSetsTo6tb7',
          },
+         '5_6a_7_long': { 
+            name: 'Grand Slam Men - Final Advantage Set',
+            description: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
+            hasDecider: true, threshold: 3, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'longSetTo6by2',
+         },
          '3_6a_7_long': { 
+            name: 'Grand Slam Women - Final Advantage Set',
             description: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'longSetTo6by2',
          },
-         '5_6a_7_long': { 
-            description: 'best of 5 sets, Advantage, 6 games for set, Tiebreak to 7, final set by 2 games', 
-            hasDecider: true, threshold: 3, minDiff: 0, children: 'AdSetsTo6tb7', decidingChild: 'longSetTo6by2',
+         '1_8a_7': { 
+            name: '8 Game Pro Set',
+            description: '1 set, Advantage, 8 games for set, Tiebreak to 7', 
+            hasDecider: true, threshold: 1, minDiff: 0, children: 'pro8a7', decidingChild: 'pro8a7',
          },
       },
    }
@@ -93,6 +104,7 @@
          so.counter = [0, 0];
          so.first_service = 0;
          if (!parent_object) {
+            common.metadata.reset();
             common.metadata.resetStats();
             common.history = [];
             common.perspective_score = true;
@@ -101,7 +113,6 @@
          if (!parent_object && format) {
             so.format.singles(true);
             so.format.type(format);
-            common.metadata.reset();
          }
       })();
 
@@ -299,7 +310,7 @@
 
          if (breakpoint) attributes.breakpoint = true;
          if (so.format.tiebreak()) attributes.tiebreak = true;
-         if (common.metadata.timestamps() && !point.uts) attributes.uts = new Date();
+         if (common.metadata.timestamps() && !point.uts) attributes.uts = new Date().valueOf();
          Object.assign(point, attributes);
          so.local_history.push(point);
 
@@ -478,6 +489,7 @@
             return undo_actions[action]();
          }
          let undone = [...Array(count).keys()].map(i => undo());
+         common.events.undo().forEach(fx => fx(undone));
          return (count == 1) ? undone[0] : undone;
       }
 
@@ -489,7 +501,7 @@
             let common_episode = common.history.pop();
             so.counter[common_episode.point.winner] -= 1;
             common.removeStatPoint(common_episode);
-            common.events.undo().forEach(fx => fx(common_episode.point));
+            // common.events.undo().forEach(fx => fx(common_episode.point));
             return common_episode.point;
          }
          return so.propagateUndo();
@@ -750,8 +762,8 @@
       }
 
       if (typeof value == 'string') {
-         if (parseCode(value)) return point;
          if (parseScore(value)) return point;
+         if (parseCode(value)) return point;
       }
 
       function parseCode(code) {
@@ -781,9 +793,10 @@
       }
 
       function parseScore(value) {
+         value = value.replace(':', '-').split('-').map(m => m.trim()).join('-').split('D').join('40');
+         if (value.split('-').length != 2) return false;
          let last_score = score_object.points;
          let combinedTotal = (score) => score.reduce((a, b) => a + b); 
-         value = value.replace(':', '-').split('-').map(m => m.trim()).join('-').split('D').join('40');
          if (format.tiebreak()) {
             let values = value.split('-').map(m => parseInt(m));;
             let last_values = last_score.split('-').map(m => parseInt(m));
@@ -880,6 +893,7 @@
                if (f.tiebreak != undefined) fo.tiebreak(f.tiebreak);
 
                // must be set after all other attributes!
+               fo.name(f.name);
                fo.description(f.description);
                fo.values.code = format_type;
 
@@ -888,14 +902,39 @@
                return true;
             }
          },
-         settings() {
-            let number_of_players = typeof common.singles == 'function' ? common.singles() ? 2 : 4 : '';
-            let settings = { 
-               description: fo.values.description, code: fo.values.code, players: number_of_players,
-               threshold: fo.values.threshold, has_decider: fo.values.has_decider, 
-               min_diff: fo.values.min_diff, tiebreak: fo.values.tiebreak,
-            };
-            return settings;
+         settings({name, description, code, players, threshold, has_decider, min_diff, tiebreak} = {}) {
+            if (code) {
+               fo.type(code);
+            } else if (!threshold || !has_decider || !min_diff || !tiebreak) {
+               let number_of_players = typeof common.singles == 'function' ? common.singles() ? 2 : 4 : '';
+               let settings = { 
+                  name: fo.values.name, description: fo.values.description, 
+                  code: fo.values.code, players: number_of_players,
+                  threshold: fo.values.threshold, has_decider: fo.values.has_decider, 
+                  min_diff: fo.values.min_diff, tiebreak: fo.values.tiebreak,
+               };
+               return settings;
+            } else {
+               // TODO: propagate these settings down to unfinished sets/games
+               fo.tiebreak(tiebreak);
+               fo.threshold(threshold);
+               fo.minDiff(min_diff);
+               fo.hasDecider(has_decider);
+               if (description) fo.description(description);
+               if (name) fo.name(name);
+               if (players) {
+                  if (players == 4) {
+                     fo.doubles();
+                  } else {
+                     fo.singles();
+                  }
+               }
+            }
+         },
+         name(value) {
+            if (!arguments.length) return fo.values.name;
+            if (typeof value == 'string') fo.values.name = value;
+            return fo;
          },
          description(value) {
             if (!arguments.length) return fo.values.description;
@@ -990,22 +1029,22 @@
             if (metadata.players[index]) return metadata.players[index];
             return { name: `Player ${['One', 'Two', 'Three', 'Four'][index]}` };
          },
-         definePlayer({index, name, birth, puid, fh, seed, rank, age, entry, ioc,} = {}) {
+         definePlayer({index, name, birth, puid, hand, seed, rank, age, entry, ioc,} = {}) {
             if (index == undefined) index = metadata.players.length;
             let player = metadata.players[index] || {};
             if ((!name && !player.name) || (isNaN(index) || index > 3)) return false;
-            let definition = { name, birth, puid, fh, seed, rank, age, entry, ioc };
+            let definition = { name, birth, puid, hand, seed, rank, age, entry, ioc };
             Object.keys(definition).forEach(key => { if (definition[key]) player[key] = definition[key] });
             metadata.players[index] = player;
             return { index, player };
          },
-         defineTournament({ name, tuid, start_date, tour, rank, surface, draw, round, level } = {}) {
-            let definition = {name, tuid, start_date, tour, rank, surface, draw, round, level };
+         defineTournament({ name, tuid, start_date, tour, rank, surface, in_out, draw, round, level } = {}) {
+            let definition = {name, tuid, start_date, tour, rank, surface, in_out, draw, round, level };
             Object.keys(definition).forEach(key => { if (definition[key]) metadata.tournament[key] = definition[key] });
             return metadata.tournament;
          },
-         defineMatch({ muid, date, gender, year, court, start_time, end_time, duration, status, in_out, umpire, official_score } = {}) {
-            let definition = {muid, date, gender, year, court, start_time, end_time, duration, status, in_out, umpire, official_score };
+         defineMatch({ muid, date, gender, year, court, start_time, end_time, duration, status, umpire, official_score } = {}) {
+            let definition = {muid, date, gender, year, court, start_time, end_time, duration, status, umpire, official_score };
             Object.keys(definition).forEach(key => { if (definition[key]) metadata.match[key] = definition[key] });
             return metadata.match;
          },
@@ -1131,7 +1170,7 @@
             return pub;
          },
          stats: {
-            calculated() { return calculatedStats(match.stats.counters()); },
+            calculated(set_filter) { return calculatedStats(match.stats.counters(), set_filter); },
             counters() {
                if (!stat_points) {
                   pub.live_stats = true;
@@ -1203,7 +1242,8 @@
       accessors.reset();
       return pub;
 
-      function calculatedStats(stats) {
+      // TODO: Add set_filter to calculations...
+      function calculatedStats(stats, set_filter) {
          if (!stats || !stats.teams) return [];
 
          // prefix of '-' indicates that value for opposing team should be used
@@ -1252,6 +1292,9 @@
             return { value: pct, display: `${pct}% (${numerator}/${denominator})` };
          }
 
+         // set_filter might need to be applied on a per-stat basis
+         // because stats are built based on the points that are found in teams
+         // the other options is to replicate teams and apply filter to copy
          let stat_calcs = {
             number(stat_obj, teams, team) {
                ({numerator, denominator} = numeratorDenominator(stat_obj, teams, team));
