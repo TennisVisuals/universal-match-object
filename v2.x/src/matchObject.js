@@ -1029,17 +1029,17 @@
             if (metadata.players[index]) return metadata.players[index];
             return { name: `Player ${['One', 'Two', 'Three', 'Four'][index]}` };
          },
-         definePlayer({index, name, birth, puid, hand, seed, rank, age, entry, ioc,} = {}) {
+         definePlayer({index, name, birth, puid, hand, seed, rank, age, entry, ioc, draw_position, } = {}) {
             if (index == undefined) index = metadata.players.length;
             let player = metadata.players[index] || {};
             if ((!name && !player.name) || (isNaN(index) || index > 3)) return false;
-            let definition = { name, birth, puid, hand, seed, rank, age, entry, ioc };
+            let definition = { name, birth, puid, hand, seed, rank, age, entry, ioc,  draw_position, };
             Object.keys(definition).forEach(key => { if (definition[key]) player[key] = definition[key] });
             metadata.players[index] = player;
             return { index, player };
          },
-         defineTournament({ name, tuid, start_date, tour, rank, surface, in_out, draw, round, level } = {}) {
-            let definition = {name, tuid, start_date, tour, rank, surface, in_out, draw, round, level };
+         defineTournament({ name, tuid, start_date, tour, rank, surface, in_out, draw, draw_size, round, level } = {}) {
+            let definition = {name, tuid, start_date, tour, rank, surface, in_out, draw, draw_size, round, level };
             Object.keys(definition).forEach(key => { if (definition[key]) metadata.tournament[key] = definition[key] });
             return metadata.tournament;
          },
@@ -1170,7 +1170,7 @@
             return pub;
          },
          stats: {
-            calculated(set_filter) { return calculatedStats(match.stats.counters(), set_filter); },
+            calculated(set_filter) { return calculatedStats(pub.stats.counters(), set_filter); },
             counters() {
                if (!stat_points) {
                   pub.live_stats = true;
