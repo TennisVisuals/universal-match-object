@@ -1,0 +1,11 @@
+{
+  "name": "CourtHive",
+  "short_name": "CourtHive",
+  "icons": [{
+        "src": "icons/TMT.png",
+        "sizes": "128x128",
+      }],
+  "scope": "/",
+  "start_url": "index.html",
+  "display": "fullscreen",
+}
