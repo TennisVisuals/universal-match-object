@@ -123,6 +123,7 @@ discreetSetFormatChanges = function() {
    assert.equal(set.scoreboard(), '4-1');
 
    set.reset();
+   set.set.perspectiveScore(true);
    set.format.hasDecider(true).threshold(8).minDiff(2).description('8 Game Pro Set');
    set.format.singles(true);
    set.format.children.type('advantage');
@@ -134,12 +135,14 @@ discreetSetFormatChanges = function() {
    set.addPoints('0000');
    assert.equal(set.complete(), true);
    set.reset();
+   set.set.perspectiveScore(true);
    set.addPoints('00001111000011110000111100001111');
    set.addPoints('00001111000011110000111100001111');
    set.addPoints('0000000');
    assert.equal(set.complete(), true);
 
    set.reset(true);
+   set.set.perspectiveScore(true);
    set.format.hasDecider(true).threshold(4).minDiff(0).description('Under 10 Set to 4, tiebreak at 3-3');
    set.format.singles(true);
    set.format.children.type('noAdvantage');
@@ -161,6 +164,7 @@ discreetSetFormatChanges = function() {
    assert.equal(set.complete(), true);
 
    set.reset(true);
+   set.set.perspectiveScore(true);
    set.format.hasDecider(true).threshold(4).minDiff(2).description('Under 10 Set to 4, tiebreak at 4-4');
    set.format.singles(true);
    set.format.children.type('noAdvantage');
@@ -607,6 +611,7 @@ Set_testPerspectiveChange = function() {
 
 Match_multipleSetPerspectives = function() {
    match.reset(true);
+   match.set.perspectiveScore(true);
    match.format.type('3_6a_7');
    match.addPoints('SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS');
    let scoreboard = match.scoreboard();
@@ -642,6 +647,7 @@ Match_multipleSetPerspectives = function() {
 
 disablePerspective = function() {
    set.reset(true);
+   set.set.perspectiveScore(true);
    set.format.type('supertiebreak');
    assert.equal(set.nextService(), 0);
    set.addPoint(0);
@@ -655,6 +661,7 @@ disablePerspective = function() {
    assert.equal(set.scoreboard(), '0-0 (3-0)');
 
    set.reset(true);
+   set.set.perspectiveScore(true);
    set.format.type('supertiebreak');
    set.set.perspectiveScore(false);
    assert.equal(set.nextService(), 0);
@@ -851,6 +858,7 @@ Match_doubles3_6n_10 = function() {
 
 customizedFormatPropagation = function() {
    match.reset(true);
+   match.set.perspectiveScore(true);
    match.format.threshold(3).hasDecider(true).minDiff(0).description('Wonky Match, Best of 5 Sets');
 
    match.format.children.threshold(2).hasDecider(true).minDiff(2).description('Best of 3 Games');
@@ -1243,6 +1251,7 @@ Games_undo = function() {
 
 Sets_undo = function() {
    set.reset(true);
+   set.set.perspectiveScore(true);
    set.format.singles(true);
    set.format.type('NoAdSetsTo6tb7');
    set.addPoints('0101010');
@@ -1320,6 +1329,7 @@ PointIndices_undo = function() {
 
 UndoPointsChange = function() {
    match.reset(true);
+   match.set.perspectiveScore(true);
    match.change.points([3, 2]);
    assert.equal(match.scoreboard(), '0-0 (40-30)');
    match.undo();
@@ -1334,6 +1344,7 @@ UndoPointsChange = function() {
    match.addPoints('111');
    assert.equal(match.scoreboard(), '0-1 (40-0)');
    match.reset();
+   match.set.perspectiveScore(true);
    match.addPoints('111111111111111111111111');
    assert.equal(match.scoreboard(), '0-6');
    match.change.points([1, 1])
@@ -1367,6 +1378,7 @@ addNewTypes = function() {
       decidingChild: 'tiebreak7a'
    });
    set = umo.Set({type: 'pro8a7'});
+   set.set.perspectiveScore(true);
    set.addPoints('0000000000000000000000000000');
    let scoreboard = set.scoreboard();
    assert.equal(scoreboard, '0-7');
@@ -1424,6 +1436,7 @@ pluggableParser = function() {
 
 scoreProgressions = function() {
    match.reset(true);
+   match.set.perspectiveScore(true);
    match.addPoints(['0-15', '0-30', '0-40', '0-0']);
    assert.equal(match.scoreboard(), '1-0');
    match.reset();
