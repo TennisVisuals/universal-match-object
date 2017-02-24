@@ -299,10 +299,7 @@
 
       resetStyles();
       resetPlayers();
-      /*
-      resetButtons();
       swapServer();
-      */
       stateChangeEvent();
    }
 
