@@ -16,6 +16,7 @@
 </head>
 
 <body>
+<audio id="click" src="./assets/simpleclick.mp3"></audio>
 <script src="./lib/d3.v4.min.js"></script>
 <script src="./lib/matchObject.js"></script>
 <script src="./lib/browserStorage.js"></script>
@@ -45,7 +46,9 @@
    </div>
 </div>
 
-<div id="mainmenu">
+<div id="system" style='display: none'></div>
+
+<div id="mainmenu" class="swipe">
    <div class='flexcenter m_menuitem' onclick="viewManager('entry')">Cancel</div>
    <div id='menu_change_server' class='flexcenter m_menuitem' onclick="menuAction(this, 'changeServer')">Change Server</div>
    <div class='flexcenter m_menuitem' onclick="menuAction(this, 'newMatch')">New Match</div>

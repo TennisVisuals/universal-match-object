@@ -17,7 +17,7 @@
 
    var match = umo.Match();
 
-   var ch_version = '1.0.1';
+   var ch_version = '1.0.2 w/ sound';
    var toggles = {};
    var view = 'entry';
    var serve2nd = false;
@@ -845,6 +845,8 @@
          }
       }
 
+      let sound = document.getElementById("click");
+      sound.play();
       if (obj.id) styleButton(obj.id);
       if (service && service == 'second_service') serve2nd = true;
       if (Object.keys(actions).indexOf(action) < 0) return undefined;
@@ -855,6 +857,8 @@
       if (result) {
          Object.assign(point, result);
          if (rally) point.rally = new Array(rally);
+         let point_location = getPointLocation(point);
+         if (point_location) point.location = point_location;
          match.addPoint(point); 
          rally = 0;
          undone = [];
@@ -863,6 +867,21 @@
       if (match.complete()) {
          let winner = match.metadata.players()[match.winner()].name;
          showModal(`Match Complete!<br>Winner: ${winner}`);
+      }
+   }
+
+   // this is a crude beginning for this sort of logic...
+   function getPointLocation(point) {
+      let p0location = document.querySelectorAll('.modeaction_player0');
+      let p1location = document.querySelectorAll('.modeaction_player1');
+      if ((p0location  && p0location[0].innerHTML == 'Net') || (p1location && p1location[0].innerHTML == 'Net')) {
+         if (point.result == 'Unforced Error' || point.result == 'Forced Error') {
+            if (point.winner == 0 && p1location[0].innerHTML == 'Net') return 'Net'; 
+            if (point.winner == 1 && p0location[0].innerHTML == 'Net') return 'Net'; 
+         } else if (point.result == 'Winner') {
+            if (point.winner == 0 && p0location[0].innerHTML == 'Net') return 'Net'; 
+            if (point.winner == 1 && p1location[0].innerHTML == 'Net') return 'Net'; 
+         }
       }
    }
 
