@@ -363,7 +363,7 @@ body {
    width: 90%;
    border: 1px;
    margin: 2px 0px 0px 0px;
-   font-size: 5vw;
+   font-size: 4.5vw;
    border-radius: 5px;
    border-color: black;
    border-style: solid;
@@ -638,7 +638,7 @@ body {
    width: 40%;
    height: 100%;
    background-color: black;
-   display: flex:
+   display: flex;
    -webkit-flex-direction: column;
    flex-direction: column;
    -webkit-justify-content: space-around;
