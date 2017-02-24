@@ -17,6 +17,7 @@
 
    var match = umo.Match();
 
+   var ch_version = '1.0.1';
    var toggles = {};
    var view = 'entry';
    var serve2nd = false;
@@ -54,7 +55,7 @@
    window.addEventListener('load', function(e) {
      window.applicationCache.addEventListener('updateready', function(e) {
        if (window.applicationCache.status == window.applicationCache.UPDATEREADY) {
-         if (confirm('A new version of Match Tracker is available. Load it?')) { window.location.reload(); }
+         if (confirm('A new version of CourtHive is available. Load it?')) { window.location.reload(); }
        }
      }, false);
    }, false);
@@ -71,8 +72,19 @@
 
    touchManager.swipeLeft = (element) => {
       if (element && element.id) {
-         let action_delete = document.getElementById(element.id + '_delete').style.display;
-         let action_export = document.getElementById(element.id + '_export').style.display;
+         if (element.id == 'mainmenu') {
+            let system_window = document.getElementById('system');
+            system_window.innerHTML = `
+               <div><b>App Version:</b> <span style="color: blue">${ch_version}</span></div>
+               <div><b>Perspective Score:</b> ${match.set.perspectiveScore()}</div>
+            `;
+            system_window.style.display = system_window.style.display == 'inline' ? 'none' : 'inline';
+            return;
+         }
+         let object_delete = document.getElementById(element.id + '_delete');
+         let object_export = document.getElementById(element.id + '_export');
+         let action_delete = object_delete ? object_delete.style.display : undefined;
+         let action_export = object_export ? object_export.style.display : undefined;
          if (action_export == 'flex') {
             document.getElementById(element.id + '_export').style.display = 'none';
          } else if (action_delete == 'none') {
@@ -83,8 +95,10 @@
 
    touchManager.swipeRight = (element) => {
       if (element && element.id) {
-         let action_delete = document.getElementById(element.id + '_delete').style.display;
-         let action_export = document.getElementById(element.id + '_export').style.display;
+         let object_delete = document.getElementById(element.id + '_delete');
+         let object_export = document.getElementById(element.id + '_export');
+         let action_delete = object_delete ? object_delete.style.display : undefined;
+         let action_export = object_export ? object_export.style.display : undefined;
          if (action_delete == 'flex') {
             document.getElementById(element.id + '_delete').style.display = 'none';
          } else if (action_export == 'none') {
@@ -496,7 +510,6 @@
       if (!match_data) return;
       if (match_data.match) match.metadata.defineMatch(match_data.match);
       if (match_data.tournament) match.metadata.defineTournament(match_data.tournament);
-      match.set.perspectiveScore(false);
       if (match_data.format) {
          match.format.settings(match_data.format);
          document.getElementById('md_format').innerHTML = match_data.format.name;
@@ -564,6 +577,7 @@
                let match_archive = JSON.parse(BrowserStorage.get('match_archive') || '[]');
                document.getElementById('menu_match_archive').style.display = match_archive.length ? 'flex' : 'none';
                document.getElementById('menu_match_format').style.display = formatChangePossible() ? 'flex' : 'none';
+               touchManager.addSwipeTarget(document.getElementById('mainmenu'));
             }
             changeDisplay(activate ? 'flex' : 'none', 'mainmenu');
          },
