@@ -107,7 +107,7 @@
             common.metadata.reset();
             common.metadata.resetStats();
             common.history = [];
-            common.perspective_score = true;
+            common.perspective_score = false;
             common.events.reset().forEach(fx => fx());
          }
          if (!parent_object && format) {
@@ -1147,7 +1147,7 @@
          events: { addPoint: addEvent, undo: undoEvent, clearEvents, reset: resetEvent },
          history: [],
          live_stats: false,
-         perspective_score: true,
+         perspective_score: false,
          assignParser(parser) { pub.pointParser = parser; },
          advanceService(service) {
             let index = metadata.service_order.indexOf(service) + 1;
