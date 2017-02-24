@@ -247,10 +247,12 @@
 
       let point_fields = Array.from(document.getElementsByClassName("points"));
       point_fields.forEach((field, index) => field.style.backgroundColor = index == serving ? '#FBF781' : '#D1FBFB');
+      resetButtons();
    }
 
    function updateState() {
       if (match.nextTeamServing() != serving) setTimeout(()=>swapServer() , 400);
+      resetButtons();
       updatePositions();
    }
 
@@ -295,10 +297,12 @@
       undone = [];
       rally = 0;
 
-      resetButtons();
       resetStyles();
       resetPlayers();
+      /*
+      resetButtons();
       swapServer();
+      */
       stateChangeEvent();
    }
 
@@ -843,7 +847,7 @@
          match.addPoint(point); 
          rally = 0;
          undone = [];
-         resetButtons();
+         updateState();
       }
       if (match.complete()) {
          let winner = match.metadata.players()[match.winner()].name;
