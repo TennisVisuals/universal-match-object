@@ -4,7 +4,7 @@
 
 [CourtHive mobile](http://tennisvisuals.com:8080/CourtHive/mobile/) has been successfully tested on iPhones 5, 6, and 7, as well as a Galaxy Tab A running Android 5.1.1.
 
-While primarily built as a framework for exercising the [Universal Match Object](https://github.com/TennisVisuals/universal-match-object), CourtHive also supports the idea that there are both many possible ways to track a tennis match, and many different attributes that could possibly be tracked... I have provided three initial views, or 'skins', and plan to develop more in the future. Of course I welcome any and all suggestions!
+While primarily built as a framework for exercising the [Universal Match Object](https://github.com/TennisVisuals/universal-match-object), CourtHive supports the idea that there are both many possible ways to track a tennis match, and many different attributes that could possibly be tracked... I have provided three initial views, or 'skins', and plan to develop more in the future. Of course I welcome any and all suggestions!
 
 ![horizontal black](screenshots/ch_hblack.png "horizontal Black")
 
