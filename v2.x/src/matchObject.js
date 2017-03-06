@@ -975,13 +975,16 @@
       let undo_events = umo.undo_events.slice();
       let reset_events = umo.reset_events.slice();
       let metadata = {};
+
       let stat_points;
       let last_episode;
+      let filtered_stats;
 
       let accessors = {
          resetStats() { 
             stat_points = undefined; 
             last_episode = undefined;
+            filtered_stats = undefined;
          },
          reset() {
             metadata = { 
@@ -1111,7 +1114,7 @@
       let addEvent = (add_event) => {
          if (!add_event) return addPoint_events;
          if (typeof add_event == 'function') {
-            addPoint_events.push(add_event);
+            if(addPoint_events.indexOf(add_event) < 0) addPoint_events.push(add_event);
          } else if (typeof add_event == 'array') {
             add_event.foreach(e) (e => { if (typeof e == 'function') addPoint_events.push(c); });
          }
@@ -1120,7 +1123,7 @@
       let undoEvent = (undo_event) => {
          if (!undo_event) return undo_events;
          if (typeof undo_event == 'function') {
-            undo_events.push(undo_event);
+            if(undo_events.indexOf(undo_event) < 0) undo_events.push(undo_event);
          } else if (typeof undo_event == 'array') {
             undo_event.foreach(e) (e => { if (typeof e == 'function') undo_events.push(c); });
          }
@@ -1129,7 +1132,7 @@
       let resetEvent = (reset_event) => {
          if (!reset_event) return reset_events;
          if (typeof reset_event == 'function') {
-            reset_events.push(reset_event);
+            if(reset_events.indexOf(reset_event) < 0) reset_events.push(reset_event);
          } else if (typeof reset_event == 'array') {
             reset_event.foreach(e) (e => { if (typeof e == 'function') reset_events.push(c); });
          }
@@ -1170,12 +1173,19 @@
             return pub;
          },
          stats: {
-            calculated(set_filter) { return calculatedStats(pub.stats.counters(), set_filter); },
-            counters() {
+            calculated(set_filter) { return calculatedStats(pub.stats.counters(set_filter)); },
+            counters(set_filter) {
+               if ((set_filter != undefined && filtered_stats != set_filter) || (set_filter == undefined && filtered_stats != undefined)) {
+                  accessors.resetStats();
+               }
                if (!stat_points) {
                   pub.live_stats = true;
-                  let points = pub.history.filter(episode => episode.action == 'addPoint');
-                  points.forEach(point => pub.addStatPoint(point));
+                  let episodes = pub.history.filter(episode => episode.action == 'addPoint');
+                  if (set_filter != undefined) {
+                     episodes = episodes.filter(episode => episode.point.set == set_filter);
+                     filtered_stats = set_filter;
+                  }
+                  episodes.forEach(episode => pub.addStatPoint(episode));
                }
                return stat_points; 
             },
@@ -1242,8 +1252,7 @@
       accessors.reset();
       return pub;
 
-      // TODO: Add set_filter to calculations...
-      function calculatedStats(stats, set_filter) {
+      function calculatedStats(stats) {
          if (!stats || !stats.teams) return [];
 
          // prefix of '-' indicates that value for opposing team should be used
@@ -1292,9 +1301,6 @@
             return { value: pct, display: `${pct}% (${numerator}/${denominator})` };
          }
 
-         // set_filter might need to be applied on a per-stat basis
-         // because stats are built based on the points that are found in teams
-         // the other options is to replicate teams and apply filter to copy
          let stat_calcs = {
             number(stat_obj, teams, team) {
                ({numerator, denominator} = numeratorDenominator(stat_obj, teams, team));
