@@ -1,26 +1,48 @@
 CACHE MANIFEST
-# matchObject perspectiveScore false
+# stats zzh
 
 index.html
 courtHive.js
 
 ./css/courtHive.css
 ./assets/ioc_codes.json
+./assets/simpleclick.mp3
 
 ./lib/browserStorage.js
 ./lib/d3.v4.min.js
 ./lib/matchObject.js
 ./lib/simpleChart.js
 ./lib/touchManager.js
+./lib/clipboard.min.js
+./lib/gameFish.js
+./lib/gameTree.js
 
-./icons/TMT.png
+./icons/courtHive.png
 ./icons/change.png
 ./icons/chart.png
 ./icons/edit.png
 ./icons/exit.png
-./icons/export.png
+./icons/exitwhite.png
+./icons/swapwhite.png
+./icons/swapblack.png
 ./icons/finish.png
-./icons/menu.png
+./icons/menuwhite.png
+./icons/menublack.png
 ./icons/recycle.png
-./icons/redo.png
-./icons/undo.png
+./icons/redowhite.png
+./icons/redoblack.png
+./icons/undowhite.png
+./icons/undoblack.png
+./icons/save.png
+./icons/infoblack.png
+./icons/clipboard.png
+./icons/exportwhite.png
+./icons/exportblack.png
+./icons/momentum.png
+./icons/historywhite.png
+./icons/historyblack.png
+./icons/statswhite.png
+./icons/statsblack.png
+./icons/gametree.png
+./icons/fishwhite.png
+./icons/fishblack.png

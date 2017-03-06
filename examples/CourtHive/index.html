@@ -4,9 +4,9 @@
 <!-- <link rel="apple-touch-startup-image" href="/launch.png"> -->
    <link rel="manifest" href="courtHive.manifest" manifest='courtHive.manifest'>
    <link rel="manifest" href="manifest.json">
-   <link rel="apple-touch-icon" sizes="114x114" href="./icons/TMT.png">
+   <link rel="apple-touch-icon" sizes="114x114" href="./icons/courtHive.png">
    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no maximum-scale=1.0">
    <meta name="apple-mobile-web-app-capable" content="yes">
    <meta name="apple-mobile-web-app-title" content="CourtHive">
    <meta name="application-name" content="CourtHive">
@@ -20,47 +20,249 @@
 <script src="./lib/d3.v4.min.js"></script>
 <script src="./lib/matchObject.js"></script>
 <script src="./lib/browserStorage.js"></script>
+<script src="./lib/clipboard.min.js"></script>
 <script src="./lib/touchManager.js"></script>
 <script src="./lib/simpleChart.js"></script>
+<script src="./lib/gameFish.js"></script>
+<script src="./lib/gameTree.js"></script>
 <script src="./courtHive.js"></script>
-<!-- <script> mt = CourtHive(); </script> -->
 
-<div id="modal" class="modal" style="display: none">
-  <button id="close-modal" onClick="closeModal()">x</button>
-  <div class="modal-content">
-     <p id="modaltext" class="modaltext noselect">Message</p>
-  </div>
-</div>
-
-<div id='statsscreen' style="display: none">
-   <div class="statistics">
-      <div class='headline'>
-         Match Statistics
-         <img src='./icons/edit.png' alt='Edit' class='icon' onclick="viewManager('entry')">
+<div id="gamefish">
+   <div class="gf_content flexcols">
+      <div class="gf_menu"> 
+         <button id="close_gf" onClick="closeGameFish()">x</button>
       </div>
-      <div class='statrow'>
-         <div id='playerone' class='playerone'>Player One</div>
-         <div id='playertwo' class='playertwo'>Player Two</div>
+      <div class='gf_players flexrows'>
+         <div class='gf_player flexcenter display_player_0'>Player One</div>
+         <div class='gf_player flexcenter display_player_1'>Player Two</div>
       </div>
-      <div id='statlines'> </div>
+      <div class='gf_chart flexrows'>
+         <div id="gameFishChart"></div>
+      </div>
    </div>
 </div>
 
-<div id="system" style='display: none'></div>
+<div id="modal" class="modal" style="display: none">
+   <div class="modal-content">
+      <div class="modal-menu"> 
+         <button id="close-modal" onClick="closeModal()">x</button>
+      </div>
+      <div id="modaltext" class="modaltext noselect">
+            Message
+      </div>
+   </div>
+</div>
 
-<div id="mainmenu" class="swipe">
-   <div class='flexcenter m_menuitem' onclick="viewManager('entry')">Cancel</div>
-   <div id='menu_change_server' class='flexcenter m_menuitem' onclick="menuAction(this, 'changeServer')">Change Server</div>
-   <div class='flexcenter m_menuitem' onclick="menuAction(this, 'newMatch')">New Match</div>
-   <div id='menu_match_format' class='flexcenter m_menuitem' onclick="viewManager('matchformat')">Match Format</div>
-   <div class='flexcenter m_menuitem' onclick="viewManager('matchdetails')">Match Details</div>
-   <div id='menu_match_archive' class='flexcenter m_menuitem' onclick="viewManager('matcharchive')">Match Archive</div>
-   <div class='flexcenter m_menuitem' onclick="menuAction(this, 'verticalview')">Change Vertical View</div>
-   <!--   <div class='flexcenter m_menuitem' onclick="viewManager('importMatch')">Import Match</div> -->
+<div id="settings" class="flexcols" style="display: none">
+   <div class="settings_options flexcols flexcenter">
+      <div class="settings_option flexrows flexcenter">
+         <div class='flexcenter'>Audible Clicks</div>
+         <div>
+            <label class="switch">
+              <input id='audible_clicks' type="checkbox" checked='true' style="display: none" onclick="updateSettings()">
+              <div class="slider round"></div>
+            </label>
+         </div>
+      </div>
+
+      <div class="settings_option flexrows flexcenter">
+         <div class='flexcenter'>Track Shot Types</div>
+         <div>
+            <label class="switch">
+              <input id='track_shot_types' type="checkbox" checked='true' style="display: none" onclick="updateSettings()">
+              <div class="slider round"></div>
+            </label>
+         </div>
+      </div>
+
+      <div class="settings_option flexrows flexcenter">
+         <div class='flexcenter'>GameFish Display</div>
+         <div>
+            <label class="switch">
+              <input id='display_gamefish' type="checkbox" checked='true' style="display: none" onclick="updateSettings()">
+              <div class="slider round"></div>
+            </label>
+         </div>
+      </div>
+   </div>
+   <div class="settings_done flexcols">
+      <div class='flexcenter s_menuitem' onclick="viewManager('entry')">Done</div>
+   </div>
+</div>
+
+<div id="stroke_slider" class="flexrows stroke_slider" style='display: none'>
+      <div id="slideleft" style='display: none' class="slideback flexcenter" onclick="strokeAction(undefined, undefined, 'right')">&#62;</div>
+      <div class="flexcols flexcenter strokes">
+         <div class="stroke flexcenter">
+            <div>Lob</div>
+            <div class='forehand' onclick='strokeAction("Forehand", "Lob")'><div class='hand_label flexleft'>F</div></div>
+            <div class='backhand' onclick='strokeAction("Backhand", "Lob")'><div class='hand_label flexright'>B</div></div>
+         </div>
+         <div class="stroke flexcenter">
+            <div>Overhead</div>
+            <div class='forehand' onclick='strokeAction("Forehand", "Overhead")'></div>
+            <div class='backhand' onclick='strokeAction("Backhand", "Overhead")'></div>
+         </div>
+         <div class="stroke flexcenter">
+            <div>Volley</div>
+            <div class='forehand' onclick='strokeAction("Forehand", "Volley")'></div>
+            <div class='backhand' onclick='strokeAction("Backhand", "Volley")'></div>
+         </div>
+         <div class="stroke flexcenter">
+            <div>Drive Volley</div>
+            <div class='forehand' onclick='strokeAction("Forehand", "Drive Volley")'></div>
+            <div class='backhand' onclick='strokeAction("Backhand", "Drive Volley")'></div>
+         </div>
+         <div class="stroke flexcenter">
+            <div>Drive</div>
+            <div class='forehand' onclick='strokeAction("Forehand", "Drive")'></div>
+            <div class='backhand' onclick='strokeAction("Backhand", "Drive")'></div>
+         </div>
+         <div class="stroke flexcenter">
+            <div>Slice</div>
+            <div class='forehand' onclick='strokeAction("Forehand", "Slice")'></div>
+            <div class='backhand' onclick='strokeAction("Backhand", "Slice")'></div>
+         </div>
+         <div class="stroke flexcenter">
+            <div>Half Volley</div>
+            <div class='forehand' onclick='strokeAction("Forehand", "Half Volley")'></div>
+            <div class='backhand' onclick='strokeAction("Backhand", "Half Volley")'></div>
+         </div>
+         <div class="stroke flexcenter">
+            <div>Drop Shot</div>
+            <div class='forehand' onclick='strokeAction("Forehand", "Drop Shot")'></div>
+            <div class='backhand' onclick='strokeAction("Backhand", "Drop Shot")'></div>
+         </div>
+      </div>
+      <div id="slideright" class="slideback flexcenter" onclick="strokeAction(undefined, undefined, 'left')">&#60;</div>
+</div>
+
+<div id="mainmenu">
+   <img class="infoicon" src='./icons/infoblack.png' alt="Info" onclick="modalInfo()">
+   <div id="main_menu" class="swipe">
+      <div class='flexcenter m_menuitem' onclick="viewManager('entry')">Cancel</div>
+      <div id='menu_change_server' class='flexcenter m_menuitem' onclick="menuAction(this, 'changeServer')">Change Server</div>
+      <div class='flexcenter m_menuitem' onclick="menuAction(this, 'newMatch')">New Match</div>
+      <div id='menu_match_format' class='flexcenter m_menuitem' onclick="viewManager('matchformat')">Match Format</div>
+      <div class='flexcenter m_menuitem' onclick="viewManager('matchdetails')">Match Details</div>
+      <div id='menu_match_archive' class='flexcenter m_menuitem' onclick="viewManager('matcharchive')">Match Archive</div>
+      <div class='flexcenter m_menuitem' onclick="menuAction(this, 'settings')">Settings</div>
+      <!-- <div class='flexcenter m_menuitem' onclick="menuAction(this, 'verticalview')">Change Vertical View</div> -->
+      <!--   <div class='flexcenter m_menuitem' onclick="viewManager('importMatch')">Import Match</div> -->
+   </div>
 </div>
 
 <div id="matchformats" class='noselect'> </div>
 <div id="matcharchive" class='noselect'> </div>
+
+<div id="gametree">
+   <div class='fixedmenu flexrows'>
+      <div class="fm_header">Momentum</div>
+      <div class="fm_action" onclick="viewManager('stats')">
+         <img class='ph_icon' src='./icons/statswhite.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('momentum')">
+         <img class='ph_icon' src='./icons/momentum.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('pointhistory')">
+         <img class='ph_icon' src='./icons/historywhite.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('entry')">
+         <img class='ph_icon' src='./icons/exitwhite.png'>
+      </div>
+   </div>
+   <div class='m_content'>
+      <div id="gameTreeChart"></div>
+   </div>
+</div>
+
+<div id="momentum">
+   <div class='fixedmenu flexrows'>
+      <div class="fm_header">Momentum</div>
+      <div class="fm_action" onclick="viewManager('stats')">
+         <img class='ph_icon' src='./icons/statswhite.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('gametree')">
+         <img class='ph_icon' src='./icons/gametree.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('pointhistory')">
+         <img class='ph_icon' src='./icons/historywhite.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('entry')">
+         <img class='ph_icon' src='./icons/exitwhite.png'>
+      </div>
+   </div>
+   <div class='m_content'>
+      <div id="momentumChart"></div>
+   </div>
+</div>
+
+<div id="pointhistory" class='noselect'>
+   <div class='fixedmenu flexrows'>
+      <div class="fm_header">Point History</div>
+      <!--
+      <div class="fm_action" onclick="modalExport(undefined, 'history')">
+         <img class='ph_icon' src='./icons/exportwhite.png'>
+      </div>
+      -->
+      <div class="fm_action" onclick="viewManager('momentum')">
+         <img class='ph_icon' src='./icons/momentum.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('gametree')">
+         <img class='ph_icon' src='./icons/gametree.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('stats')">
+         <img class='ph_icon' src='./icons/statswhite.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('entry')">
+         <img class='ph_icon' src='./icons/exitwhite.png'>
+      </div>
+   </div>
+   <div class='fixedheader flexrows'>
+      <div class='ph_result'>Server</div>
+      <div class='ph_score'>Score</div>
+      <div class='ph_rally'>Rally</div>
+   </div>
+   <div class='fixedcontent'>
+      <div id='ph_frame'></div>
+   </div>
+</div>
+
+<div id="statsscreen" class="noselect">
+   <div class='s_menu flexrows'>
+      <div class="fm_header">Statistics</div>
+      <!--
+      <div class="fm_action" onclick="modalExport(undefined, 'history')">
+         <img class='ph_icon' src='./icons/exportwhite.png'>
+      </div>
+      -->
+      <div class="fm_action" onclick="viewManager('momentum')">
+         <img class='ph_icon' src='./icons/momentum.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('gametree')">
+         <img class='ph_icon' src='./icons/gametree.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('pointhistory')">
+         <img class='ph_icon' src='./icons/historywhite.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('entry')">
+         <img class='ph_icon' src='./icons/exitwhite.png'>
+      </div>
+   </div>
+   <div id="statview" class='s_view flexrows sets'>
+      <div class='s_set'>Match</div>
+   </div>
+   <div class='s_header flexrows'>
+      <div class="s_players">
+         <div id='playerone' class='s_player playerone'>Player One</div>
+         <div id='playertwo' class='s_player playertwo' style='text-align: right'>Player Two</div>
+      </div>
+   </div>
+   <div class='s_content'>
+      <div id='statlines'></div>
+   </div>
+</div>
+
 <div id="matchdetails" class='noselect'>
    <input id='blur' class='blur' readonly>
    <div class='md_detail'>
@@ -274,6 +476,7 @@
 <div id='vblack' style='display: none' class='noselect'>
       <div class='vs_players flexrows'>
          <div class='vs_player flexcenter indicate_serve display_player_0'>Player One</div>
+         <div class='vs_swap flexcenter' onclick='menuAction(this, "swap")'><img width='100%' alt='' src='./icons/swapwhite.png'></div>
          <div class='vs_player flexcenter indicate_serve display_player_1'>Player Two</div>
       </div>
       <div class='vs_center flexrows'>
@@ -294,10 +497,15 @@
          </div>
          <div class='vs_filler'></div>
          <div class='vs_menuaction flexcols'>
-            <div class='vs_menubutton flexcenter' onclick='menuAction(this, "stats")'>Stats</div>
-            <div class='vs_menubutton flexcenter' onclick='viewManager("mainmenu")'>Menu</div>
-            <div class='vs_menubutton flexcenter' onclick='menuAction(this, "redo")'>Redo</div>
-            <div class='vs_menubutton flexcenter' onclick='menuAction(this, "undo")'>Undo</div>
+            <div class='vs_mode_action flexcenter'>
+               <img src='./icons/statswhite.png' class='view_stats vs_action_icon' alt='Stats' onclick='viewManager("stats")'>
+            </div>
+            <div class='vs_mode_action flexcenter'>
+               <img src='./icons/menuwhite.png' class='vs_action_icon' alt='Stats' onclick='viewManager("mainmenu")'>
+            </div>
+            <div class='vs_mode_action flexcenter'>
+               <img src='./icons/historywhite.png' class='view_history vs_action_icon' alt='Stats' onclick='viewManager("pointhistory")'>
+            </div>
          </div>
       </div>
       <div class='vs_entry flexrows'>
@@ -309,16 +517,19 @@
                   <div class='vs_action_button forced modeforce flexcenter' onclick='classAction(this, "modeerr", 0)'>Forced</div> 
                </div>
                <div class='vs_mode_buttons flexcols flexcenter'>
+                  <div class='vs_mode_action flexcenter'>
+                     <img src='./icons/redowhite.png' class='redo vs_action_icon' alt='Redo' onclick='menuAction(this, "redo")'>
+                  </div>
                   <div class='vs_mode_button modeaction_player0 flexcenter' onclick='classAction(this, "modeaction", 0)'>Serve</div>
                </div>
-            </div>
-            <div class='vs_point flexcenter flexjustifystart'>
-               <div class='vs_point_button flexcenter' onclick='classAction(this, "point", 0)'>+ Point</div>
             </div>
          </div>
          <div class='vs_player_actions'>
             <div class='vs_action_area flexrows'>
                <div class='vs_mode_buttons flexcols flexcenter'>
+                  <div class='vs_mode_action flexcenter'>
+                     <img src='./icons/undowhite.png' class='undo vs_action_icon' alt='Undo' onclick='menuAction(this, "undo")'>
+                  </div>
                   <div class='vs_mode_button modeaction_player1 flexcenter' onclick='classAction(this, "modeaction", 1)'>Return</div>
                </div>
                <div class='vs_action_buttons flexcenter'>
@@ -327,22 +538,28 @@
                   <div class='vs_action_button forced modeforce flexcenter' onclick='classAction(this, "modeerr", 1)'>Forced</div> 
                </div>
             </div>
+         </div>
+      </div>
+      <div class='vs_points flexrows'>
+            <div class='vs_point flexcenter flexjustifystart'>
+               <div class='vs_point_button flexcenter' onclick='classAction(this, "point", 0)'>+ Point</div>
+            </div>
             <div class='vs_point flexcenter flexjustifyend'>
                <div class='vs_point_button flexcenter' onclick='classAction(this, "point", 1)'>+ Point</div>
             </div>
-         </div>
       </div>
    <div class='footer vs_rally'>
       <div class='vs_rallybar rally flexcenter' onclick='classAction(this, "rally")'>Rally</div>
    </div>
 </div>
 
-<div id="horizontalentry" class='noselect'>
+<div id="hblack" class='noselect'>
    <div id='h_scoreboard' class='flexrows'>
       <div id='h_playernames' class='flexcols'>
          <div id='h_playerone' class='h_playername flexcenter indicate_serve display_player_0'> Player One</div>
          <div id='h_playertwo' class='h_playername flexcenter indicate_serve display_player_1'> Player Two </div>
       </div>
+      <div class='h_swap flexcenter' onclick='menuAction(this, "swap")'><img width='100%' alt='' src='./icons/swapwhite.png'></div>
       <div id='h_scores' class=''>
          <div class='h_setscore flexcols'>
             <div class='flexcenter h_score'><div class='display_set_0_games_0'> 0 </div></div>
@@ -446,7 +663,7 @@
       <div class='h_menuitem flexcenter' onclick='classAction(this, "penalty", 1)'>
          <div class='h_button'>Penalty</div>
       </div>
-      <div class='h_menuitem flexcenter' onclick='menuAction(this, "stats")'>
+      <div class='h_menuitem flexcenter' onclick='viewManager("stats")'>
          <div class='h_button blue'>Stats</div>
       </div>
       <div class='h_menuitem flexcenter' onclick='classAction(this, "rally")'>
@@ -530,10 +747,11 @@
 
    <div class='footer'>
      <div id='toolbar' class='toolbar'>
-        <img src='./icons/menu.png' alt='Menu' class='icon' onclick="viewManager('mainmenu')">
+        <img src='./icons/menublack.png' alt='Menu' class='icon' onclick="viewManager('mainmenu')">
+        <img src='./icons/swapblack.png' alt='Swap' class='icon' onclick="menuAction(this, 'swap')">
         <img id='footer_change_server' src='./icons/change.png' alt='Swap' class='icon' onclick="menuAction(this, 'changeServer')">
-        <img src='./icons/redo.png' alt='Redo' class='icon' onclick="menuAction(this, 'redo')">
-        <img src='./icons/undo.png' alt='Undo' class='icon' onclick="menuAction(this, 'undo')">
+        <img src='./icons/redoblack.png' alt='Redo' class='redo icon' onclick="menuAction(this, 'redo')">
+        <img src='./icons/undoblack.png' alt='Undo' class='undo icon' onclick="menuAction(this, 'undo')">
      </div>
   </div>
 </div>

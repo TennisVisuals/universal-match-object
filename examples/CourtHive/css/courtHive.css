@@ -1,24 +1,13 @@
-/* orientation lock */
 /*
 @media screen and (min-width: 320px) and (max-width: 767px) and (orientation: landscape) {
-   html {
-      transform: rotate(-90deg);
-      transform-origin: left top;
-      width: 100vh;
-      overflow-x: hidden;
-      position: absolute;
-      top: 100%;
-      left: 0;
-   }
-   .footer {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      left: 0;
+   .m_content {
+      overflow-y: hidden;
+      overflow-x: scroll;
    }
 }
-
 */
+
+/* deal with iOS browser real estate */
 @media (min-height: 500px) {
    .footer {
       position: absolute;
@@ -27,6 +16,7 @@
       left: 0;
    }
 }
+
 select {
   -webkit-appearance: none;
   appearance: none;
@@ -178,19 +168,6 @@ body {
 }
 .small { height: 60%; }
 
-#statsscreen {
-   width: 100%;
-   margin: 0;
-   padding: 0;
-   display: flex;
-   -webkit-flex-direction: row;
-   flex-direction: row;
-   -webkit-flex-flow: row wrap;
-   flex-flow: row wrap;
-   -webkit-justify-content: center;
-   justify-content: center;
-}
-
 .entrysection {
    margin: 0;
    width: 100%;
@@ -325,30 +302,92 @@ body {
    height: 0px;
 }
 
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgb(0,0,0);
-    background-color: rgba(0,0,0,0.4);
-}
-
 .icon {
    width: 20px;
    height: 20px;
 }
 
-/* Menu */
-#mainmenu {
+/* Settings */
+#settings {
    margin: 0;
    padding: 1em;
    display: none;
    height: 100vh;
+   -webkit-flex-direction: column;
+   flex-direction: column;
+   -webkit-justify-content: space-between;
+   justify-content: space-between;
+   -webkit-align-items: center;
+   align-items: center;
+   -webkit-align-content: stretch;
+   align-content: stretch;
+   font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+.settings_options {
+   width: 100%;
+}
+
+.settings_option {
+   width: 100%;
+   max-width: 400px;
+   display: -webkit-flex;
+   display: flex;
+   -webkit-flex-direction: row;
+   flex-direction: row;
+   -webkit-justify-content: space-between;
+   justify-content: space-between;
+}
+
+.settings_done {
+   width: 100%;
+   height: 50%;
+   display: flex;
+   -webkit-flex-direction: column-reverse;
+   flex-direction: column-reverse;
+   -webkit-align-items: center;
+   align-items: center;
+   -webkit-align-content: stretch;
+   align-content: stretch;
+   font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+.s_menuitem {
+   height: 20%;
+   width: 90%;
+   border: 1px;
+   margin: 2px 0px 0px 0px;
+   font-size: 4.5vw;
+   border-radius: 5px;
+   border-color: black;
+   border-style: solid;
+   background-color: white;
+}
+
+
+/* Menu */
+
+.infoicon {
+   position: absolute;
+   top: 10px;
+   left: 10px;
+   width: 2em;
+   height: 2em;
+}
+
+#mainmenu {
+   margin: 0;
+   width: 100%;
+   height: 100%;
+   display: none;
+}
+
+#main_menu {
+   margin: 0;
+   padding: 1em;
+   display: flex;
+   height: 100vh;
+   width: 100vw;
    -webkit-flex-direction: column-reverse;
    flex-direction: column-reverse;
    -webkit-align-items: center;
@@ -363,7 +402,7 @@ body {
    width: 90%;
    border: 1px;
    margin: 2px 0px 0px 0px;
-   font-size: 4.5vw;
+   font-size: 1.5em;
    border-radius: 5px;
    border-color: black;
    border-style: solid;
@@ -433,7 +472,6 @@ body {
    margin: 0;
    padding: 0;
    display: none;
-   height: 100vh;
    -webkit-flex-direction: column;
    flex-direction: column;
    -webkit-align-items: stretch;
@@ -465,12 +503,167 @@ body {
    font-size: 12px;
 }
 
+/* point history */
+
+#pointhistory {
+   display: none;
+}
+
+.fixedmenu {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 6%;
+   color: white;
+   padding-left: 10px;
+   font-size: 3vh;
+   background-color: black;
+   display: flex;
+   -webkit-align-items: center;
+   align-items: center;
+}
+
+.fixedheader {
+   position: absolute;
+   top: 6%;
+   left: 0;
+   width: 100%;
+   height: 4%;
+   color: white;
+   padding-left: 10px;
+   font-size: 2vh;
+   background-color: #2980B9;
+   display: flex;
+   -webkit-align-items: center;
+   align-items: center;
+}
+
+.fm_header {
+   width: 60%;
+   height: 50%;
+}
+
+.fm_action {
+   width: 10%;
+   height: 50%;
+}
+
+.fixedcontent {
+   position: absolute;
+   top: 10%;
+   left: 0;
+   width: 100%;
+   height: 90%;
+   overflow-y: scroll;
+   overflow-x: hidden;
+}
+
+#ph_frame {
+   margin: 0;
+   padding: 0;
+   width: 100%;
+   display: flex;
+   -webkit-flex-direction: column;
+   flex-direction: column;
+   -webkit-align-items: stretch;
+   align-items: stretch;
+   -webkit-align-content: stretch;
+   align-content: stretch;
+   font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+.ph_icon {
+   width: 3.5vh;
+   height: 3.5vh;
+}
+
+.ph_fish {
+   width: 1.5em;
+   height: 1.5em;
+}
+
+.ph_game {
+   width: 100%;
+   background-color: #EAF2F8;
+}
+
+.ph_episode {
+   width: 100%;
+}
+
+.ph_point_odd {
+   width: 100%;
+   height: 100%;
+}
+
+.ph_point_even {
+   width: 100%;
+   height: 100%;
+   background-color: #F7F9F9;
+}
+
+.ph_margin {
+   width: 100%;
+   height: 100%;
+   margin-top: 10px;
+   margin-bottom: 10px;
+}
+
+.ph_won { color: green; }
+.ph_lost { color: red; }
+
+.ph_result {
+   width: 70%;
+   height: 50%;
+   margin-left: 5px;
+}
+
+.ph_score {
+   width: 20%;
+   height: 50%;
+   text-align: center;
+}
+
+.ph_server {
+   width: 70%;
+   font-size: 1.2em;
+   margin-left: 5px;
+}
+
+.ph_action {
+   width: 20%;
+   height: 50%;
+}
+
+.ph_rally {
+   width: 20%;
+   height: 50%;
+   text-align: center;
+}
+
 /* match archive */
+.c2c {
+   width: 6vw;
+   height: 6vw;
+   display: inline-block;
+   border: none;
+   background-color: white;
+   padding: 0;
+   margin: 0;
+   vertical-align: top;
+}
+
+.export_action {
+   width: 6vw;
+   height: 6vw;
+}
+
 #matcharchive {
    margin: 0;
    padding: 0;
    display: none;
-   height: 100vh;
+   /* height: 100vh; */
    -webkit-flex-direction: column;
    flex-direction: column;
    -webkit-align-items: stretch;
@@ -516,8 +709,8 @@ body {
 }
 
 .mh_action {
-   width: 5vw;
-   height: 5vw;
+   width: 6vw;
+   height: 6vw;
 }
 
 .mh_players {
@@ -556,9 +749,13 @@ body {
    background-color: black;
 }
 
+.vs_swap {
+   width: 10%;
+}
+
 .vs_player {
    color: white;
-   width: 50%;
+   width: 45%;
    text-align: center;
    font-size: 5vw;
    background-color: black;
@@ -597,7 +794,7 @@ body {
 }
 
 .vs_menuaction {
-   height: 80%;
+   height: 90%;
    width: 20%;
    background-color: black;
    -webkit-align-items: center;
@@ -608,8 +805,8 @@ body {
    height: 25%;
    width: 90%;
    padding: 0px;
-   color: white;
    color: #4BA1F6;
+   border-radius: 5px;
    background-color: #4A4848;
    border-top-style: solid;
    border-top-width: 1px;
@@ -617,7 +814,7 @@ body {
 }
 
 .vs_entry {
-   height: 50%;
+   height: 40%;
    width: 100%;
    background-color: black;
 }
@@ -630,7 +827,7 @@ body {
 
 .vs_action_area {
    width: 100%;
-   height: 75%;
+   height: 100%;
    background-color: black;
 }
 
@@ -650,6 +847,7 @@ body {
    height: 30%;
    color: white;
    text-align: center;
+   border-radius: 5px;
    background-color: #4A4848;
    font-size: 5vw;
 }
@@ -660,21 +858,35 @@ body {
    background-color: black;
 }
 
-.vs_message {
+.vs_mode_action {
    height: 30%;
+   width: 90%;
 }
+
+.vs_action_icon {
+   width: 6vh;
+   height: 6vh;
+}
+
 .vs_mode_button {
    width: 90%;
    height: 60%;
    color: white;
    font-size: 8vw;
    text-align: center;
+   border-radius: 5px;
    background-color: #4A4848;
 }
 
-.vs_point {
+.vs_points {
+   height: 6%;
    width: 100%;
-   height: 25%;
+   background-color: black;
+}
+
+.vs_point {
+   width: 50%;
+   height: 100%;
    background-color: black;
 }
 
@@ -682,12 +894,13 @@ body {
    width: 97%;
    height: 90%;
    color: white;
+   border-radius: 5px;
    background-color: #4A4848;
-   font-size: 8vw;
+   font-size: 7vw;
 }
 
 .vs_rally {
-   height: 4rem;
+   height: 5rem;
 }
 
 .vs_rallybar {
@@ -700,7 +913,7 @@ body {
 }
 
 /* Horizontal Entry */
-#horizontalentry {
+#hblack {
    margin: 0;
    padding: 0;
    display: none;
@@ -718,8 +931,12 @@ body {
 }
 
 #h_playernames {
-   width: 50%;
+   width: 47%;
    height: 100%;
+}
+
+.h_swap {
+   width: 6%;
 }
 
 .h_playername {
@@ -732,7 +949,7 @@ body {
 }
 
 #h_scores {
-   width: 50%;
+   width: 47%;
    height: 100%;
    background-color: black;
    display: flex;
@@ -915,8 +1132,87 @@ body {
 
 /* STATS SCREEN */
 
+#statsscreen {
+   display: none;
+   width: 100%;
+   height: 100%;
+}
+
+.s_menu {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 6%;
+   color: white;
+   padding-left: 10px;
+   font-size: 3vh;
+   background-color: black;
+   display: flex;
+   -webkit-align-items: center;
+   align-items: center;
+}
+
+.s_view {
+   position: absolute;
+   top: 6%;
+   left: 0;
+   width: 100%;
+   height: 6%;
+   color: white;
+   padding-left: 10px;
+   font-size: 3vh;
+   background-color: #85929E;
+   display: flex;
+   -webkit-align-items: center;
+   align-items: center;
+   -webkit-justify-content: space-around;
+   justify-content: space-around;
+}
+
+.s_set {
+}
+
+.s_header {
+   position: absolute;
+   top: 12%;
+   left: 0;
+   width: 100%;
+   height: 8%;
+   font-size: 1.2em;
+   padding-left: 1em;
+   padding-right: 1em;
+}
+
+.s_players {
+   display: flex;
+   height: 100%;
+   width: 100%;
+   -webkit-justify-content: space-between;
+   justify-content: space-between;
+}
+
+.s_player {
+   height: 100%;
+   display: flex;
+   -webkit-align-items: center;
+   align-items: center;
+}
+
+.s_content {
+   position: absolute;
+   top: 20%;
+   left: 0;
+   width: 100%;
+   height: 80%;
+   overflow-y: scroll;
+   overflow-x: hidden;
+}
+
+/*
 .playerone { color: blue; }
 .playertwo { color: red; }
+*/
 
 .statsplayers {
    width: 100%;
@@ -974,42 +1270,131 @@ body {
    width: 48%;
 }
 
+/* stroke slider */
+
+#stroke_slider {
+   position: absolute;
+   z-index: 1000;
+   top: 0;
+   left: 0;
+   height: 100%;
+   width: 50%;
+   background-color: white;
+}
+
+.slideback {
+   height: 100%;
+   width: 10%;
+   background-color: gray;
+}
+
+.strokes {
+   height: 100%;
+   width: 90%;
+}
+
+.stroke {
+   font-size: 1.5em;
+   position: relative;
+	border: 1px;
+   border-style: solid;
+   border-color: black;
+   color: #0000FF;
+   /* background-color: #BFC9CA; */
+   height: 16.67%;
+   width: 100%;
+}
+
+.forehand {
+   font-size: 2em;
+   z-index: 10;
+   display: block;
+   position: absolute;
+   width: 50%;
+   height: 100%;
+   top: 0;
+   left: 0;
+   opacity: .4;
+   background-color: #BFC9CB;
+   vertical-align: middle;
+}
+
+.backhand {
+   font-size: 2em;
+   z-index: 10;
+   display: block;
+   position: absolute;
+   width: 50%;
+   height: 100%;
+   top: 0;
+   right: 0;
+   opacity: .4;
+   text-align: right;
+   background-color: #B2BABB;
+}
+
+.hand_label {
+   height: 100%;
+   width: 100%;
+   display: flex;
+   -webkit-align-items: center;
+   align-items: center;
+}
+
 /* Modal */
+
+@media(max-width:900px) {
+   .modal-content {
+      margin: 9% auto;
+      width: 90%;
+   }
+}
 
 .modal {
     display: none;
+    flex-direction: column;
+    -webkit-flex-direction: column;
     position: fixed;
-    z-index: 100;
+    z-index: 2000;
     left: 0;
     top: 0;
     width: 100%;
-    height: 200%;
-    overflow: auto;
+    height: 100%;
     background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.4);
 }
 
 .modal-content {
-    display: flex;           /* establish flex container */
-    flex-direction: column;  /* make main axis vertical */
-    justify-content: center; /* center items vertically, in this case */
-    align-items: center;     /* center items horizontally, in this case */
-    height: 300px;
+    display: flex;
+    width: auto;
+    margin: 10px;
+    padding: 5px;
+    flex-direction: column;
+    -webkit-flex-direction: column;
+    justify-content: center;
+    -webkit-justify-content: center;
+    align-items: center;
+    -webkit-align-items: center;
+    background-color: #fefefe;
+    border-radius: 5px;
+    text-align: center;
+    overflow: auto;
+}
 
-/*
-    margin: 7% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-*/
+.modal-menu {
+    display: flex;
+    height: auto;
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
 }
 
 .modaltext {
     background-color: #fefefe;
     border-radius: 5px;
-    width: 300px;
-    margin: 5px;
     text-align: center;
+    font-size: 1em;
 }
 
 #close-modal {
@@ -1021,24 +1406,15 @@ body {
     float: right;
     margin-top: 3px;
     margin-right: 3px;
-    font-size: 18px;
+    width: 1.5em;
+    height: 1.5em;
+    font-size: 1em;
 }
 
 #close-modal:hover,
 #close-modal:focus {
     text-decoration: none;
     cursor: pointer;
-}
-
-@media(max-width:900px) {
-   #close-modal {
-      font-size: 16px;
-   }
-
-   .modal-content {
-      margin: 9% auto;
-       width: 90%;
-   }
 }
 
 /* misc */
@@ -1064,3 +1440,173 @@ body {
 .forced { color: orange; }
 .modeforce { display: none; }
 
+/* viz */
+
+#momentum {
+   display: none;
+   width: 100%;
+   height: 100%;
+}
+
+.m_content {
+   position: absolute;
+   top: 6%;
+   left: 0;
+   width: 100%;
+   height: 90%;
+   overflow-y: scroll;
+   overflow-x: scroll;
+}
+
+#momentumChart {
+   height: 100%;
+   width: 100%;
+}
+
+#gametree {
+   display: none;
+   width: 100vw;
+   height: 100vh;
+}
+
+#gameTreeChart {
+   height: 100%;
+   width: 100%;
+   padding-top: 1em;
+   display: flex;
+   -webkit-justify-content: center;
+   justify-content: center;
+}
+
+#gamefish {
+   display: none;
+   z-index: 1500;
+   position: fixed;
+   left: 0;
+   top: 0;
+   width: 100%;
+   height: 100%;
+   background-color: rgb(0,0,0);
+   background-color: rgba(0,0,0,0.4);
+}
+
+.gf_menu {
+    display: flex;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+#close_gf {
+    border: 1px solid rgba(255,255,255,0.75);
+    background-color: rgba(20,20,20,0.75);
+    border-top-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    color: #fff;
+    float: right;
+    margin-top: 1px;
+    margin-right: 1px;
+    width: 2em;
+    height: 2em;
+    font-size: 1em;
+}
+
+.gf_content {
+    display: flex;
+    width: 100%;
+    height: 90%;
+    margin: 10px;
+    padding: 5px;
+    flex-direction: column;
+    -webkit-flex-direction: column;
+    justify-content: center;
+    -webkit-justify-content: flex-start;
+    align-items: flex-start;
+    -webkit-align-items: center;
+    background-color: #fefefe;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.gf_players {
+   width: 100%;
+   height: 10%;
+   background-color: white;
+}
+
+.gf_player {
+   color: black;
+   width: 50%;
+   text-align: center;
+   font-size: 1.5em;
+}
+
+.gf_chart {
+   width: 100%;
+   height: 85%;
+   background-color: white;
+   overflow-y: scroll;
+}
+
+#gameFishChart {
+   width: 100%;
+   height: 100%;
+}
+
+/* slider buttons  */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {display:none;}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}

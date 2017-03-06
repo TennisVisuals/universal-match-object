@@ -5,7 +5,7 @@ var touchManager = (function() {
       time_threshold: 200,
       diff_threshold: 130,
       prevent_touch: true,
-      prevent_double_tap: true,
+      prevent_double_tap: false,
       addSwipeTarget(target) {
          target.addEventListener('touchstart', handleTouchStart, false);
          target.addEventListener('touchmove', handleTouchMove, false);
@@ -77,17 +77,15 @@ var touchManager = (function() {
    }
 
    function findAncestor (el, cls) {
-      while ((el = el.parentNode) && !el.classList.contains(cls));
+      while ((el = el.parentNode) && el.classList && !el.classList.contains(cls));
       return el;
    }
 
    function handleTouchEnd(evt) { 
       let timeDiff = Date.now() - timeDown; 
-      console.log(timeDiff);
       if (Math.abs(xDiff) > Math.abs(yDiff)) {
          if (Math.abs(xDiff) > behaviors.diff_threshold && timeDiff < behaviors.time_threshold) {
             if (xDiff > 0) { 
-               foo = touch_target;
                if (typeof behaviors.swipeLeft == 'function') behaviors.swipeLeft(findAncestor(touch_target, 'swipe'));
             } else { 
                if (typeof behaviors.swipeRight == 'function') behaviors.swipeRight(findAncestor(touch_target, 'swipe'));
