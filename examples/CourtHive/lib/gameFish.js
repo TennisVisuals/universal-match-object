@@ -134,7 +134,11 @@ function momentumChart() {
                    fish: fish.append('g').attr('class', 'cGF' + i), 
                    game: game.append('g').attr('class', 'cGF' + i) 
                 });
-                fish_school[i].options({id: 'GF' + i, display: { score: false, point_score: false }});
+                fish_school[i].options({
+                   id: 'GF' + i, 
+                   display: { score: false, point_score: false },
+                   fish: { school: true },
+                });
              }
              fish_school[i].width(fish_offset).height(fish_offset);
              fish_school[i].options({ 
@@ -479,6 +483,7 @@ function gameFish() {
            left:   10, right:  10
         },
         fish: {
+           school:    false,
            gridcells: ['0', '15', '30', '40', 'G'],
            max_rally: undefined,
            cell_size: undefined,
@@ -558,7 +563,7 @@ function gameFish() {
             options.height = Math.max(dims.height, 100);
          }
 
-         if (options.fish.cell_size) {
+         if (options.fish.cell_size && !options.fish.school) {
             var multiplier = Math.max(10, data.length + 2);
             options.height = options.fish.cell_size * multiplier * .9;
          }
