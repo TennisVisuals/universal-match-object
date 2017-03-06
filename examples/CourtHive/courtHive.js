@@ -432,7 +432,7 @@
       let html = '';
       if (!games.length) return false;
       games.forEach(game => {
-         html += gameEntry(game, players);
+         if (game.points && game.points.length) html += gameEntry(game, players);
       });
       document.getElementById('ph_frame').innerHTML = html;
    }
@@ -716,6 +716,7 @@
       loadMatch(current_match_id);
       swapServer();
       resetButtons();
+      visibleButtons();
    }
 
    function deleteMatch(match_id) {
@@ -1380,7 +1381,6 @@
             sizeToFit:        false,
             continuous:       false,
             orientation:      'horizontal',
-            // show_images:      true,
             transition_time:  0,
             service:          false,
             rally:            true,
@@ -1390,30 +1390,21 @@
          },
          colors: pcolors
       })
-      charts.mc.events({ 
-         'score' :      { 'click': showGame }, 
-      });
+      charts.mc.events({ 'score' : { 'click': showGame }, });
       d3.select('#momentumChart').call(charts.mc);
 
       // set up gameFish
       var pcolors = { players: ["#a55194", "#6b6ecf"] };
       charts.gamefish = gameFish();
       charts.gamefish.options({ 
-         display:    { 
-            sizeToFit:        true,
-         },
+         display:    { sizeToFit: true, },
          colors:     pcolors 
-      });
-      charts.gamefish.events({ 
-         'rightImage' : { 'click': closeViz }, 
       });
       d3.select('#gameFishChart').call(charts.gamefish);
 
       charts.gametree = gameTree();
       var options = {
-         display: { 
-            sizeToFit: true,
-         },
+         display: { sizeToFit: true, },
          lines: {
             points: { winners: "green", errors: "#BA1212", unknown: "#2ed2db" },
             colors: { underlines: "black" }
@@ -1427,9 +1418,6 @@
          }
       }
       charts.gametree.options(options);
-      charts.gametree.events({ 
-         'rightImage' : { 'click': closeViz }, 
-      });
       d3.select('#gameTreeChart').call(charts.gametree);
    }
 
