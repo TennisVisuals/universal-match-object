@@ -10,8 +10,8 @@ While primarily built as a framework for exercising the [Universal Match Object]
 
 [CourtHive mobile](http://tennisvisuals.com:8080/CourtHive/mobile/) produces full stats as well as some very basic charts as an example of integrating [D3js](https://d3js.org/) visualizations. In the future the full complement of match visualizations currently hosted on [TennisVisuals.com](http://tennisvisuals.com:8080) will be rolled into CourtHive mobile.
 
-![vertical black](screenshots/ch_vblack.png "Vertical Black")![Statistics](screenshots/ch_stats.png "horizontal Black")
+![vertical black](screenshots/ch_vblack.png "Vertical Black")![Statistics](screenshots/ch_stats.png "Statistics")
 
 ![history](screenshots/ch_history.png "History")![Momentum](screenshots/ch_momentum.png "Momentum")
 
-![game tree](screenshots/ch_gametree.png "History")![game fish](screenshots/ch_gamefish.png "GameFish")
+![game tree](screenshots/ch_gametree.png "Game Tree")![game fish](screenshots/ch_gamefish.png "GameFish")
