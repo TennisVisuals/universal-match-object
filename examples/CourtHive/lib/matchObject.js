@@ -27,6 +27,10 @@
             description: 'No-Ad, 6 games for set, Tiebreak to 7',
             hasDecider: true, threshold: 6, minDiff: 2, children: 'noAdvantage', decidingChild: 'tiebreak7a', 
          },
+         'NoAdSetsTo4tb7': { 
+            description: 'No-Ad, 4 games for set, Tiebreak to 7',
+            hasDecider: true, threshold: 4, minDiff: 0, children: 'noAdvantage', decidingChild: 'tiebreak7a', 
+         },
          'longSetTo6by2': { 
             description: 'Advantage, 6 games for set, win by 2 games',
             hasDecider: false, threshold: 6, minDiff: 2, children: 'advantage', decidingChild: 'advantage', 
@@ -54,6 +58,16 @@
             name: 'Standard No-Advantage',
             description: 'best of 3 sets, No Advantage, 6 games for set, Tiebreak to 7', 
             hasDecider: true, threshold: 2, minDiff: 0, children: 'NoAdSetsTo6tb7', decidingChild: 'NoAdSetsTo6tb7',
+         },
+         '3_4n_10': { 
+            name: 'Standard Under 10',
+            description: 'best of 3 sets, No Advantage, 4 games for set, Tiebreak to 7, final set Supertiebreak', 
+            hasDecider: true, threshold: 2, minDiff: 0, children: 'NoAdSetsTo4tb7', decidingChild: 'supertiebreak',
+         },
+         '1_4n_7': { 
+            name: 'Under 10 Qualifying',
+            description: '4 games for set, No Advantage, Tiebreak to 7 at 3-3', 
+            hasDecider: false, threshold: 1, minDiff: 0, children: 'NoAdSetsTo4tb7', decidingChild: 'NoAdSetsTo4tb7',
          },
          '3_6n_10': { 
             name: 'No-Ad, 3rd Set Supertiebreak',
@@ -150,7 +164,11 @@
       so.history = {};
       so.history.local = () => so.local_history;
       so.history.action = (action) =>  common.history.filter(episode => episode.action == action);
-      so.history.points = () => common.history.filter(episode => episode.action == 'addPoint').map(episode => episode.point); 
+      so.history.points = (set) => {
+         let points = common.history.filter(episode => episode.action == 'addPoint').map(episode => episode.point); 
+         if (set != undefined) points = points.filter(point => point.set == set);
+         return points;
+      }
       so.history.score = () => { 
          if (object == 'Game') return so.history.points().map(point => point.score); 
          return [].concat(...so.children.map(child => child.history.score())); 
@@ -1200,6 +1218,10 @@
 
             addStat({ player: point.server, episode, stat: 'pointsServed' });
             addStat({ team: team_winner, episode, stat: 'pointsWon' });
+            if (point.result && point.hand) {
+               let player = point.result == 'Winner' ? team_winner : team_loser;
+               addStat({ player, episode, stat: point.hand });
+            }
             if (point.result == 'Ace') addStat({ player: point.server, episode, stat: 'aces' });
             if (point.result == 'Double Fault') addStat({ player: point.server, episode, stat: 'doubleFaults' });
             if (point.result == 'Winner') addStat({ player: point.winner, episode, stat: 'winners' });
