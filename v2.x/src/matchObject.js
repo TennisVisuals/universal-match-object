@@ -594,8 +594,15 @@
       let set = umo.stateObject({index, parent_object, object: 'Set', format, child, common});
 
       set.pointsNeeded = () => {
-         if (set.complete()) return undefined;
          let threshold = set.format.threshold();
+         if (set.complete()) {
+            let points_to_set = [];
+            points_to_set[set.winner()] = 0;
+            let loser = 1 - set.winner();
+            let pts = set.history.action('addPoint').filter(episode => episode.point.set == index).map(episode => episode.needed.points_to_set).filter(f=>f);
+            points_to_set[loser] = Math.max(...pts.map(p=>p[loser]));
+            return { points_to_set };
+         }
          let deciding_game = set.format.hasDecider();
          let score_difference = set.scoreDifference();
          let min_diff = set.format.minDiff();
