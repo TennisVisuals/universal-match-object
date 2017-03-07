@@ -25,6 +25,7 @@
 <script src="./lib/simpleChart.js"></script>
 <script src="./lib/gameFish.js"></script>
 <script src="./lib/gameTree.js"></script>
+<script src="./lib/ptsChart.js"></script>
 <script src="./courtHive.js"></script>
 
 <div id="gamefish">
@@ -154,6 +155,27 @@
 
 <div id="matchformats" class='noselect'> </div>
 <div id="matcharchive" class='noselect'> </div>
+
+<div id="pts">
+   <div class='fixedmenu flexrows'>
+      <div class="fm_header">Points To Set</div>
+      <div class="fm_action" onclick="viewManager('stats')">
+         <img class='ph_icon' src='./icons/statswhite.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('gametree')">
+         <img class='ph_icon' src='./icons/gametree.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('pointhistory')">
+         <img class='ph_icon' src='./icons/historywhite.png'>
+      </div>
+      <div class="fm_action" onclick="viewManager('entry')">
+         <img class='ph_icon' src='./icons/exitwhite.png'>
+      </div>
+   </div>
+   <div class='m_content'>
+      <div id="PTSChart"></div>
+   </div>
+</div>
 
 <div id="gametree">
    <div class='fixedmenu flexrows'>

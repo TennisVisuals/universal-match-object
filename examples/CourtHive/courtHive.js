@@ -24,7 +24,7 @@
  */
 
    var match = umo.Match();
-   var ch_version = '1.1.9';
+   var ch_version = '1.2.3';
 
    var app = {
       isStandalone: 'standalone' in window.navigator && window.navigator.standalone,
@@ -121,9 +121,13 @@
       document.getElementById('gamefish').style.display = "flex"; 
       let games = groupGames();
       let game = index != undefined ? games[index] : games[games.length -1];
+      let gridcells = (game.points[0].tiebreak) ? ['0', '1', '2', '3', '4', '5', '6', '7'] : ['0', '15', '30', '40', 'G'];
       charts.gamefish.options({ 
          display: { reverse: env.swap_sides, },
-         fish: { cell_size: 20 },
+         fish: { 
+            gridcells: gridcells,
+            cell_size: 20 
+         },
          score: game.score 
       });
       charts.gamefish.data(game.points).update();
@@ -440,11 +444,14 @@
    function gameEntry(game, players) {
       let last_point = game.points[game.points.length - 1];
       let game_score = game.complete ? game.score.join('-') : undefined;
-      let servergame = last_point.server == last_point.winner ? 'won' : 'lost';
+      let tiebreak = last_point.tiebreak;
+      let server = tiebreak ? 'Tiebreak' : players[last_point.server].name;
+      let service = tiebreak ? '' : last_point.server ? 'playertwo' : 'playerone';
+      let servergame = tiebreak ? '' : last_point.server == last_point.winner ? 'won' : 'lost';
       let html = `
          <div class="flexrows ph_game" onclick="showGameFish(${game.index})">
             <div class='ph_margin flexrows'>
-               <div class="ph_server">${players[last_point.server].name}</div>
+               <div class="ph_server ${service}">${server}</div>
                <div class="ph_action flexcenter"> <img class='ph_fish' src='./icons/fishblack.png'> </div>
                <div class='ph_rally ph_${servergame}''> <b>${game_score || ''}</b> </div>
             </div>
@@ -458,7 +465,7 @@
 
    function pointEntry(point, players, game_score) {
       let evenodd = point.index % 2 ? 'even' : 'odd';
-      let point_score = point.server ? point.score.split('-').reverse().join('-') : point.score;
+      let point_score = !point.tiebreak && point.server ? point.score.split('-').reverse().join('-') : point.score;
       let player_initials;
       if (point.result) {
          let shot_by;
@@ -473,6 +480,10 @@
       let point_result = point.result || '';
       let point_description = (!point_result) ? '' : `${player_initials}: ${point_hand}${point_result}`;
       point_score = point_score == '0-0' ? 'GAME' : point_score;
+      if (point.tiebreak) {
+         if (point.server) point_score = `&nbsp;${point_score}*`;
+         if (!point.server) point_score = `*${point_score}&nbsp;`;
+      }
       let rally = point.rally ? point.rally.length + 1 : '';
       let html = `
       <div class='flexrows ph_episode' onclick="editPoint(${point.index})">
@@ -845,10 +856,21 @@
             }
          },
          momentum({activate = true} = {}) {
-            changeDisplay(activate ? 'inline' : 'none', 'momentum');
-            if (activate) {
+            if (!activate) {
+               changeDisplay('none', 'momentum');
+               changeDisplay('none', 'pts');
+            } else {
+               if (env.orientation == 'landscape') {
+                  changeDisplay('none', 'momentum');
+                  changeDisplay('flex', 'pts');
+                  charts.pts_match.update();
+               } else {
+                  changeDisplay('inline', 'momentum');
+                  changeDisplay('none', 'pts');
+               }
                touchManager.prevent_touch = false;
                let point_episodes = match.history.action('addPoint');
+               charts.mc.width(window.innerWidth).height(820);
                charts.mc.data(point_episodes).update();
                charts.mc.update();
             }
@@ -858,8 +880,10 @@
             if (activate) {
                touchManager.prevent_touch = false;
                let point_episodes = match.history.action('addPoint');
+               let noAd = match.format.settings().code.indexOf('n_') >= 0;
+               charts.gametree.options({display: { noAd }});
                charts.gametree.data(point_episodes).update();
-               vizUpdate();
+               charts.gametree.update({sizeToFit: true});
             }
          },
       }
@@ -974,6 +998,43 @@
                html += table;
             }
          });
+
+         let counters = match.stats.counters(set_filter).teams;
+         if (counters[0].Backhand || counters[0].Forehand || counters[1].Backhand || counters[1].Forehand) {
+            html += `<div class='statsection flexcenter'>Finishing Shots - Strokes</div>`;
+            ['Forehand', 'Backhand'].forEach(hand => {
+               if (counters[0][hand] || counters[1][hand]) {
+                  let left_display = counters[0][hand] ? counters[0][hand].length : 0;
+                  let right_display = counters[1][hand] ? counters[1][hand].length : 0;
+                  html += `<div class='statrow'><div class='statleft'><b>${left_display}</b></div>` + 
+                            `<div class='statname'><b>Total ${hand} Shots</b></div><div class='statright'><b>${right_display}</b></div></div>`;
+                  // get a list of unique results
+                  let results = [].concat(...Object.keys(counters).map(key => {
+                     return counters[key][hand] ? counters[key][hand].map(episode => episode.point.result).filter(f=>f) : []
+                  })).filter((item, i, s) => s.lastIndexOf(item) == i);
+                  results.forEach(result => {
+                     let left_results = counters[0][hand] ? counters[0][hand].filter(f=>f.point.result == result) : [];
+                     let right_results = counters[1][hand] ? counters[1][hand].filter(f=>f.point.result == result) : [];
+                     if (left_results.length || right_results.length) {
+                        html += `<div class='statrow'><div class='statleft'>${left_results.length}</div>` + 
+                                  `<div class='statname'>${hand} ${result}s</div><div class='statright'>${right_results.length}</div></div>`;
+                     }
+                     // get a list of unique strokes
+                     let strokes = [].concat(...Object.keys(counters).map(key => {
+                        return counters[key][hand] ? counters[key][hand].map(episode => episode.point.stroke).filter(f=>f) : []
+                     })).filter((item, i, s) => s.lastIndexOf(item) == i);
+                     strokes.forEach(stroke => {
+                        let left_results = counters[0][hand] ? counters[0][hand].filter(f=>f.point.result == result && f.point.stroke == stroke) : [];
+                        let right_results = counters[1][hand] ? counters[1][hand].filter(f=>f.point.result == result && f.point.stroke == stroke) : [];
+                        if (left_results.length || right_results.length) {
+                           html += `<div class='statrow'><div class='statleft'>${left_results.length}</div>` + 
+                                     `<div class='statname'><i>${hand} ${stroke} ${result}s</i></div><div class='statright'>${right_results.length}</div></div>`;
+                        }
+                     });
+                  });
+               }
+            });
+         }
 
          document.querySelector('#statlines').innerHTML = html;
          addCharts(charts);
@@ -1348,7 +1409,7 @@
       let tiebreak_side = Math.floor(current_points / 6) % 2;
    }
 
-   function groupGames(set) {
+   function groupGames() {
       let point_episodes = match.history.action('addPoint');
       let games = [{ points: [] }];
       let game_counter = 0;
@@ -1359,14 +1420,12 @@
             game_counter += 1;
             current_game = point.game;
             games[game_counter] = { points: [] };
-         } else {
          }
          games[game_counter].points.push(point);
          games[game_counter].index = game_counter;
          games[game_counter].set = episode.set.index;
          games[game_counter].score = episode.game.games;
          games[game_counter].complete = episode.game.complete;
-         if (episode.set.complete) games[game_counter].last_game = true;
       });
       return games;
       if (set != undefined) games = games.filter(function(game) { return game.set == set });
@@ -1380,7 +1439,7 @@
          display: { 
             sizeToFit:        false,
             continuous:       false,
-            orientation:      'horizontal',
+            orientation:      'vertical',
             transition_time:  0,
             service:          false,
             rally:            true,
@@ -1402,6 +1461,7 @@
       });
       d3.select('#gameFishChart').call(charts.gamefish);
 
+      // set up gametree
       charts.gametree = gameTree();
       var options = {
          display: { sizeToFit: true, },
@@ -1419,21 +1479,34 @@
       }
       charts.gametree.options(options);
       d3.select('#gameTreeChart').call(charts.gametree);
+
+      charts.pts_match = ptsMatch();
+      charts.pts_match.options({ 
+         margins: { top: 40, bottom: 20 },
+         display: { sizeToFit: true, }
+      });
+      charts.pts_match.data(match);
+      d3.select('#PTSChart').call(charts.pts_match);
    }
 
    function closeViz() { viewManager('entry'); }
 
    function vizUpdate() {
-      let direction = env.orientation == 'landscape' ? 'horizontal' : 'vertical' 
-      let width = direction == 'horizontal' ? 820 : window.innerWidth;
-      let height = direction == 'horizontal' ? window.innerHeight : 820;
-      charts.mc.width(width).height(height);
-      charts.mc.options({ display: { orientation: direction, } });
-      charts.mc.update();
+      let direction = env.orientation == 'landscape' ? 'horizontal' : 'vertical';
 
-      width = window.innerWidth;
-      height = 820;
-      charts.gamefish.width(width).height(height);
+      if (env.view == 'pts' && direction == 'vertical') {
+         changeDisplay('none', 'pts');
+         changeDisplay('inline', 'momentum');
+         charts.mc.width(window.innerWidth).height(820);
+         charts.mc.update();
+         env.view = 'momentum';
+      } else if (env.view == 'momentum' && direction == 'horizontal') {
+         changeDisplay('none', 'momentum');
+         changeDisplay('flex', 'pts');
+         charts.pts_match.update({sizeToFit: true});
+         env.view = 'pts';
+      }
+
       charts.gamefish.update();
 
       let players = match.metadata.players();
@@ -1444,11 +1517,6 @@
          },
       });
       charts.gametree.update({sizeToFit: true});
-
-      Array.from(document.querySelectorAll(".m_content")).forEach(div => {
-         div.setAttribute("overflow-y", direction == 'vertical' ? 'scroll' : 'hidden')
-         div.setAttribute("overflow-x", direction == 'vertical' ? 'hidden' : 'scroll')
-      });
    }
 
    function modalInfo() {

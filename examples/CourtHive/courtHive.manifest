@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# stats a
+# pts
 
 index.html
 courtHive.js
@@ -16,6 +16,7 @@ courtHive.js
 ./lib/clipboard.min.js
 ./lib/gameFish.js
 ./lib/gameTree.js
+./lib/ptsChart.js
 
 ./icons/courtHive.png
 ./icons/change.png

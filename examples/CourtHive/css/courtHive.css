@@ -1,12 +1,3 @@
-/*
-@media screen and (min-width: 320px) and (max-width: 767px) and (orientation: landscape) {
-   .m_content {
-      overflow-y: hidden;
-      overflow-x: scroll;
-   }
-}
-*/
-
 /* deal with iOS browser real estate */
 @media (min-height: 500px) {
    .footer {
@@ -1171,6 +1162,7 @@ body {
 }
 
 .s_set {
+   /* no style as yet */
 }
 
 .s_header {
@@ -1209,10 +1201,8 @@ body {
    overflow-x: hidden;
 }
 
-/*
-.playerone { color: blue; }
-.playertwo { color: red; }
-*/
+.playerone { color: #a55194; }
+.playertwo { color: #6b6ecf; }
 
 .statsplayers {
    width: 100%;
@@ -1268,6 +1258,15 @@ body {
    color: green;
    text-align: center;
    width: 48%;
+}
+
+.statsection {
+   width: 100%;
+   height: auto;
+   color: white;
+   padding: 2px;
+   background-color: #85929E;
+   margin-bottom: 1em;
 }
 
 /* stroke slider */
@@ -1461,6 +1460,21 @@ body {
 #momentumChart {
    height: 100%;
    width: 100%;
+}
+
+#pts {
+   display: none;
+   width: 100vw;
+   height: 100vh;
+}
+
+#PTSChart {
+   height: 100%;
+   width: 100%;
+   padding-top: 1em;
+   display: flex;
+   -webkit-justify-content: center;
+   justify-content: center;
 }
 
 #gametree {

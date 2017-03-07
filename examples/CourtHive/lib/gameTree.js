@@ -28,6 +28,7 @@ function gameTree() {
       },
 
       display: {
+         noAd:        false,
          leftImg:     false,
          rightImg:    false,
          show_images: false,
@@ -484,10 +485,11 @@ function gameTree() {
       } else {
          var _data = data;
       }
+      _data = _data.filter(function(f) { return !f.point.tiebreak; });
       for (var d=0; d < _data.length; d++) {
          var previous_episode = _data[d - 1];
-         var previous = (d == 0 || previous_episode.game.complete) ? '0-0' : previous_episode.point.points.join('-');
-         var progression = 'L' + previous + point_connector + _data[d].point.points.join('-');
+         var previous = (d == 0 || previous_episode.game.complete) ? calcPosition([0, 0]) : calcPosition(previous_episode.point.points);
+         var progression = 'L' + previous + point_connector + calcPosition(_data[d].point.points);
          if (options.points.highlight.length && options.points.highlight.indexOf(d) < 0) { continue; }
          counters.p[progression] = counters.p[progression] ? counters.p[progression] + 1 : 1;
 
@@ -496,6 +498,14 @@ function gameTree() {
          } else if (options.points.errors.indexOf(_data[d].point.result) >= 0) {
             counters.e[progression] = counters.e[progression] ? counters.e[progression] + 1 : 1;
          }
+      }
+
+      // make adjustment for multiple dueces
+      function calcPosition(points) {
+         let point_min = Math.min(...points);
+         let diff = (point_min >= 4) ? point_min - 3 : 0;
+         var pos = points.map((point, index) => (options.display.noAd && point == 4 && points[1 - index] == 3) ? 'G' : point - diff);
+         return pos.join('-');
       }
    }
 
