@@ -1005,8 +1005,9 @@ pointsNeededCalcs = function() {
    assert.equal(pts[0], 3);
    assert.equal(pts[1], 1);
    set.addPoints('000');
-   pts = set.pointsNeeded();
-   assert.equal(pts, undefined);
+   pts = set.pointsNeeded().points_to_set;
+   assert.equal(pts[0], 0);
+   assert.equal(pts[1], 29);
 
 }
 
