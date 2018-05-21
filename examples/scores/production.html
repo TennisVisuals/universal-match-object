@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>CourtHive Scores</title>
+    <link rel="stylesheet" type="text/css" href="css/scores.min.css" />
+  </head>
+  <script src="scores.lib.js"></script>
+  <body>
+
+  <div class="container">
+     <div>
+    <div class='header flexcenter'>CourtHive Match Score</div>
+    <div id='h_black'>
+      <div id='h_scoreboard' class='flexrows flexcenter'>
+         <div id='h_playernames'>
+            <div id='h_playerone' class='h_playername flexcenter indicate_serve display_player_0'> Player One</div>
+            <div id='h_playertwo' class='h_playername flexcenter indicate_serve display_player_1'> Player Two </div>
+         </div>
+         <div id="h_scores" class='flexrows flexcenter'>
+            <div class='hs0 h_setscore flexcols'>
+               <div class='h_score display_set_0_games_0'> 0 </div>
+               <div class='h_score display_set_0_games_1'> 0 </div>
+            </div>
+            <div style='display: none' class='hs1 h_setscore flexcols'>
+               <div class='h_score display_set_1_games_0'> - </div>
+               <div class='h_score display_set_1_games_1'> - </div>
+            </div>
+            <div style='display: none' class='hs2 h_setscore flexcols'>
+               <div class='h_score display_set_2_games_0'> - </div>
+               <div class='h_score display_set_2_games_1'> - </div>
+            </div>
+            <div style='display: none' class='hs3 h_setscore flexcols'>
+               <div class='h_score display_set_3_games_0'>   </div>
+               <div class='h_score display_set_3_games_1'>   </div>
+            </div>
+            <div style='display: none' class='hs4 h_setscore flexcols'>
+               <div class='h_score display_set_4_games_0'>   </div>
+               <div class='h_score display_set_4_games_1'>   </div>
+            </div>
+            <div class='hp h_setscore flexcols'>
+               <div class='h_points display_points_0'> 0 </div>
+               <div class='h_points display_points_1'> 0 </div>
+            </div>
+         </div>
+      </div>
+    </div>
+ </div>
+ <div id='pointhistory' style='display: none'>
+    <div class='header flexcenter'>Point History</div>
+    <div class='h_history_names flexrows'>
+       <div class="h_playername flexjustifystart display_player_0 indicate_serve"> Player One </div>
+       <div class="h_playername flexjustifyend display_player_1 indicate_serve"> Player Two </div>
+    </div>
+    <div id='details'> <ul id="updates"></ul> </div>
+ </div>
+  </div>
+
+  </body>
+</html>
