@@ -1,4 +1,3 @@
-/* deal with iOS browser real estate */
 @media (min-height: 500px) {
    .footer {
       position: absolute;
@@ -26,6 +25,7 @@ html, body {
 
 html {
   box-sizing: border-box;
+  touch-action: manipulation;
 }
 
 *,
@@ -70,6 +70,19 @@ body {
 
 .nowrap { white-space:nowrap; }
 
+.flexhelp {
+   display: flex;
+   -webkit-flex-direction: row;
+   flex-direction: row;
+   -webkit-flex-flow: row nowrap;
+   flex-flow: row nowrap;
+   -webkit-justify-content: center;
+   justify-content: center;
+   -webkit-align-items: center;
+   align-items: center;
+   padding-bottom: .5em;
+}
+
 .flexrows {
    display: flex;
    -webkit-flex-direction: row;
@@ -84,6 +97,16 @@ body {
    flex-direction: column;
    -webkit-justify-content: space-between;
    justify-content: space-between;
+}
+
+.centerall {
+   display: flex;
+   -webkit-justify-content: center;
+   justify-content: center;
+   -webkit-align-content: center;
+   align-content: center;
+   -webkit-align-items: center;
+   align-items: center;
 }
 
 .flexcenter {
@@ -104,15 +127,7 @@ body {
    justify-content: flex-end;
 }
 
-.flexleft {
-   -webkit-justify-content: flex-start;
-   justify-content: flex-start;
-}
-
-.flexright {
-   -webkit-justify-content: flex-end;
-   justify-content: flex-end;
-}
+/* Timers */
 
 /* Vertical Entry */
 #vwhite {
@@ -190,11 +205,18 @@ body {
 }
 
 .player { width: 60%; }
+
+.playername {
+   border: none;
+   width: 100%;
+   text-align: left;
+}
 .player_entry {
    border: none;
    width: 100%;
    text-align: left;
 }
+
 .t_entry {
    border: none;
    width: 100%;
@@ -293,11 +315,6 @@ body {
    height: 0px;
 }
 
-.icon {
-   width: 20px;
-   height: 20px;
-}
-
 /* Settings */
 #settings {
    margin: 0;
@@ -358,12 +375,42 @@ body {
 
 /* Menu */
 
-.infoicon {
-   position: absolute;
-   top: 10px;
-   left: 10px;
-   width: 2em;
-   height: 2em;
+#pulse {
+   display: none;
+}
+
+.helpintro {
+   font-size: 2em;
+   font-weight: bold;
+   padding: .5em;
+}
+
+.quicktitle {
+   font-size: larger;
+   font-weight: bold;
+   padding-left: .5em;
+}
+
+.quickitem {
+   display: flex;
+   -webkit-flex-direction: row;
+   flex-direction: row;
+   -webkit-flex-flow: row wrap;
+   flex-flow: row wrap;
+   -webkit-justify-content: center;
+   justify-content: center;
+   padding-bottom: .5em;
+}
+
+.helpitem {
+   display: flex;
+   -webkit-flex-direction: row;
+   flex-direction: row;
+   -webkit-flex-flow: row wrap;
+   flex-flow: row wrap;
+   -webkit-justify-content: center;
+   justify-content: center;
+   padding-bottom: .5em;
 }
 
 #mainmenu {
@@ -373,11 +420,24 @@ body {
    display: none;
 }
 
+.mm {
+   position: absolute;
+   top: 6vh;
+   left: 0;
+   width: 100vw;
+   height: 94vh;
+}
+
+.spacebetween {
+   -webkit-justify-content: space-between;
+   justify-content: space-between;
+}
+
 #main_menu {
    margin: 0;
    padding: 1em;
    display: flex;
-   height: 100vh;
+   height: 80%;
    width: 100vw;
    -webkit-flex-direction: column-reverse;
    flex-direction: column-reverse;
@@ -389,8 +449,20 @@ body {
 }
 
 .m_menuitem {
-   height: 10%;
-   width: 90%;
+   height: 10vh;
+   width: 90vw;
+   border: 1px;
+   margin: 2px 0px 0px 0px;
+   font-size: 1.5em;
+   border-radius: 5px;
+   border-color: black;
+   border-style: solid;
+   background-color: white;
+}
+
+.reset {
+   height: 2em;
+   width: 50vw;
    border: 1px;
    margin: 2px 0px 0px 0px;
    font-size: 1.5em;
@@ -401,11 +473,16 @@ body {
 }
 
 /* match details */
-#matchdetails {
-   margin: 0;
-   padding: 0;
+#matchdeets {
    display: none;
+   z-index: 1500;
+   position: fixed;
+   left: 0;
+   top: 0;
+   width: 100vw;
    height: 100vh;
+   background-color: rgb(0,0,0);
+   background-color: rgba(0,0,0,0.4);
    -webkit-flex-direction: column;
    flex-direction: column;
    -webkit-align-items: stretch;
@@ -415,13 +492,14 @@ body {
    font-family: "Helvetica Neue", Arial, sans-serif;
 }
 
-.MDselection {
-   font-size: 14px;
+.MDselection { font-size: 14px; }
+.md_header { 
+   font-size: 1.5em; 
 }
 
 .md_detail {
    width: 100%;
-   padding: 1em 1em 1em 1em;
+   padding: .5em;
    background-color: white;
 }
 
@@ -429,23 +507,31 @@ body {
    display: flex;
    -webkit-flex-direction: row;
    flex-direction: row;
+    -webkit-justify-content: flex-start;
+    align-items: flex-start;
    padding: 0px 0px 1px 1px;
    font-size: 15px;
 }
 
 .md_label { 
+   float: left;
    width: 5em; 
+   font-weight: bold;
+   text-align: left;
 }
+
+.md_value { width: 80%; }
+#md_format { float: left; }
 
 .md_player {
    width: 100%;
-   padding: 1em 1em 1em 1em;
+   padding: .5em;
    background-color: white;
 }
 
 .md_event {
    width: 100%;
-   padding: 1em 1em 1em 1em;
+   padding: .5em;
    background-color: white;
 }
 
@@ -457,6 +543,107 @@ body {
    align-items: center;
    font-family: "Helvetica Neue", Arial, sans-serif;
 }
+
+/* edit point */
+#editpoint {
+   display: none;
+   z-index: 1500;
+   position: fixed;
+   left: 0;
+   top: 0;
+   width: 100%;
+   height: 100%;
+   background-color: rgb(0,0,0);
+   background-color: rgba(0,0,0,0.4);
+}
+
+.ep_header { 
+   font-size: 1.5em;
+}
+
+.ep_limit_modal {
+   max-width: 600px;
+}
+
+/* edit player */
+#editplayer {
+   display: none;
+   z-index: 1500;
+   position: fixed;
+   left: 0;
+   top: 0;
+   width: 100%;
+   height: 100%;
+   background-color: rgb(0,0,0);
+   background-color: rgba(0,0,0,0.4);
+}
+
+.ep_player {
+   width: 100%;
+   padding: 1em 1em 1em 1em;
+   background-color: white;
+}
+
+.ep_playername {
+   border: none;
+   width: 100%;
+   text-align: left;
+   font-size: 1.5em;
+}
+
+.ep_row {
+   width: 100%;
+   display: flex;
+   -webkit-flex-direction: row;
+   flex-direction: row;
+   -webkit-align-items: left;
+   align-items: left;
+   -webkit-align-content: left;
+   align-content: left;
+   padding: .5em;
+   font-size: 1em;
+}
+
+.ep_actions {
+   width: 100%;
+   display: flex;
+   -webkit-flex-direction: row-reverse;
+   flex-direction: row-reverse;
+   padding: .5em;
+   font-size: 1em;
+}
+
+.ep_item {
+   width: 50%;
+   text-align: left;
+   font-weight: bold;
+}
+
+#ep_sgp {
+   font-weight: bold;
+}
+
+.ep_select {
+   border: none;
+   font-size: inherit;
+}
+
+#player_rank { width: 90%; }
+
+.ep_action {
+   width: 30%;
+   height: 1.5em;
+   max-width: 100px;
+   margin-left: 1%;
+   margin-bottom: 1em;
+   border: 1px;
+   font-size: 1em;
+   border-radius: 5px;
+   border-color: black;
+   border-style: solid;
+   background-color: white;
+}
+
 
 /* match formats */
 #matchformats {
@@ -504,8 +691,8 @@ body {
    position: absolute;
    top: 0;
    left: 0;
-   width: 100%;
-   height: 6%;
+   width: 100vw;
+   height: 6vh;
    color: white;
    padding-left: 10px;
    font-size: 3vh;
@@ -537,7 +724,11 @@ body {
 
 .fm_action {
    width: 10%;
-   height: 50%;
+   height: 100%;
+}
+
+.menu_icon {
+   float: right;
 }
 
 .fixedcontent {
@@ -564,14 +755,12 @@ body {
    font-family: "Helvetica Neue", Arial, sans-serif;
 }
 
-.ph_icon {
-   width: 3.5vh;
-   height: 3.5vh;
-}
-
 .ph_fish {
-   width: 1.5em;
-   height: 1.5em;
+   width: 2em;
+   height: 0;
+   padding-bottom: 2em;
+   background-image: url("../icons/sprite.png");
+   background-size: 100%;
 }
 
 .ph_game {
@@ -598,7 +787,7 @@ body {
    width: 100%;
    height: 100%;
    margin-top: 10px;
-   margin-bottom: 10px;
+   margin-bottom: 5px;
 }
 
 .ph_won { color: green; }
@@ -634,6 +823,8 @@ body {
 }
 
 /* match archive */
+.view_archive { display: none; }
+
 .c2c {
    width: 6vw;
    height: 6vw;
@@ -734,6 +925,20 @@ body {
    background-color: black;
 }
 
+.vs_status {
+   height: 6%;
+   width: 100%;
+   background-color: black;
+}
+
+.vs_status_message {
+   width: 100%;
+   height: 100%;
+   color: #09D806;
+   font-size: 7vw;
+   background-color: black;
+}
+
 .vs_players {
    width: 100%;
    height: 15%;
@@ -768,6 +973,12 @@ body {
 
 .vs_label, .vs_value {
    height: 30%;
+}
+
+.value_border {
+   border-style: solid;
+   border-width: 1px;
+   border-color: green;
 }
 
 .vs_player_score {
@@ -1069,7 +1280,8 @@ body {
 }
 
 .h_messagetext {
-   color: white;
+   font-size: 3vw;
+   color: #09D806;
 }
 
 .h_serviceaction {
@@ -1116,6 +1328,16 @@ body {
    border-color: black;
    border-style: solid;
    width: 12.5%;
+   height: 100%;
+   color: white;
+   background-color: #4A4848;
+}
+
+.h_menuwide {
+   border: 1px;
+   border-color: black;
+   border-style: solid;
+   width: 25%;
    height: 100%;
    color: white;
    background-color: #4A4848;
@@ -1357,8 +1579,8 @@ body {
     z-index: 2000;
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.4);
 }
@@ -1370,8 +1592,6 @@ body {
     padding: 5px;
     flex-direction: column;
     -webkit-flex-direction: column;
-    justify-content: center;
-    -webkit-justify-content: center;
     align-items: center;
     -webkit-align-items: center;
     background-color: #fefefe;
@@ -1397,17 +1617,9 @@ body {
 }
 
 #close-modal {
-    border: 1px solid rgba(255,255,255,0.75);
-    background-color: rgba(20,20,20,0.75);
-    border-top-left-radius: 5px;
-    border-bottom-right-radius: 5px;
-    color: #fff;
     float: right;
     margin-top: 3px;
     margin-right: 3px;
-    width: 1.5em;
-    height: 1.5em;
-    font-size: 1em;
 }
 
 #close-modal:hover,
@@ -1432,11 +1644,11 @@ body {
 
 /* universal */
 
-.fault { color: yellow; }
+.fault { color: #FF8483; }
 .winner { color: #09D806; }
-.unforced { color: yellow; }
+.forced { color: #FFD683; }
 .blue { color: #4BA1F6; }
-.forced { color: orange; }
+.unforced { color: #FF8483; }
 .modeforce { display: none; }
 
 /* viz */
@@ -1505,26 +1717,14 @@ body {
 }
 
 .gf_menu {
-    display: flex;
-    width: 100%;
-    height: auto;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-#close_gf {
-    border: 1px solid rgba(255,255,255,0.75);
-    background-color: rgba(20,20,20,0.75);
-    border-top-left-radius: 5px;
-    border-bottom-right-radius: 5px;
-    color: #fff;
-    float: right;
-    margin-top: 1px;
-    margin-right: 1px;
-    width: 2em;
-    height: 2em;
-    font-size: 1em;
+  
+   display: flex;
+   width: 100%;
+   height: auto;
+   min-height: 20px;
+   flex-direction: row;
+   justify-content: flex-end;
+   align-items: center;
 }
 
 .gf_content {
@@ -1551,7 +1751,6 @@ body {
 }
 
 .gf_player {
-   color: black;
    width: 50%;
    text-align: center;
    font-size: 1.5em;
@@ -1623,4 +1822,11 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+.img_recycle { background-color: red; }
+.img_export { background-color: blue; }
+.recycle_icon, .export_icon {
+  width: 25px;
+  height: 25px;
 }

@@ -1,49 +1,25 @@
 CACHE MANIFEST
-# pts
+# v1.6.4
 
 index.html
-courtHive.js
+courtHive.min.js
+manifest.json
 
-./css/courtHive.css
+./css/style.css
+./icons/courtHive.png
+
+./lib/lib_bundle.js
+./icons/sprite.png
+
+./icons/link.png
+./icons/emailblack.png
+./icons/points.jpg
+
+./icons/exportwhite.png
+./icons/recycle.png
+
 ./assets/ioc_codes.json
 ./assets/simpleclick.mp3
 
-./lib/browserStorage.js
-./lib/d3.v4.min.js
-./lib/matchObject.js
-./lib/simpleChart.js
-./lib/touchManager.js
-./lib/clipboard.min.js
-./lib/gameFish.js
-./lib/gameTree.js
-./lib/ptsChart.js
-
-./icons/courtHive.png
-./icons/change.png
-./icons/chart.png
-./icons/edit.png
-./icons/exit.png
-./icons/exitwhite.png
-./icons/swapwhite.png
-./icons/swapblack.png
-./icons/finish.png
-./icons/menuwhite.png
-./icons/menublack.png
-./icons/recycle.png
-./icons/redowhite.png
-./icons/redoblack.png
-./icons/undowhite.png
-./icons/undoblack.png
-./icons/save.png
-./icons/infoblack.png
-./icons/clipboard.png
-./icons/exportwhite.png
-./icons/exportblack.png
-./icons/momentum.png
-./icons/historywhite.png
-./icons/historyblack.png
-./icons/statswhite.png
-./icons/statsblack.png
-./icons/gametree.png
-./icons/fishwhite.png
-./icons/fishblack.png
+NETWORK:
+*

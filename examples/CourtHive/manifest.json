@@ -1,11 +1,15 @@
 {
-  "name": "CourtHive",
   "short_name": "CourtHive",
-  "icons": [{
-        "src": "icons/TMT.png",
-        "sizes": "128x128",
-      }],
+  "name": "CourtHive",
+  "icons": [
+    {
+      "src": "icons/CourtHive.png",
+      "type": "image/png",
+      "sizes": "128x128"
+    }
+  ],
   "scope": "/",
   "start_url": "index.html",
-  "display": "fullscreen",
+  "display": "standalone",
+  "background-color": "#020C2D"
 }
