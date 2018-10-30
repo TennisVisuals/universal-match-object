@@ -17,36 +17,13 @@
  */
 
    var match = umo.Match();
-   var ch_version = '1.8.2';
-
-   // BEGIN queryString
-   var queryString = {};
-   (function () {
-     let query = window.location.search.substring(1);
-     let vars = query.split("&");
-     for (let i=0;i<vars.length;i++) {
-       let pair = vars[i].split("=");
-       if (typeof queryString[pair[0]] === "undefined") {
-         queryString[pair[0]] = pair[1];
-       } else if (typeof queryString[pair[0]] === "string") {
-         var arr = [ queryString[pair[0]], pair[1] ];
-         queryString[pair[0]] = arr;
-       } else {
-         queryString[pair[0]].push(pair[1]);
-       }
-     } 
-     history.pushState('', document.title, window.location.pathname);
-     // util.clearHistory();
-   })();
+   var ch_version = '1.4.7';
 
    var device = {
       isStandalone: 'standalone' in window.navigator && window.navigator.standalone,
       isIDevice: (/iphone|ipod|ipad/i).test(window.navigator.userAgent),
-      isMobile: (typeof window.orientation !== "undefined"),
       geoposition: {},
    }
-
-   var dev = {}
 
    var env = {
       lets: 0,
@@ -112,7 +89,7 @@
    var toggle_ids = Object.keys(buttons).filter(f=>buttons[f].type == 'toggle');
 
    // used to locate known tournaments in vicinity; auto-fill country
-   navigator.geolocation.getCurrentPosition(function(pos) { device.geoposition = pos; });
+   navigator.geolocation.getCurrentPosition(function(pos){ device.geoposition = pos; });
 
    window.addEventListener('load', function(e) {
      window.applicationCache.addEventListener('updateready', function(e) {
@@ -149,10 +126,9 @@
       if (which) {
          document.getElementById(which).style.display = "none"; 
       } else {
-         Array.from(document.querySelectorAll('.modal')).forEach(modal => modal.style.display = "none");
+         document.getElementById('modal').style.display = "none"; 
       }
    }
-
    function showModal(text, data) {
       document.getElementById('modaltext').innerHTML = text;
       if (data) document.getElementById("copy2clipboard").setAttribute("data-clipboard-text", data);
@@ -179,8 +155,6 @@
    function closeGameFish() { 
       document.getElementById('gamefish').style.display = "none"; 
    }
-
-   touchManager.disableDrag();
 
    touchManager.swipeLeft = (element) => {
       if (element && element.id) {
@@ -218,7 +192,6 @@
       }
    }
 
-   // TODO: is this used??
    touchManager.pressAndHold = (element) => {
       if (element.classList.contains('rally')) {
          console.log('Prompt for Rally Length');
@@ -437,9 +410,7 @@
          div.style.display = env.undone.length ? 'flex' : 'none'
       });
       var last_point = points.length ? points[points.length - 1] : undefined;
-      var status_message = statusMessage();
-      match.status = status_message;
-      Array.from(document.querySelectorAll('.status_message')).forEach(div => div.innerHTML = status_message);
+      Array.from(document.querySelectorAll('.status_message')).forEach(div => div.innerHTML = statusMessage());
 
       function statusMessage() {
          if (last_point) {
@@ -497,18 +468,18 @@
          <p>Supported by your device</p>
       `;
       var save = `
-         <div onclick="exportMatch('${match_id}')" class="flexcenter">
+         <p onclick="exportMatch('${match_id}')">
             <div class='export_action action_icon iconsave'></div>
-         </div>
+         </p>
       `;
       var copy = `
-         <div class="flexcenter">
+         <p>
             <button id='copy2clipboard' class="flexcenter c2c" data-clipboard-text=""> 
                <div class='export_action action_icon iconclipboard'></div> 
             </button>
-         </div> 
+         </p> 
       `;
-      var modaltext = `<div>${header}<div class="flexrows flexcenter">${!device.isIDevice ? save : ''}${copy}</div></div>`;
+      var modaltext = `<div>${header}${!device.isIDevice ? save : ''}${copy}</div>`;
       var export_data = match_data;
       showModal(modaltext, export_data);
    }
@@ -518,40 +489,13 @@
       var players = match.metadata.players();
       var html = '';
       if (!games.length) return false;
-      games.forEach((game, game_number) => {
-         if (game.points && game.points.length) html += gameEntry(game, players, game_number);
+      games.forEach(game => {
+         if (game.points && game.points.length) html += gameEntry(game, players);
       });
-      html += `
-         <div class="flexrows ph_game">
-            <div class='ph_margin' style='width: 100%'>
-               <div class='flexcenter' style='width: 100%'>Duration ${matchDuration()}</div>
-            </div>
-         </div>
-      `;
       document.getElementById('ph_frame').innerHTML = html;
    }
 
-   function matchDuration() {
-      var timestamps = match.history.points().map(p=>p.uts);
-      var start = Math.min(...timestamps);
-      var end = Math.max(...timestamps);
-      let seconds = (end - start) / 1000.0;
-      return HHMMSS(seconds);
-   }
-
-   function HHMMSS(s) {
-       var sec_num = parseInt(s, 10); // don't forget the second param
-       var hours   = Math.floor(sec_num / 3600);
-       var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-       var seconds = sec_num - (hours * 3600) - (minutes * 60);
-
-       if (hours   < 10) {hours   = "0"+hours;}
-       if (minutes < 10) {minutes = "0"+minutes;}
-       if (seconds < 10) {seconds = "0"+seconds;}
-       return hours+':'+minutes+':'+seconds;
-   }
-
-   function gameEntry(game, players, game_number) {
+   function gameEntry(game, players) {
       var last_point = game.points[game.points.length - 1];
       var game_score = game.complete ? game.score.join('-') : undefined;
       var tiebreak = last_point.tiebreak;
@@ -678,20 +622,21 @@
       }
    }
 
-   function resetMatch(muid) {
+   function resetMatch() {
       match.reset();
       loadDetails();
       updateScore();
+      stateChangeEvent();
       var date = new Date().valueOf();
-      muid = muid || UUID.generate();
+      var muid = UUID.generate();
       match.metadata.defineMatch({muid, date});
       BrowserStorage.set('current_match', muid);
-      stateChangeEvent();
+      updateMatchArchive();
    }
 
-   function newMatch(force_format) {
+   function newMatch() {
       resetMatch();
-      viewManager(force_format ? 'entry' : 'matchformat');
+      viewManager('matchformat');
    }
 
    function displayFormats() {
@@ -705,8 +650,6 @@
    }
 
    function formatEntry(format) {
-      let name;
-      let description;
       ({name, description} = umo.formats().matches[format]);
       name = name || '';
       var html = `
@@ -720,8 +663,8 @@
       return html;
    }
 
-   function displayMatchArchive({active}={}) {
-      var html = `<div class='swipe-panel no-top'>`;
+   function displayMatchArchive() {
+      var html = '';
       // archive used to sort by match.date when match_id was timestamp...
       // need a fix for this...
       var match_archive = JSON.parse(BrowserStorage.get('match_archive') || '[]')
@@ -731,68 +674,17 @@
          newMatch();
          return;
       }
-      if (active) return;
-
       match_archive.forEach(match_id => {
          var match_data = JSON.parse(BrowserStorage.get(match_id));
          if (match_data) {
             html += archiveEntry(match_id, match_data);
          } else {
-            BrowserStorage.remove(match_id);
+            deleteMatch(match_id);
          }
       });
-      html += '</div>';
-      let ma_elem = document.getElementById('matcharchiveList');
-      ma_elem.innerHTML = html;
-
-      SwipeList.init({
-        container: '.swipe-item',
-        buttons: [
-             {
-                 width: 60,
-                 side: 'right',
-                 class: 'img_export swipe_img',
-                 image: './icons/exportwhite.png',
-                 image_class: 'export_icon',
-             },
-             {
-                 width: 60,
-                 side: 'right',
-                 class: 'img_recycle swipe_img',
-                 image: './icons/recycle.png',
-                 image_class: 'recycle_icon',
-             },
-         ]
-      });
-
-      function findUpClass(el, class_name) {
-         while (el.parentNode) {
-            el = el.parentNode;
-            if (el.classList && Array.from(el.classList).indexOf(class_name) >= 0) return el;
-         }
-         return null;
-      }
-
-      ma_elem.addEventListener('click', function(e) {
-         let p = findUpClass(e.target, 'swipe-item');
-         let muid = p.getAttribute('muid');
-         let selected_match = findUpClass(e.target, 'mh_match');
-         if (selected_match) { return loadMatch(muid); }
-
-         if (e.target.className.indexOf('img_export') >= 0 || e.target.className == 'export_icon') {
-            p.classList.remove('move-out-click');
-            p.style.webkitTransitionDuration = '125ms';
-            p.style.transitionDuration = '125ms';
-            p.style.webkitTransform = 'translateX(0px)';
-            p.style.transform = 'translateX(0px)';
-            modalExport(muid);
-         }
-         if (e.target.className.indexOf('img_recycle') >= 0 || e.target.className == 'recycle_icon') {
-            deleteMatch(muid);
-            p.remove();
-         }
-      });
-
+      document.getElementById('matcharchiveList').innerHTML = html;
+      var swipe_targets = Array.from(document.querySelectorAll('.swipe'));
+      Array.from(swipe_targets).forEach(target => touchManager.addSwipeTarget(target));
       return match_archive;
    }
 
@@ -808,14 +700,24 @@
       var match_score = match_data.scoreboard;
       var match_format = match_data.format.name;
       var html = `
-      <div id='match_${match_id}' muid='${match_id}' class='flexcenter mh_swipe swipe-item'>
-         <div class='flexcols mh_match'>
+      <div id='match_${match_id}' class='flexcenter mh_swipe swipe'>
+         <div id='match_${match_id}_export' class='flexcols flexcenter mh_export' style='display: none;' onclick="modalExport('${match_id}')">
+            <div class='mh_fullheight'> 
+               <div class='export_action archive_icon iconexport'></div> 
+            </div>
+         </div>
+         <div class='flexcols mh_match' onclick="loadMatch('${match_id}')">
             <div class='mh_players'>${display_players}</div>
             <div class='mh_details'>
                <div>${display_date}</div>
                <div class='mh_format'>${match_format}</div>
             </div>
             <div class='mh_score'>${match_score}</div>
+         </div>
+         <div id='match_${match_id}_delete' class='flexcols flexcenter mh_trash' style='display: none;' onclick="deleteMatch('${match_id}')">
+            <div class='mh_fullheight'> 
+               <div class='mh_action archive_icon iconrecycle'></div> 
+               </div>
          </div>
       </div>`
       return html;
@@ -919,17 +821,13 @@
    }
 
    function loadMatch(match_id, view = 'entry') {
-      if (!match_id) {
-         viewManager('entry');
-         return;
-      }
+      if (!match_id) return;
       match.reset();
       var json = BrowserStorage.get(match_id);
       var match_data = (json && isJSON(json)) ? JSON.parse(BrowserStorage.get(match_id)) : undefined;
       if (!match_data) {
          // newMatch(); ??
          // insure match_id is not in match_archive ??
-         viewManager('entry');
          return;
       }
 
@@ -976,8 +874,8 @@
       var current_match_id = BrowserStorage.get('current_match');
       if (!current_match_id) {
          var match_archive = BrowserStorage.get('match_archive');
-         // only show quick start if this is first launch
          newMatch();
+         // only show quick start if this is first launch
          if (!match_archive) modalHelp(true);
       } else {
          loadMatch(current_match_id);
@@ -987,19 +885,9 @@
       }
    }
 
-   function broadcastStatus(status) {
-      if (broadcasting()) {
-         var muid = match.metadata.defineMatch().muid;
-         var data = { muid, status };
-         var tournament = match.metadata.defineTournament();
-         data.tuid = tournament.tuid || tournament.name;
-         coms.socket.emit('match status', data);
-      }
-   }
-
    function deleteMatch(match_id) {
-      if (broadcasting()) {
-         var match_data = JSON.parse(BrowserStorage.get(match_id));
+      if (app.broadcast) {
+         var match_data = BrowserStorage.get(match_id);
          var data = { muid: match_id };
          var tournament = match_data && match_data.tournament || {};
          data.tuid = tournament.tuid || tournament.name;
@@ -1011,14 +899,13 @@
       var match_archive = JSON.parse(BrowserStorage.get('match_archive') || '[]');
       match_archive = match_archive.filter(archive_id => match_id != archive_id);
       BrowserStorage.set('match_archive', JSON.stringify(match_archive));
-      if (match_id == current_match_id) { resetMatch(); }
-      displayMatchArchive({ active: true });
+      if (match_id == current_match_id) resetMatch();
+      displayMatchArchive();
    }
 
    function exportMatch(match_id) {
       var match_data = BrowserStorage.get(match_id);
       download(match_data, `match_${match_id}.json`);
-      closeModal();
    }
 
    function formatChangePossible() {
@@ -1060,11 +947,8 @@
    }
 
    function setOrientation() {
-      if (device.isMobile) {
-         env.orientation = (Math.abs(window.orientation) == 90) ? 'landscape' : 'portrait';
-      } else {
-         env.orientation = (window.innerWidth > window.innerHeight) ? 'landscape' : 'portrait';
-      }
+      env.orientation = (window.innerHeight > window.innerWidth) ? 'portrait' : 'landscape';
+      touchManager.orientation = env.orientation;
    }
 
    function orientationEvent () {
@@ -1081,7 +965,7 @@
    function viewManager(new_view = env.view, params) {
       // hide strokeslider any time view changes
       strokeSlider();
-      // changeDisplay('none', 'system');
+      changeDisplay('none', 'system');
 
       var views = {
          mainmenu({activate = true} = {}) {
@@ -1193,7 +1077,6 @@
    }
 
    // defunct... first pass at stats page... saved for posterity
-   /*
    function statCounters() {
       var html = '';
       var stats = match.stats.counters();
@@ -1212,7 +1095,6 @@
       }
       document.querySelector('#statlines').innerHTML = html;
    }
-   */
 
    function addCharts(charts) {
       var counters = match.stats.counters();
@@ -1386,7 +1268,6 @@
 
    function editPlayer(index) {
       env.edit_player = env.swap_sides ? 1 - index : index;
-      closeModal();
       document.getElementById('editplayer').style.display = 'flex';
       var player = match.metadata.players(env.edit_player);
       document.getElementById('playername').value = player.name;
@@ -1396,14 +1277,6 @@
          document.getElementById(target_id).value = player[attribute] || '';
       });
       document.getElementById('player_rank').value = player.rank || '';
-      var next_edit = index ? `editMatchDetails()` : `editPlayer(${env.swap_sides ? env.edit_player : 1 - env.edit_player})`;
-      d3.select('.ep_next').attr('onclick', next_edit)
-   }
-
-   function editMatchDetails() {
-      closeModal();
-      document.getElementById('matchdeets').style.display = 'flex';
-      document.getElementById('matchdetail_content').scrollTop = 0;
    }
 
    function checkPlayerName(keypress) {
@@ -1464,7 +1337,6 @@
             var server_mode = `.modeaction_player${server_side}`;
             Array.from(document.querySelectorAll(server_mode)).forEach(div => div.innerHTML = '2nd Serve')
             env.serve2nd = true;
-            broadcastStatus('Service Fault');
          },
          doubleFault(point, player) { return player != env.serving ? undefined : { code: 'd'} },
          ace(point, player) { return player != env.serving ? undefined : env.serve2nd ? { code: 'a'} : { code: 'A'} },
@@ -1501,7 +1373,6 @@
             if (env.rally == 1) rallyMode();
          },
          let(point, player) {
-            broadcastStatus('Service: Let');
             var server_side = env.swap_sides ? 1 - env.serving : env.serving;
             var server_let = `.modeforce_player${server_side}`;
             var action = obj.innerHTML;
@@ -1554,21 +1425,17 @@
    }
 
    function broadcastScore(action) {
-      action = action || match.history.lastPoint();
+      var scoreboard = match.scoreboard(0);
       var players = match.metadata.players();
 
       // don't publish if the player names haven't been changed
       var pub = players[0].name != default_players[0] && players[1].name != default_players[1];
 
-      if (pub && broadcasting()) {
+      if (pub && app.broadcast) {
          var coords = device.geoposition.coords || {};
-         var tournament = match.metadata.defineTournament();
-         var match_meta = match.metadata.defineMatch();
-         var match_message = { 
-            tournament,
+         coms.socket.emit('match score', { 
             match: match.metadata.defineMatch(), 
-            event: { euid: match_meta.euid },
-            status: match.status,
+            tournament: match.metadata.defineTournament(), 
             players: match.metadata.players(), 
             score: match.score(), 
             point: action.point,
@@ -1580,31 +1447,7 @@
                longitude: coords.longitude,
             },
             undo: typeof action == 'string' && action == 'Undo',
-         }
-         dev.match_message = match_message;
-         sendScoreUpdate(match_message);
-      }
-   }
-
-   var next_update;
-   var last_timeout;
-   var last_update = 0;
-   var update_window = 10000;
-
-   function sendScoreUpdate(update) {
-      var now = Date.now();
-      next_update = update;
-
-      if (now - last_update > update_window) {
-         coms.socket.emit('match score', next_update);
-         last_update = now;
-      } else {
-         if (last_timeout) clearTimeout(last_timeout);
-         var wait_time = update_window - (now - last_update);
-         last_timeout = setTimeout(function() {
-            coms.socket.emit('match score', next_update);
-            last_update = now;
-         }, wait_time);
+         });
       }
    }
 
@@ -1664,15 +1507,11 @@
       }
    }
 
-   function updateMatchArchive(force) {
+   function updateMatchArchive() {
       var points = match.history.points();
 
-      // var match_id = match.metadata.defineMatch().muid;
-      var match_id = BrowserStorage.get('current_match');
+      var match_id = match.metadata.defineMatch().muid;
       if (!match_id) return;
-      var players = match.metadata.players();
-      var save = force || points.length || (players[0].name != default_players[0] && players[1].name != default_players[1]);
-      if (!save) return;
 
       // add key for current match
       var match_archive = JSON.parse(BrowserStorage.get('match_archive') || '[]');
@@ -1684,7 +1523,7 @@
 
       var match_object = {
          ch_version: ch_version,
-         players: players,
+         players: match.metadata.players(),
          first_service: match.set.firstService(),
          match: match.metadata.defineMatch(),
          format: match.format.settings(),
@@ -1715,7 +1554,6 @@
                var undo = match.undo();
                broadcastScore('Undo');
                if (undo) env.undone.push(undo);
-               updateMatchArchive(true);
             }
             visibleButtons();
          },
@@ -1764,23 +1602,13 @@
    function comsConnect() {};
    function comsDisconnect() {};
    function comsError() {};
-   function sendHistory() {
-      var muid = match.metadata.defineMatch().muid;
-      var point_history = match.history.points();
-      var data = { muid, point_history };
-      if (muid && point_history.length) coms.socket.emit('point history', data);
-   }
 
-   function connectSocket() {
-      if ((navigator.onLine || window.location.hostname == 'localhost') && !coms.socket) {   
+   function connectSocket(){                    
+      if (!coms.socket) {   
          coms.socket = io.connect('/match', coms.connectionOptions);
          coms.socket.on('connect', comsConnect);                                 
          coms.socket.on('disconnect', comsDisconnect);
          coms.socket.on('connect_error', comsError);
-         coms.socket.on('history request', sendHistory);
-         coms.socket.on('tmx error', tmxError);
-         coms.socket.on('tmx directive', tmxDirective);
-         coms.socket.on('tmx message', tmxMessage);
       }
    } 
 
@@ -1790,32 +1618,26 @@
       d3.select('#pulse').style('display', 'none').selectAll('svg').remove();
    }
 
-   function broadcasting() {
-      if (app.broadcast && coms.socket) return true;
-      if (app.broadcast) { connectSocket(); }
-      return false;
-   }
-
    function startBroadcast() {
       connectSocket();
-      var pc = pulseCircle()
+      var pulseCircle = d3.pulseCircle()
          .color_range(['white', 'white'])
          .height(60)
          .width(60)
          .radius(28)
          .stroke_width(5);
       d3.select('#startpulse').style('display', 'none');
-      d3.select('#pulse').style('display', 'block').call(pc);
+      d3.select('#pulse').style('display', 'block').call(pulseCircle);
    }
 
    function broadcastToggle() {
       app.broadcast = !app.broadcast;
-      if (app.broadcast && coms.socket) {
+      if (app.broadcast) {
          startBroadcast();
+         // send complete match to room;
       } else {
          endBroadcast();
       }
-      if (!navigator.onLine) showModal(` <p> <h1>No Internet Connection!</h1>`);
       updateAppState();
    }
 
@@ -1836,8 +1658,7 @@
 
       restoreAppState();
       checkUserUUID();
-      connectSocket();
-      if (app.broadcast && navigator.onLine) startBroadcast();
+      if (app.broadcast) startBroadcast();
 
       defineEntryEvents();
       defineActionEvents();
@@ -1857,13 +1678,11 @@
          loadDetails();
       });
 
-      setOrientation();
       loadCurrent();
+      setOrientation();
       configureViz();
       vizUpdate();
-
-      // if (queryString.key) { setTimeout(()=> enterKey(queryString.key), 1000); }
-      if (queryString.key) { setTimeout(()=> emitTMX({ key: queryString.key }), 1000); }
+      viewManager();
    }
 
    function newGame() {
@@ -1956,9 +1775,7 @@
       d3.select('#PTSChart').call(charts.pts_match);
    }
 
-   function closeViz() { 
-      viewManager('entry'); 
-   }
+   function closeViz() { viewManager('entry'); }
 
    function vizUpdate() {
       var direction = env.orientation == 'landscape' ? 'horizontal' : 'vertical';
@@ -1976,121 +1793,24 @@
          env.view = 'pts';
       }
 
-      if (charts.gamefish) charts.gamefish.update();
+      charts.gamefish.update();
 
       var players = match.metadata.players();
-
-      if (charts.gametree) {
-         charts.gametree.options({ 
-            labels: { 
-               Player: players[0].name, 
-               Opponent: players[1].name,
-            },
-         });
-         charts.gametree.update({sizeToFit: true});
-      }
-   }
-
-   function enterKey(value) {
-      let html = `
-         <h2>Enter key:</h2>
-         <input id='key' class='key_input'>
-         <button id='submit_key' class='btn btn-small submit-btn'>Submit</button>
-      `;
-      showModal(html);
-
-      var key = document.getElementById('key');
-      if (value) key.value = value;
-
-      var key_entry = document.getElementById('key');
-      key_entry.addEventListener('keyup', keyAction);
-
-      var submit = document.getElementById('submit_key');
-      submit.addEventListener('click', submitKey);
-
-      function submitKey() {
-         if (key.value) emitTMX({ key: key.value });
-         closeModal();
-      }
-
-      function keyAction(evt) { if (evt.which == 13) submitKey(); }
-   }
-
-   function emitTMX(data) {
-      Object.assign(data, { timestamp: new Date().getTime(), uuuid: app.user_uuid });
-      coms.socket.emit('tmx', data);
-   }
-
-   function tmxError(data) {
-      var message = `<h2>${data.error}</h2>`;
-      showModal(message);
-   }
-
-   function tmxMessage(data) {
-      if (!data || !data.muid) {
-         var message = `<h2>Invalid Key</h2>`;
-         return showModal(message);
-      }
-
-      let auth_match = attemptJSONparse(data.data);
-
-      updateMatchArchive();
-      resetMatch(auth_match.match.muid);
-
-      match.metadata.defineTournament({
-         name: auth_match.tournament.name,
-         tuid: auth_match.tournament.tuid,
-         start_date: formatDate(auth_match.tournament.start)
+      charts.gametree.options({ 
+         labels: { 
+            Player: players[0].name, 
+            Opponent: players[1].name,
+         },
       });
-
-      match.metadata.defineMatch({
-         euid: auth_match.event.euid,
-      });
-
-      let players = auth_match.teams.map(t => `${t[0].first_name} ${t[0].last_name}`);
-      match.metadata.definePlayer({index: 0, name: players[0]});
-      match.metadata.definePlayer({index: 1, name: players[1]});
-
-      let surface = auth_match.event.surface;
-      if (surface) {
-         let surfaces = {
-            'C': 'clay',
-            'H': 'hard',
-            'G': 'grass'
-         }
-         if (surfaces[surface]) { match.metadata.defineTournament({ surface: surfaces[surface] }); }
-      }
-
-      let in_out = auth_match.event.inout;
-      if (in_out) {
-         let inout = {
-            'o': 'out',
-            'i': 'in'
-         }
-         if (inout[in_out]) { match.metadata.defineTournament({ in_out: inout[in_out] }); }
-      }
-
-      loadDetails();
-      stateChangeEvent();
-      viewManager('entry');
-   }
-
-   function attemptJSONparse(data) {
-      if (!data) return undefined;
-      try { return JSON.parse(data); }
-      catch(e) { return undefined; }
-   }
-
-   function tmxDirective(data) {
-      console.log('tmx directive', data);
+      charts.gametree.update({sizeToFit: true});
    }
 
    function modalShare(match_id) {
-      broadcastScore();
       match_id = match_id || BrowserStorage.get('current_match');
       var modaltext = ` <p> <h1>First Track a Match!</h1> </p> `;
-      var match_data = match_id && BrowserStorage.get(match_id);
-      if (match_data) {
+      var tv_link;
+      if (match_id) {
+         var match_data = BrowserStorage.get(match_id);
          var json_data = JSON.parse(match_data);
          var muid = json_data.match.muid;
          if (!muid) {
@@ -2104,24 +1824,20 @@
          function shareResult(response) {
             var result = JSON.parse(response);
             if (!result.error) {
-               // var tv_link = `https://tennisvisuals.net/?ch=${muid}.ch`;
-               // var tvb = `TennisVisuals Match Visualization: ${tv_link}`;
+               tv_link = `https://tennisvisuals.net/?ch=${muid}.ch`;
+               var tvb = `TennisVisuals Match Visualization: ${tv_link}`;
                var broadcast_link = app.broadcast ? `CourtHive Live Score: ${location.origin}/scores?muid=${muid}` : '';
-               // var email_message = `${tvb}%0D%0A ${broadcast_link}%0D%0A `;
-               // var copy_message = `${tvb}\r\n${broadcast_link}\r\n`;
-               var email_message = `${broadcast_link}%0D%0A `;
-               var copy_message = `${broadcast_link}\r\n`;
-               /*
+               var email_message = `${tvb}%0D%0A ${broadcast_link}%0D%0A `;
+               var copy_message = `${tvb}\r\n${broadcast_link}\r\n`;
+               modaltext = `
+                  <p>&nbsp;</p>
+                  <h1>Options for Sharing</h1>
+                  <div class='flexrows'> 
                      <div class='flexcenter iconmargin' onclick='closeModal()'>
                         <a href="${tv_link}" target="_blank" class="notextdecoration">
                            <img class="icon_large" src='icons/link.png'>
                         </a>
                      </div>
-               */
-               modaltext = `
-                  <p>&nbsp;</p>
-                  <h1>Options for Sharing</h1>
-                  <div class='flexrows'> 
                      <div class='flexcenter iconmargin' onclick='closeModal()'>
                         <a href='mailto:?subject=CourtHive Match Link&body=${email_message}' class="notextdecoration">
                            <img class="icon_large" src='icons/emailblack.png'>
@@ -2200,25 +1916,6 @@
       }
       closeModal();
       newMatch();
-   }
-
-   function formatDate(date, separator = '-', format='YMD') {
-      if (!date) return '';
-
-      let d = new Date(date);
-      let month = '' + (d.getMonth() + 1);
-      let day = '' + d.getDate();
-      let year = d.getFullYear();
-
-      if (month.length < 2) month = '0' + month;
-      if (day.length < 2) day = '0' + day;
-
-      if (format == 'DMY') return [day, month, year].join(separator);
-      if (format == 'MDY') return [month, day, year].join(separator);
-      if (format == 'YDM') return [year, day, month].join(separator);
-      if (format == 'DYM') return [day, year, month].join(separator);
-      if (format == 'MYD') return [month, year, day].join(separator);
-      return [year, month, day].join(separator);
    }
 
    function modalHelp(quick_start) {

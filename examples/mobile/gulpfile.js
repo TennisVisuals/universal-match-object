@@ -19,7 +19,7 @@ let pkg = {
    destination: '/Users/charlesallen/Development/node/CourtHive/app/static/mobile',
 }
 
-gulp.task('compress-css', function() {
+gulp.task('compress-css', ['concat-css'], function() {
 	return gulp.src(['css/*.css'])
 		.pipe(compress())
 		.pipe(rename({ suffix: '.min' }))
@@ -33,28 +33,35 @@ gulp.task('concat-css', function() {
 		.pipe(gulp.dest(pkg.destination + '/css'));
 });
 
-gulp.task('concat-js', function() {
-	return gulp.src([ 
-         './minimized/d3.v4.min.js',
-         './minimized/awesomplete.min.js',
-         './minimized/clipboard.min.js',
-         './minimized/socket.io.min.1.7.2.js',
+gulp.task('copy-lib', 
+   ['copy-assets', 'copy-icons'],
+   function() {
+      return gulp.src([ 
+            '../components/minimized/d3.v4.min.js',
+            '../components/minimized/awesomplete.min.js',
+            '../components/minimized/clipboard.min.js',
+            '../components/minimized/socket.io.min.1.7.2.js',
 
-         './ugly/aip.min.js',
-         './ugly/matchObject.min.js',
-         './ugly/pulseCircle.min.js',
-         './ugly/UUID.min.js',
-         './ugly/browserStorage.min.js',
-         './ugly/simpleChart.min.js',
-         './ugly/touchManager.min.js',
-         './ugly/SwipeList.min.js',
-         './ugly/gameFish.min.js',
-         './ugly/gameTree.min.js',
-         './ugly/ptsChart.min.js',
-      ])
-      .pipe(concat('lib_bundle.js'))
-		.pipe(gulp.dest(pkg.destination + '/lib'));
-});
+            '../components/ugly/aip.min.js',
+            '../components/ugly/matchObject.min.js',
+            '../components/ugly/pulseCircle.min.js',
+            '../components/ugly/UUID.min.js',
+            '../components/ugly/browserStorage.min.js',
+            '../components/ugly/simpleChart.min.js',
+            '../components/ugly/touchManager.min.js',
+            '../components/ugly/SwipeList.min.js',
+            '../components/ugly/gameFish.min.js',
+            '../components/ugly/gameTree.min.js',
+            '../components/ugly/ptsChart.min.js',
+         ])
+         .pipe(concat('lib_bundle.js'))
+         .pipe(gulp.dest(pkg.destination + '/lib'));
+   });
+
+gulp.task('babili-src', function (cb) {
+   let efx = 'node /Users/posiwid/Development/Projects/node/AiP/v3/node_modules/babili/bin/babili.js src/courtHive.js > minimized/courtHive.min.js';
+  exec(efx, function (err, stdout, stderr) { cb(err); });
+})
 
 gulp.task('ugly-src', function() {
 	return gulp.src([ 'src/courtHive.js', ])
@@ -91,7 +98,7 @@ gulp.task('compress-html', function() {
     .pipe(gulp.dest(pkg.destination));
 });
 
-gulp.task('copy-src', function() {
+gulp.task('copy-src', ['ugly-src'], function() {
 	return gulp.src([
          'ugly/courtHive.min.js',
       ])
@@ -99,27 +106,32 @@ gulp.task('copy-src', function() {
 		.pipe(gulp.dest(pkg.destination));
 });
 
-gulp.task('bundle-sw', () => {
-  return wbBuild.generateSW({
-    globDirectory: '/Users/charlesallen/Development/node/CourtHive/app/static/mobile/',
-    swDest: '/Users/charlesallen/Development/node/CourtHive/app/static/mobile/sw.js',
-    globPatterns: ['**\/*.{html,js,css,png,mp3,json}'],
-    globIgnores: ['admin.html'],
-  })
-  .then(() => {
-    console.log('Service worker generated.');
-  })
-  .catch((err) => {
-    console.log('[ERROR] This happened: ' + err);
-  });
-})
+gulp.task('default', ['bundle-sw']);
+gulp.task('bundle-sw', [
+      'copy-manifest',
+      'copy-src',
+      'compress-html',
+      'compress-css',
+      'copy-lib'
+   ], () => {
+     return wbBuild.generateSW({
+       globDirectory: '/Users/charlesallen/Development/node/CourtHive/app/static/mobile/',
+       swDest: '/Users/charlesallen/Development/node/CourtHive/app/static/mobile/sw.js',
+       globPatterns: ['**\/*.{html,js,css,png,mp3,json}'],
+       globIgnores: ['admin.html'],
+     })
+     .then(() => {
+       console.log('Service worker generated.');
+     })
+     .catch((err) => {
+       console.log('[ERROR] This happened: ' + err);
+     });
+   }
+)
 
-gulp.task('copy-external', gulp.parallel('copy-assets', 'copy-icons'));
-gulp.task('copy', gulp.series('concat-js', 'copy-external'));
-gulp.task('css', gulp.series('compress-css', 'concat-css'));
-gulp.task('js', gulp.series('ugly-src', 'copy-src'));
-gulp.task('code', gulp.parallel('copy-manifest', 'js'));
-gulp.task('html', gulp.parallel('compress-html', 'css'));
-
-gulp.task('build', gulp.parallel('code', gulp.parallel('html', 'copy')));
-gulp.task('default', gulp.series('build', 'bundle-sw'));
+gulp.task('watch', ['bundle-sw'], () => {
+  gulp.watch('src/**/*.js', [/* do some linting etc., */ 'copy-src']);
+  gulp.watch('*.manifest', [/* do some linting etc., */ 'copy-manifest']);
+  gulp.watch('*.html', [/* do some linting etc., */ 'compress-html']);
+  gulp.watch('src/css/*.css', [/* do some linting etc., */ 'compress-css']);
+});

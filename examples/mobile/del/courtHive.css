@@ -25,7 +25,6 @@ html, body {
 
 html {
   box-sizing: border-box;
-  touch-action: manipulation;
 }
 
 *,
@@ -97,16 +96,6 @@ body {
    flex-direction: column;
    -webkit-justify-content: space-between;
    justify-content: space-between;
-}
-
-.centerall {
-   display: flex;
-   -webkit-justify-content: center;
-   justify-content: center;
-   -webkit-align-content: center;
-   align-content: center;
-   -webkit-align-items: center;
-   align-items: center;
 }
 
 .flexcenter {
@@ -473,16 +462,11 @@ body {
 }
 
 /* match details */
-#matchdeets {
+#matchdetails {
+   margin: 0;
+   padding: 0;
    display: none;
-   z-index: 1500;
-   position: fixed;
-   left: 0;
-   top: 0;
-   width: 100vw;
    height: 100vh;
-   background-color: rgb(0,0,0);
-   background-color: rgba(0,0,0,0.4);
    -webkit-flex-direction: column;
    flex-direction: column;
    -webkit-align-items: stretch;
@@ -492,14 +476,13 @@ body {
    font-family: "Helvetica Neue", Arial, sans-serif;
 }
 
-.MDselection { font-size: 14px; }
-.md_header { 
-   font-size: 1.5em; 
+.MDselection {
+   font-size: 14px;
 }
 
 .md_detail {
    width: 100%;
-   padding: .5em;
+   padding: 1em 1em 1em 1em;
    background-color: white;
 }
 
@@ -507,31 +490,23 @@ body {
    display: flex;
    -webkit-flex-direction: row;
    flex-direction: row;
-    -webkit-justify-content: flex-start;
-    align-items: flex-start;
    padding: 0px 0px 1px 1px;
    font-size: 15px;
 }
 
 .md_label { 
-   float: left;
    width: 5em; 
-   font-weight: bold;
-   text-align: left;
 }
-
-.md_value { width: 80%; }
-#md_format { float: left; }
 
 .md_player {
    width: 100%;
-   padding: .5em;
+   padding: 1em 1em 1em 1em;
    background-color: white;
 }
 
 .md_event {
    width: 100%;
-   padding: .5em;
+   padding: 1em 1em 1em 1em;
    background-color: white;
 }
 
@@ -555,10 +530,6 @@ body {
    height: 100%;
    background-color: rgb(0,0,0);
    background-color: rgba(0,0,0,0.4);
-}
-
-.ep_header { 
-   font-size: 1.5em;
 }
 
 .ep_limit_modal {
@@ -604,19 +575,9 @@ body {
    font-size: 1em;
 }
 
-.ep_actions {
-   width: 100%;
-   display: flex;
-   -webkit-flex-direction: row-reverse;
-   flex-direction: row-reverse;
-   padding: .5em;
-   font-size: 1em;
-}
-
 .ep_item {
    width: 50%;
    text-align: left;
-   font-weight: bold;
 }
 
 #ep_sgp {
@@ -630,12 +591,10 @@ body {
 
 #player_rank { width: 90%; }
 
-.ep_action {
+.ep_done {
    width: 30%;
-   height: 1.5em;
    max-width: 100px;
    margin-left: 1%;
-   margin-bottom: 1em;
    border: 1px;
    font-size: 1em;
    border-radius: 5px;
@@ -1579,8 +1538,8 @@ body {
     z-index: 2000;
     left: 0;
     top: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.4);
 }
@@ -1822,64 +1781,4 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
-}
-
-.img_recycle { background-color: red; }
-.img_export { background-color: blue; }
-.recycle_icon, .export_icon {
-  width: 25px;
-  height: 25px;
-}
-
-.key_input {
-   margin-bottom: 1em;
-   width: 100%;
-   font-size: 1.5em;
-	border: 1px;
-   border-style: solid;
-   background: transparent;
-   border-radius: 5px;
-}
-
-.btn {
-  color: #000;
-  cursor: pointer;
-
-  background: 0;
-  background-image: none;
-
-  box-shadow: none
-  -moz-box-shadow: none;
-  -webkit-box-shadow: none;
-
-  border-radius: 4px;
-  border: 1px solid #000;
-
-  font-weight: normal;
-  text-align: center;
-  text-transform: uppercase;
-  white-space: nowrap;
-  vertical-align: middle;
-  line-height: 1.3333333;
-
-  -ms-touch-action: manipulation;
-      touch-action: manipulation;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
-
-  transition: background ease-out 500ms;
-  -webkit-transition: background ease-out 500ms;
-  -moz-transition: background ease-out 500ms;
-  -o-transition: background ease-out 500ms;
-}
-
-.btn-small {
-  padding: 5px 8px 5px 8px;
-  font-size: 12px;
-}
-
-.submit-btn {
-   margin-bottom: 1em;
 }

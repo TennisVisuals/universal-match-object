@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html manifest="courtHive.manifest">
 <head>
+<!-- <link rel="apple-touch-startup-image" href="/launch.png"> -->
    <link rel="apple-touch-icon" sizes="114x114" href="./icons/courtHive.png">
    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no maximum-scale=1.0">
    <meta name="apple-mobile-web-app-capable" content="yes">
    <meta name="apple-mobile-web-app-title" content="CourtHive">
    <meta name="application-name" content="CourtHive">
    <meta name="apple-mobile-web-app-status-bar-style" content="default">
    <meta name="mobile-web-app-capable" content="yes">
-   <link rel="stylesheet" type="text/css" href="./css/style.css" />
-   <link rel="manifest" href="./manifest.json">
+   <link rel="stylesheet" type="text/css" href="./css/courtHive.css" />
+   <link rel="stylesheet" type="text/css" href="./css/icons.css" />
 </head>
 
 <body>
@@ -23,9 +23,9 @@
    </div>
 </div>
 
-<script src="./lib/lib_bundle.js"></script>
-<script src="./courtHive.min.js"></script>
 <audio id="click" src="./assets/simpleclick.mp3"></audio>
+<script src="./lib/lib_bundle.js"></script>
+<script src="./source/courtHive.js"></script>
 
 <div id="gamefish">
    <div class="gf_content flexcols">
@@ -88,9 +88,10 @@
                </select>
             </div>
          </div>
-         <div class="ep_actions">
-            <div class='ep_action' onclick='updatePoint()'>Submit</div>
-            <div class='ep_action' onclick="closeModal('editpoint')">Cancel</div>
+         <div class="ep_row flexjustifyend">
+            <div></div>
+            <div class='ep_done' onclick="closeModal('editpoint')">Cancel</div>
+            <div class='ep_done' onclick='updatePoint()'>Submit</div>
          </div>
       </div>
    </div>
@@ -99,7 +100,6 @@
 <div id="editplayer" class="modal" style="display: none">
    <div class="modal-content">
       <div class='ep_player'>
-         <div class='ep_header'><b>Player Details</b></div>
          <div class='ep_row'>
             <input id='playername' class='ep_playername' value="Player Name" onBlur="updatePositions()" >
          </div>
@@ -155,9 +155,9 @@
                </select>
             </div>
          </div>
-         <div class="ep_actions">
-            <div class='ep_action' onclick='closeModal()'>Done</div>
-            <div class='ep_action ep_next' onclick='editPlayer(1)'>Next</div>
+         <div class="ep_row flexcols">
+            <div></div>
+            <div class='ep_done' onclick='closeModal("editplayer")'>Done</div>
          </div>
       </div>
    </div>
@@ -258,6 +258,26 @@
       <div id="slideright" class="slideback flexcenter" onclick="strokeAction(undefined, undefined, 'left')">&#60;</div>
 </div>
 
+<div id="endpoint_slider" class="flexrows endpoint_slider" style='display: none'>
+      <div class="flexcols flexcenter strokes">
+         <div class="stroke flexcenter">
+            <div class='' onclick='endPoint("long")'>Long</div>
+         </div>
+         <div class="stroke flexcenter">
+            <div class='' onclick='endPoint("wide")'>Wide</div>
+         </div>
+         <div class="stroke flexcenter">
+            <div class='' onclick='endPoint("long_wide")'>Long and Wide</div>
+         </div>
+         <div class="stroke flexcenter">
+            <div class='' onclick='endPoint("net")'>Net</div>
+         </div>
+         <div class="stroke flexcenter">
+            <div class='' onclick='endPoint("net_cord")'>Net Cord</div>
+         </div>
+      </div>
+</div>
+
 <div id="mainmenu">
    <div class='fixedmenu flexrows'>
       <div class="fm_header">Main Menu</div>
@@ -275,7 +295,6 @@
             <div id="startpulse" class="icon icon_4 iconbroadcast" onclick="broadcastToggle()"></div>
             <div id="pulse" style="display: none" onclick="broadcastToggle()"></div>
             <div class="icon icon_2_5 iconshare" onclick="modalShare()"></div>
-            <div class="icon icon_2_5 iconkeys" onclick="enterKey()"></div>
             <div class="icon icon_3 iconhelp" onclick="modalHelp()"></div>
          </div>
       </div>
@@ -284,8 +303,7 @@
          <div id='menu_change_server' class='flexcenter m_menuitem' onclick="menuAction(this, 'changeServer')">Change Server</div>
          <div class='flexcenter m_menuitem' onclick="menuAction(this, 'newMatch')">New Match</div>
          <div id='menu_match_format' class='flexcenter m_menuitem' onclick="viewManager('matchformat')">Match Format</div>
-         <!-- <div class='flexcenter m_menuitem' onclick="viewManager('matchdetails')">Match Details</div> -->
-         <div class='flexcenter m_menuitem' onclick="editMatchDetails()">Match Details</div>
+         <div class='flexcenter m_menuitem' onclick="viewManager('matchdetails')">Match Details</div>
          <div id='menu_match_archive' class='flexcenter m_menuitem' onclick="viewManager('matcharchive')">Match Archive</div>
          <div class='flexcenter m_menuitem' onclick="menuAction(this, 'settings')">Settings</div>
       </div>
@@ -438,58 +456,64 @@
    </div>
 </div>
 
-<div id="matchdeets" class="modal" style="display: none">
-   <div id="matchdetail_content" class='modal-content'>
-      <input id='blur' class='blur' readonly>
+<div id="matchdetails" class="noselect">
+   <input id='blur' class='blur' readonly>
+   <div class='fixedmenu flexrows'>
+      <div class="fm_header">Match Details</div>
+      <div class="fm_action"> </div>
+      <div class="fm_action"> </div>
+      <div class="fm_action"> </div>
+      <div class="fm_action" onclick="viewManager('entry')">
+         <div class='menu_icon iconexit'></div>
+      </div>
+   </div>
+   <div class='m_content'>
       <div class='md_detail'>
-         <div class="md_header"><b>Match</b></div>
+         <div><b>Match</b></div>
          <div class='md_player'>
             <div class='md_row'>
-               <div class='md_label'>Format:</div>
-               <div id='md_format'></div>
+               <div class='md_label'>Format:</div><div id='md_format'></div>
             </div>
             <div class='md_row'>
                <div class='md_label'>Court:</div>
-               <div class='md_value'> <input class='t_entry' id='match_court' placeholder='Match Court Number or Name' onChange="updateMatchDetails()"> </div>
+               <input class='t_entry' id='match_court' placeholder='Match Court Number or Name' onChange="updateMatchDetails()">
             </div>
             <div class='md_row'>
                <div class='md_label'>Umpire:</div>
-               <div class='md_value'> <input class='t_entry' id='match_umpire' placeholder='Match Umpire' onChange="updateMatchDetails()"> </div>
+               <input class='t_entry' id='match_umpire' placeholder='Match Umpire' onChange="updateMatchDetails()">
             </div>
          </div>
       </div>
       <div class='md_detail'>
-         <div class="md_header"><b>Event</b></div>
+         <div><b>Event</b></div>
          <div class='md_event'>
             <div class='md_row'>
                <div class='md_label'>Name:</div>
-               <div class='md_value'> <input class='t_entry' id='tournament_name' placeholder='Tournament Name' onChange="updateTournamentDetails()"> </div>
+               <input class='t_entry' id='tournament_name' placeholder='Tournament Name' onChange="updateTournamentDetails()">
             </div>
             <div class='md_row'>
                <div class='md_label'>Date:</div>
-               <div class='md_value'> <input class='t_entry' id='tournament_start_date' placeholder='Start Date' onChange="updateTournamentDetails()"></div>
+               <input class='t_entry' id='tournament_start_date' placeholder='Start Date' onChange="updateTournamentDetails()">
             </div>
             <div class='md_row'>
                <div class='md_label'>Tour:</div>
-               <div class='md_value'> <input class='t_entry' id='tournament_tour' placeholder='Tour' onChange="updateTournamentDetails()"></div>
+               <input class='t_entry' id='tournament_tour' placeholder='Tour' onChange="updateTournamentDetails()">
             </div>
             <div class='md_row'>
                <div class='md_label'>Rank:</div>
-               <div class='md_value'> <input class='t_entry' id='tournament_rank' placeholder='Tournament Rank' onChange="updateTournamentDetails()"></div>
+               <input class='t_entry' id='tournament_rank' placeholder='Tournament Rank' onChange="updateTournamentDetails()">
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>Surface:</span>
+               <label>Surface:
                   <select class="MDselection" id="tournament_surface" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="clay">Clay</option>
                      <option value="hard">Hard</option>
-                     <option value="grass">Grass</option>
-                     <option value="carpet">Carpet</option>
                   </select>
                </label>
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>In/Out:</span>
+               <label>In/Out:
                   <select class="MDselection" id="tournament_in_out" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="in">Indoor</option>
@@ -498,7 +522,7 @@
                </label>
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>Draw:</span>
+               <label>Draw:&nbsp;
                   <select class="MDselection" id="tournament_draw" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="main">Main</option>
@@ -507,7 +531,7 @@
                </label>
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>Draw Size:</span>
+               <label>Draw Size:&nbsp;
                   <select class="MDselection" id="tournament_draw_size" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="8">8</option>
@@ -522,7 +546,7 @@
                </label>
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>Round:</span>
+               <label>Round:
                   <select class="MDselection" id="tournament_round" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="F">Final</option>
@@ -543,11 +567,6 @@
                </label>
             </div>
          </div>
-      </div>
-      <div class="ep_actions">
-         <!-- <div class='ep_action' onclick='viewManager("entry")'>Done</div> -->
-         <div class='ep_action' onclick='closeModal()'>Done</div>
-         <div class='ep_action ep_next' onclick='editPlayer(0)'>Next</div>
       </div>
    </div>
 </div>
@@ -763,19 +782,91 @@
       </div>
    </div>
 </div>
-<script>
-   if ('serviceWorker' in navigator) {
-     window.addEventListener('load', function() {
-       navigator.serviceWorker.register('./sw.js').then(function(registration) {
-         // Registration was successful
-         console.log('ServiceWorker registration successful with scope: ', registration.scope);
-       }, function(err) {
-         // registration failed :(
-         console.log('ServiceWorker registration failed: ', err);
-       });
-     });
-   }
-   init();
-</script>
+
+<!--
+<div id="vwhite" style='display: none' class='noselect'>
+   <div class="entry">
+      <div class='headline'>
+         Players
+         <img id="stats" src='./icons/chart.png' alt='Stats' class='icon' onclick="viewManager('stats')">
+      </div>
+
+      <div class="entrysection">
+         <div class='player_score'>
+            <div class='player'>
+               <div class='display_player_0 playerone nowrap truncate' onclick='editPlayer(0)'>Player One</div>
+            </div>
+            <div class='scores'>
+               <input id='points0' class='points game_score' type="text" value="0" disabled> 
+               <input id='set0_0' class='games0 set_score' type="text" value="-" disabled>
+               <input id='set1_0' class='games1 set_score' type="text" value="-" disabled>
+               <input id='set2_0' class='games2 set_score' type="text" value="-" disabled>
+            </div>
+         </div>
+         <div class='player_score'>
+            <div class='player'>
+               <div class='display_player_1 playertwo nowrap' onclick='editPlayer(1)'> Player Two </div>
+            </div>
+            <div class='scores'>
+               <input id='points1' class='points game_score' type="text" value="0" disabled>
+               <input id='set0_1' class='games0 set_score' type="text" value="-" disabled>
+               <input id='set1_1' class='games1 set_score' type="text" value="-" disabled>
+               <input id='set2_1' class='games2 set_score' type="text" value="-" disabled>
+            </div>
+         </div>
+      </div>
+
+      <div id='team_one' class='headline'>
+         <label id='team_one_role'>Serving:</label>
+         <input class='position_display playerone' value="Player One" disabled>
+      </div>
+
+      <div id='player_serving' class="entrysection">
+         <div class="actions">
+           <button id="first_serve" class="btn tall" onclick="classAction(this, 'firstServe')">First Serve</button>
+           <button id="second_serve" class="btn tall toggle" onclick="classAction(this, 'secondServe')">Second Serve</button>
+           <button id="double_fault" class="btn tall" onclick="classAction(this, 'doubleFault', 'server')">Double Fault</button>
+         </div>
+         <div class="actions">
+           <button id="first_ace" class="btn small" onclick="classAction(this, 'ace', 'server')">Ace</button>
+           <button id="second_ace" class="btn small" onclick="classAction(this, 'ace', 'server', 'second_service')">Ace</button>
+           <button id="penalty" class='btn small v_red' onclick='classAction(this, "penalty", "server")'>Penalty</button>
+         </div>
+         <div class="actions">
+           <button id="server_winner" class="btn tall" onclick="classAction(this, 'winner', 'server')">Winner</button>
+           <button id="server_forced" class="btn tall" onclick="classAction(this, 'forced', 'server')">Forced Error</button>
+           <button id="server_unforced" class="btn tall" onclick="classAction(this, 'unforced', 'server')">Unforced Error</button>
+        </div>
+     </div>
+
+     <div id='team_two' class='headline'>
+        <label id='team_two_role'>Receiving:</label>
+        <input class='position_display playertwo' value="Player Two" disabled>
+     </div>
+
+     <div id='player_receiving' class="entrysection">
+        <div class="actions">
+           <button id="receiving_winner" class="btn tall" onclick="classAction(this, 'winner', 'receiver')">Winner</button>
+           <button id="receiving_forced" class="btn tall" onclick="classAction(this, 'forced', 'receiver')">Forced Error</button>
+           <button id="receiving_unforced" class="btn tall" onclick="classAction(this, 'unforced', 'receiver')">Unforced Error</button>
+         </div>
+     </div>
+
+     <div id='entry_end' class='container'></div>
+  </div>
+
+   <div class='footer'>
+     <div id='toolbar' class='toolbar'>
+        <img src='./icons/menublack.png' alt='Menu' class='icon' onclick="viewManager('mainmenu')">
+        <img src='./icons/swapblack.png' alt='Swap' class='icon' onclick="menuAction(this, 'swap')">
+        <img id='footer_change_server' src='./icons/changeblack.png' alt='Swap' class='icon' onclick="menuAction(this, 'changeServer')">
+        <img src='./icons/redoblack.png' alt='Redo' class='redo icon' onclick="menuAction(this, 'redo')">
+        <img src='./icons/undoblack.png' alt='Undo' class='undo icon' onclick="menuAction(this, 'undo')">
+     </div>
+  </div>
+</div>
+-->
+<script> init(); </script>
 </body>
 </html>
+

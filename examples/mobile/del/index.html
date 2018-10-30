@@ -3,14 +3,13 @@
 <head>
    <link rel="apple-touch-icon" sizes="114x114" href="./icons/courtHive.png">
    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no maximum-scale=1.0">
    <meta name="apple-mobile-web-app-capable" content="yes">
    <meta name="apple-mobile-web-app-title" content="CourtHive">
    <meta name="application-name" content="CourtHive">
    <meta name="apple-mobile-web-app-status-bar-style" content="default">
    <meta name="mobile-web-app-capable" content="yes">
    <link rel="stylesheet" type="text/css" href="./css/style.css" />
-   <link rel="manifest" href="./manifest.json">
 </head>
 
 <body>
@@ -23,9 +22,9 @@
    </div>
 </div>
 
+<audio id="click" src="./assets/simpleclick.mp3"></audio>
 <script src="./lib/lib_bundle.js"></script>
 <script src="./courtHive.min.js"></script>
-<audio id="click" src="./assets/simpleclick.mp3"></audio>
 
 <div id="gamefish">
    <div class="gf_content flexcols">
@@ -47,7 +46,9 @@
       <div class="modal-menu"> 
          <div id='close-modal' class="icon closeicon" onclick="closeModal()"></div>
       </div>
-      <div id="modaltext" class="modaltext noselect"> Message </div>
+      <div id="modaltext" class="modaltext noselect">
+            Message
+      </div>
    </div>
 </div>
 
@@ -88,9 +89,10 @@
                </select>
             </div>
          </div>
-         <div class="ep_actions">
-            <div class='ep_action' onclick='updatePoint()'>Submit</div>
-            <div class='ep_action' onclick="closeModal('editpoint')">Cancel</div>
+         <div class="ep_row flexjustifyend">
+            <div></div>
+            <div class='ep_done' onclick="closeModal('editpoint')">Cancel</div>
+            <div class='ep_done' onclick='updatePoint()'>Submit</div>
          </div>
       </div>
    </div>
@@ -99,7 +101,6 @@
 <div id="editplayer" class="modal" style="display: none">
    <div class="modal-content">
       <div class='ep_player'>
-         <div class='ep_header'><b>Player Details</b></div>
          <div class='ep_row'>
             <input id='playername' class='ep_playername' value="Player Name" onBlur="updatePositions()" >
          </div>
@@ -155,9 +156,9 @@
                </select>
             </div>
          </div>
-         <div class="ep_actions">
-            <div class='ep_action' onclick='closeModal()'>Done</div>
-            <div class='ep_action ep_next' onclick='editPlayer(1)'>Next</div>
+         <div class="ep_row flexcols">
+            <div></div>
+            <div class='ep_done' onclick='closeModal("editplayer")'>Done</div>
          </div>
       </div>
    </div>
@@ -275,7 +276,6 @@
             <div id="startpulse" class="icon icon_4 iconbroadcast" onclick="broadcastToggle()"></div>
             <div id="pulse" style="display: none" onclick="broadcastToggle()"></div>
             <div class="icon icon_2_5 iconshare" onclick="modalShare()"></div>
-            <div class="icon icon_2_5 iconkeys" onclick="enterKey()"></div>
             <div class="icon icon_3 iconhelp" onclick="modalHelp()"></div>
          </div>
       </div>
@@ -284,8 +284,7 @@
          <div id='menu_change_server' class='flexcenter m_menuitem' onclick="menuAction(this, 'changeServer')">Change Server</div>
          <div class='flexcenter m_menuitem' onclick="menuAction(this, 'newMatch')">New Match</div>
          <div id='menu_match_format' class='flexcenter m_menuitem' onclick="viewManager('matchformat')">Match Format</div>
-         <!-- <div class='flexcenter m_menuitem' onclick="viewManager('matchdetails')">Match Details</div> -->
-         <div class='flexcenter m_menuitem' onclick="editMatchDetails()">Match Details</div>
+         <div class='flexcenter m_menuitem' onclick="viewManager('matchdetails')">Match Details</div>
          <div id='menu_match_archive' class='flexcenter m_menuitem' onclick="viewManager('matcharchive')">Match Archive</div>
          <div class='flexcenter m_menuitem' onclick="menuAction(this, 'settings')">Settings</div>
       </div>
@@ -438,58 +437,64 @@
    </div>
 </div>
 
-<div id="matchdeets" class="modal" style="display: none">
-   <div id="matchdetail_content" class='modal-content'>
-      <input id='blur' class='blur' readonly>
+<div id="matchdetails" class="noselect">
+   <input id='blur' class='blur' readonly>
+   <div class='fixedmenu flexrows'>
+      <div class="fm_header">Match Details</div>
+      <div class="fm_action"> </div>
+      <div class="fm_action"> </div>
+      <div class="fm_action"> </div>
+      <div class="fm_action" onclick="viewManager('entry')">
+         <div class='menu_icon iconexit'></div>
+      </div>
+   </div>
+   <div class='m_content'>
       <div class='md_detail'>
-         <div class="md_header"><b>Match</b></div>
+         <div><b>Match</b></div>
          <div class='md_player'>
             <div class='md_row'>
-               <div class='md_label'>Format:</div>
-               <div id='md_format'></div>
+               <div class='md_label'>Format:</div><div id='md_format'></div>
             </div>
             <div class='md_row'>
                <div class='md_label'>Court:</div>
-               <div class='md_value'> <input class='t_entry' id='match_court' placeholder='Match Court Number or Name' onChange="updateMatchDetails()"> </div>
+               <input class='t_entry' id='match_court' placeholder='Match Court Number or Name' onChange="updateMatchDetails()">
             </div>
             <div class='md_row'>
                <div class='md_label'>Umpire:</div>
-               <div class='md_value'> <input class='t_entry' id='match_umpire' placeholder='Match Umpire' onChange="updateMatchDetails()"> </div>
+               <input class='t_entry' id='match_umpire' placeholder='Match Umpire' onChange="updateMatchDetails()">
             </div>
          </div>
       </div>
       <div class='md_detail'>
-         <div class="md_header"><b>Event</b></div>
+         <div><b>Event</b></div>
          <div class='md_event'>
             <div class='md_row'>
                <div class='md_label'>Name:</div>
-               <div class='md_value'> <input class='t_entry' id='tournament_name' placeholder='Tournament Name' onChange="updateTournamentDetails()"> </div>
+               <input class='t_entry' id='tournament_name' placeholder='Tournament Name' onChange="updateTournamentDetails()">
             </div>
             <div class='md_row'>
                <div class='md_label'>Date:</div>
-               <div class='md_value'> <input class='t_entry' id='tournament_start_date' placeholder='Start Date' onChange="updateTournamentDetails()"></div>
+               <input class='t_entry' id='tournament_start_date' placeholder='Start Date' onChange="updateTournamentDetails()">
             </div>
             <div class='md_row'>
                <div class='md_label'>Tour:</div>
-               <div class='md_value'> <input class='t_entry' id='tournament_tour' placeholder='Tour' onChange="updateTournamentDetails()"></div>
+               <input class='t_entry' id='tournament_tour' placeholder='Tour' onChange="updateTournamentDetails()">
             </div>
             <div class='md_row'>
                <div class='md_label'>Rank:</div>
-               <div class='md_value'> <input class='t_entry' id='tournament_rank' placeholder='Tournament Rank' onChange="updateTournamentDetails()"></div>
+               <input class='t_entry' id='tournament_rank' placeholder='Tournament Rank' onChange="updateTournamentDetails()">
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>Surface:</span>
+               <label>Surface:
                   <select class="MDselection" id="tournament_surface" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="clay">Clay</option>
                      <option value="hard">Hard</option>
-                     <option value="grass">Grass</option>
-                     <option value="carpet">Carpet</option>
                   </select>
                </label>
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>In/Out:</span>
+               <label>In/Out:
                   <select class="MDselection" id="tournament_in_out" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="in">Indoor</option>
@@ -498,7 +503,7 @@
                </label>
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>Draw:</span>
+               <label>Draw:&nbsp;
                   <select class="MDselection" id="tournament_draw" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="main">Main</option>
@@ -507,7 +512,7 @@
                </label>
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>Draw Size:</span>
+               <label>Draw Size:&nbsp;
                   <select class="MDselection" id="tournament_draw_size" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="8">8</option>
@@ -522,7 +527,7 @@
                </label>
             </div>
             <div class='md_row'>
-               <label><span class='md_label'>Round:</span>
+               <label>Round:
                   <select class="MDselection" id="tournament_round" tabindex="5" onChange="updateTournamentDetails()">
                      <option value="">- Select -</option>
                      <option value="F">Final</option>
@@ -543,11 +548,6 @@
                </label>
             </div>
          </div>
-      </div>
-      <div class="ep_actions">
-         <!-- <div class='ep_action' onclick='viewManager("entry")'>Done</div> -->
-         <div class='ep_action' onclick='closeModal()'>Done</div>
-         <div class='ep_action ep_next' onclick='editPlayer(0)'>Next</div>
       </div>
    </div>
 </div>
@@ -763,19 +763,6 @@
       </div>
    </div>
 </div>
-<script>
-   if ('serviceWorker' in navigator) {
-     window.addEventListener('load', function() {
-       navigator.serviceWorker.register('./sw.js').then(function(registration) {
-         // Registration was successful
-         console.log('ServiceWorker registration successful with scope: ', registration.scope);
-       }, function(err) {
-         // registration failed :(
-         console.log('ServiceWorker registration failed: ', err);
-       });
-     });
-   }
-   init();
-</script>
+<script> init(); </script>
 </body>
 </html>
