@@ -44,34 +44,6 @@ describe("Supertiebreak Scoring in Final Set", () => {
     );
   });
 
-  it("should debug why type() returns undefined", () => {
-    const match = matchObject.Match();
-
-    // Check what type() actually is
-    console.log("typeof match.format.type:", typeof match.format.type);
-    console.log("match.format.type.name:", match.format.type?.name);
-    console.log("match.format.type.length:", match.format.type?.length);
-
-    // Try with just one argument
-    console.log("Calling with format_type argument...");
-    try {
-      const result = match.format.type("SET3-S:4NOAD/TB7-F:TB10");
-      console.log("type() returned:", result, "type:", typeof result);
-    } catch (err) {
-      console.log("type() threw error:", err);
-    }
-
-    // Check what was set
-    console.log(
-      "decidingChildFormatStructure type:",
-      typeof match.format.decidingChildFormatStructure,
-    );
-    console.log(
-      "decidingChildFormatStructure value:",
-      match.format.decidingChildFormatStructure,
-    );
-  });
-
   describe("SET3-S:4NOAD/TB7-F:TB10 (Fast4 with Supertiebreak)", () => {
     it("should use point-based scoring (1,2,3...) in 3rd set, not tennis scoring (15,30,40)", () => {
       const match = matchObject.Match({

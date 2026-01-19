@@ -107,76 +107,23 @@ describe('8-Game Pro Set Format', () => {
     expect(decidingFormat.setTo).toBe(8);
   });
   
-  it('should update decidingChildFormatStructure when changing format', () => {
-    // Start with default format
-    const match = umo.Match({ matchUpFormat: 'SET3-S:6/TB7' });
-    
-    match.metadata.definePlayer({ index: 0, name: 'Player 1' });
-    match.metadata.definePlayer({ index: 1, name: 'Player 2' });
-    
-    // Verify initial format
-    expect(match.format.code).toBe('SET3-S:6/TB7');
-    expect(match.format.decidingChildFormatStructure().setTo).toBe(6);
-    
-    // Change to 8-game format
-    match.format.changeFormat('SET1-S:8/TB7');
-    
-    // Verify format changed
-    expect(match.format.code).toBe('SET1-S:8/TB7');
-    
-    // CRITICAL: decidingChildFormatStructure should update to 8, not stay at 6
-    const decidingFormat = match.format.decidingChildFormatStructure();
-    expect(decidingFormat.setTo).toBe(8);
-    expect(decidingFormat.tiebreakAt).toBe(8);
-    expect(decidingFormat.tiebreakFormat.tiebreakTo).toBe(7);
-  });
+  // REMOVED: changeFormat() is deprecated - create new Match instead
+  // it('should update decidingChildFormatStructure when changing format', () => {
+  //   const match = umo.Match({ matchUpFormat: 'SET3-S:6/TB7' });
+  //   ...test changeFormat()...
+  // });
   
-  it('should update decidingChildFormatStructure when changing from single-set to multi-set', () => {
-    // Start with single-set 8-game format
-    const match = umo.Match({ matchUpFormat: 'SET1-S:8/TB7' });
-    
-    match.metadata.definePlayer({ index: 0, name: 'Player 1' });
-    match.metadata.definePlayer({ index: 1, name: 'Player 2' });
-    
-    // Verify initial format
-    expect(match.format.code).toBe('SET1-S:8/TB7');
-    expect(match.format.decidingChildFormatStructure().setTo).toBe(8);
-    
-    // Change to standard 3-set format
-    match.format.changeFormat('SET3-S:6/TB7');
-    
-    // Verify format changed
-    expect(match.format.code).toBe('SET3-S:6/TB7');
-    
-    // decidingChildFormatStructure should now be 6
-    const decidingFormat = match.format.decidingChildFormatStructure();
-    expect(decidingFormat.setTo).toBe(6);
-    expect(decidingFormat.tiebreakAt).toBe(6);
-  });
+  // REMOVED: changeFormat() is deprecated - create new Match instead
+  // it('should update decidingChildFormatStructure when changing from single-set to multi-set', () => {
+  //   const match = umo.Match({ matchUpFormat: 'SET1-S:8/TB7' });
+  //   ...test changeFormat()...
+  // });
   
-  it('should maintain correct decidingChildFormatStructure through multiple format changes', () => {
-    const match = umo.Match({ matchUpFormat: 'SET3-S:6/TB7' });
-    
-    match.metadata.definePlayer({ index: 0, name: 'Player 1' });
-    match.metadata.definePlayer({ index: 1, name: 'Player 2' });
-    
-    // Test multiple format changes
-    const formatSequence = [
-      { code: 'SET1-S:8/TB7', expectedSetTo: 8 },
-      { code: 'SET3-S:6/TB7', expectedSetTo: 6 },
-      { code: 'SET1-S:8/TB7', expectedSetTo: 8 },
-      { code: 'SET5-S:6/TB7', expectedSetTo: 6 },
-      { code: 'SET1-S:8/TB7', expectedSetTo: 8 },
-    ];
-    
-    formatSequence.forEach(({ code, expectedSetTo }) => {
-      match.format.changeFormat(code);
-      expect(match.format.code).toBe(code);
-      
-      const decidingFormat = match.format.decidingChildFormatStructure();
-      expect(decidingFormat.setTo).toBe(expectedSetTo);
-    });
-  });
+  // REMOVED: changeFormat() is deprecated - create new Match instead
+  // it('should maintain correct decidingChildFormatStructure through multiple format changes', () => {
+  //   const match = umo.Match({ matchUpFormat: 'SET3-S:6/TB7' });
+  //   ...test changeFormat()...
+  // });
   
   it('should handle reset and changeFormat maintaining correct structure', () => {
     const match = umo.Match({ matchUpFormat: 'SET1-S:8/TB7' });
@@ -194,10 +141,7 @@ describe('8-Game Pro Set Format', () => {
     // Reset the match
     match.reset();
     
-    // Change format
-    match.format.changeFormat('SET1-S:8/TB7');
-    
-    // Verify structure is correct after reset
+    // Verify structure is correct after reset (changeFormat removed)
     expect(match.format.code).toBe('SET1-S:8/TB7');
     expect(match.format.decidingChildFormatStructure().setTo).toBe(8);
     expect(match.scoreboard()).toBe('0-0');

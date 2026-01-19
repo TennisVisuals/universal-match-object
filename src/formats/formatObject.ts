@@ -24,66 +24,14 @@ export function createFormatObject({plural, common = null} = {}) {
       singles: hasCommon ? common.singles : () => undefined,
       doubles: hasCommon ? common.doubles : () => undefined,
       init(format_type) { 
-         // Initialize with format code (Factory or legacy - will auto-convert)
+         // DEPRECATED: Format must be set via constructor matchUpFormat parameter
+         // This method kept for backward compatibility but does nothing
          if (format_type) {
-            fo.type(format_type); 
-            fo.values.initial_code = format_type;
+            console.warn('⚠️  format.init() is deprecated. Use matchUpFormat constructor parameter instead.');
          }
       },
-      
-      // LEGACY: type() method
-      types(object = fo.values.plural) { 
-         return [];
-      },
-      type(format_type) {
-         if (!fo.values.plural) return false;
-         if (format_type == true && fo.values.initial_code) format_type = fo.values.initial_code;
-         
-         // Convert legacy to Factory
-         if (typeof format_type === 'string' && isLegacyFormat(format_type)) {
-            const factoryCode = convertLegacyToFactory(format_type);
-            if (factoryCode) {
-               format_type = factoryCode;
-            } else {
-               console.warn('⚠️  Legacy format not in conversion map:', format_type);
-               return false;
-            }
-         }
-         
-         // Factory format support
-         if (typeof format_type === 'string' && isFactoryFormat(format_type)) {
-            try {
-               const parsed = parseFormat(format_type);
-               if (!parsed.isValid || !parsed.format) return false;
-               
-               const matchFormat = parsed.format;
-               fo.values.formatStructure = matchFormat;
-               
-               if (fo.values.plural === 'matches') {
-                  fo.values.code = format_type;
-               }
-               fo.name(format_type);
-               fo.description(`Factory format: ${format_type}`);
-               
-               if (matchFormat.setFormat) {
-                  fo.values.childFormatStructure = matchFormat.setFormat;
-               }
-               // CRITICAL: Always update decidingChildFormatStructure
-               // For single-set formats (no finalSetFormat), use setFormat
-               fo.values.decidingChildFormatStructure = matchFormat.finalSetFormat || matchFormat.setFormat;
-               
-               return true;
-            } catch (error) {
-               return false;
-            }
-         }
-         
-         return false;
-      },
-      settings({name, description, code, players, threshold, has_decider, min_diff, tiebreak} = {}) {
-         if (code) {
-            fo.type(code);
-         } else if (!threshold || !has_decider || !min_diff || !tiebreak) {
+      settings({name, description, players, threshold, has_decider, min_diff, tiebreak} = {}) {
+         if (!threshold || !has_decider || !min_diff || !tiebreak) {
             let number_of_players = hasCommon && typeof common.singles == 'function' ? common.singles() ? 2 : 4 : '';
             let settings = { 
                name: fo.values.name, 
@@ -282,9 +230,11 @@ export function createFormatObject({plural, common = null} = {}) {
       configurable: true
    });
    
+   // DEPRECATED: changeFormat via code
+   // Format changes should be done by creating a new Match with new matchUpFormat
    fo.changeFormat = function(formatCode) {
-      if (!formatCode) return false;
-      return fo.type(formatCode);
+      console.warn('⚠️  format.changeFormat() is deprecated. Create a new Match with the desired matchUpFormat instead.');
+      return false;
    };
 
    return fo;
