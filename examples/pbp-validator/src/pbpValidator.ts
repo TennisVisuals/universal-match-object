@@ -413,15 +413,13 @@ const pbp = {
       if (setGames && setGames.length > 0) {
         const lastGame = setGames[setGames.length - 1];
         if (lastGame && lastGame.format && lastGame.format.tiebreak && lastGame.format.tiebreak()) {
-          // Tiebreak points - use the game's local_history which has only its points
-          const tbPoints = [0, 0];
-          const localHistory = lastGame.local_history || [];
-          localHistory.forEach((pt: any) => {
-            if (pt.winner !== undefined && pt.winner !== null) {
-              tbPoints[pt.winner]++;
-            }
-          });
-          tiebreak = tbPoints;
+          // Tiebreak points - use scoreboard() method which has the final score
+          const tbScoreboard = lastGame.scoreboard ? lastGame.scoreboard() : null;
+          
+          if (tbScoreboard) {
+            const parts = tbScoreboard.split('-');
+            tiebreak = [parseInt(parts[0]) || 0, parseInt(parts[1]) || 0];
+          }
         }
       }
 
