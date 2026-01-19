@@ -171,23 +171,27 @@ const pbp = {
   },
 
   validSet(set: string, format: string): { valid: boolean } {
-    const game = matchObject.Game();
     const games = set.split(';');
     let valid = true;
 
     for (const g of games) {
+      // Create new game for each game string
+      let game: any;
+      let pts: string;
+      
       if (g.indexOf('/') > 0) {
-        game.reset('tiebreak7a');
-        const result = game.addPoints(g.split('/').join(''));
-        if (!game.complete() || result.rejected.length) {
-          valid = false;
-        }
+        // Tiebreak game
+        game = matchObject.Game({ tiebreakTo: 7 });
+        pts = g.split('/').join('');
       } else {
-        game.reset('advantage');
-        const result = game.addPoints(g);
-        if (!game.complete() || result.rejected.length) {
-          valid = false;
-        }
+        // Regular game
+        game = matchObject.Game();
+        pts = g;
+      }
+      
+      const result = game.addPoints(pts);
+      if (!game.complete() || (result.rejected && result.rejected.length > 0)) {
+        valid = false;
       }
     }
 
@@ -224,19 +228,35 @@ const pbp = {
     excess_points: number; 
     missing_points: number 
   } {
-    const game = matchObject.Game();
     const games = points.split('.').join(';').split(';');
     let validGames = 0;
     let excessPoints = 0;
     let missingPoints = 0;
 
     games.forEach(g => {
+      // Create new game for each game string
+      let game: any;
+      let pts: string;
+      
       if (g.indexOf('/') > 0) {
-        game.reset('tiebreak7a');
-        test(g.split('/').join(''));
+        // Tiebreak game
+        game = matchObject.Game({ tiebreakTo: 7 });
+        pts = g.split('/').join('');
       } else {
-        game.reset('advantage');
-        test(g);
+        // Regular game
+        game = matchObject.Game();
+        pts = g;
+      }
+      
+      const result = game.addPoints(pts);
+      if (game.complete()) {
+        if (!result.rejected || result.rejected.length === 0) {
+          validGames += 1;
+        } else {
+          excessPoints += 1;
+        }
+      } else {
+        missingPoints += 1;
       }
     });
 
@@ -245,19 +265,6 @@ const pbp = {
       excess_points: excessPoints, 
       missing_points: missingPoints 
     };
-
-    function test(pts: string) {
-      const result = game.addPoints(pts);
-      if (game.complete()) {
-        if (!result.rejected.length) {
-          validGames += 1;
-        } else {
-          excessPoints += 1;
-        }
-      } else {
-        missingPoints += 1;
-      }
-    }
   },
 
   processMatch(
