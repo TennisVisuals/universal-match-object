@@ -127,8 +127,9 @@ describe('Standalone Game Usage', () => {
         formatStructure: { tiebreakTo: 10 } 
       });
       
-      // Play to 10-5
-      const result = game.addPoints('000000000011111000000');
+      // Play to 10-5: need to alternate to get score up
+      game.addPoints('0101010101'); // 5-5
+      game.addPoints('00000'); // 10-5
       
       expect(game.complete()).toBe(true);
       expect(game.scoreboard()).toBe('10-5');
