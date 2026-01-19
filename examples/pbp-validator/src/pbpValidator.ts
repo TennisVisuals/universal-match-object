@@ -26,14 +26,20 @@ interface MatchResult {
   results: ValidationResult;
 }
 
+interface ValidationOptions {
+  limit?: number;
+  debug?: boolean;
+}
+
 const pbp = {
-  validateArchive(archiveName: string): MatchResult[] {
+  validateArchive(archiveName: string, options: ValidationOptions = {}): MatchResult[] {
     const matches = d3Dsv.csvParse(this.loadFile(archiveName)) as unknown as CSVRow[];
-    console.log(`Validating ${matches.length} matches`);
-    const results = this.validateMatchArray(matches);
+    const matchesToProcess = options.limit ? matches.slice(0, options.limit) : matches;
+    console.log(`Validating ${matchesToProcess.length} matches${options.limit ? ` (of ${matches.length} total)` : ''}`);
+    const results = this.validateMatchArray(matchesToProcess, false, options);
     const errors = results.filter(f => f.results.errors.length);
-    const valid = matches.length - errors.length;
-    const pctValid = ((valid / matches.length) * 100).toFixed(2);
+    const valid = matchesToProcess.length - errors.length;
+    const pctValid = ((valid / matchesToProcess.length) * 100).toFixed(2);
     console.log(`Valid Matches: ${valid} (${pctValid}%), Invalid Matches: ${errors.length}`);
     return results;
   },
@@ -62,12 +68,15 @@ const pbp = {
     return fs.readFileSync(targetFile, encoding as BufferEncoding);
   },
 
-  validateMatchArray(matchArray: CSVRow[], expand = false): MatchResult[] {
+  validateMatchArray(matchArray: CSVRow[], expand = false, options: ValidationOptions = {}): MatchResult[] {
     const results: MatchResult[] = [];
-    const bar = new ProgressBar(':bar', { total: matchArray.length });
+    const bar = options.debug ? null : new ProgressBar(':bar', { total: matchArray.length });
     for (let i = 0; i < matchArray.length; i++) {
-      results.push({ i, results: this.validateMatch(matchArray[i], expand) });
-      bar.tick();
+      if (options.debug) {
+        console.log(`\n=== Match ${i + 1} ===`);
+      }
+      results.push({ i, results: this.validateMatch(matchArray[i], expand, options) });
+      if (bar) bar.tick();
     }
     return results;
   },
@@ -88,7 +97,7 @@ const pbp = {
     return false;
   },
 
-  validateMatch(row: CSVRow, expand = false): ValidationResult {
+  validateMatch(row: CSVRow, expand = false, options: ValidationOptions = {}): ValidationResult {
     const errors: string[] = [];
     const winner = parseInt(row.winner) - 1;
     const playerArray: string[] = [];
@@ -136,18 +145,36 @@ const pbp = {
         ? 'longSetTo6by2' 
         : 'AdSetsTo6tb7';
       
-      const result = this.validSet(sets[s], format);
+      if (options.debug) {
+        console.log(`Set ${s + 1}: "${sets[s]}" format:${format}`);
+      }
+      const result = this.validSet(sets[s], format, options);
       if (!result.valid) {
         errors.push('invalid set');
+        if (options.debug) {
+          console.log(`  → Set ${s + 1} INVALID`);
+        }
+      } else if (options.debug) {
+        console.log(`  → Set ${s + 1} VALID`);
       }
     }
 
     const gamesData = this.processGames(points);
     const matchData = this.processMatch(sets, setsWon, score);
     
+    if (options.debug) {
+      console.log(`Games data: valid=${gamesData.valid_games}, excess=${gamesData.excess_points}, missing=${gamesData.missing_points}`);
+      console.log(`Match data rejected: ${matchData.rejected.length}`);
+    }
+    
     if (matchData.rejected.length) errors.push('excess points');
     
-    const validScore = this.validScore(matchData.sets, score);
+    const validScore = this.validScore(matchData.sets, score, options);
+    if (options.debug) {
+      console.log(`Valid score check: ${validScore}`);
+      console.log(`Total errors: ${errors.length > 0 ? errors.join(', ') : 'none'}`);
+    }
+    
     if (!validScore) {
       errors.push('invalid score');
       if (gamesData.missing_points) errors.push('games missing points');
@@ -170,11 +197,13 @@ const pbp = {
     };
   },
 
-  validSet(set: string, format: string): { valid: boolean } {
+  validSet(set: string, format: string, options: any = {}): { valid: boolean } {
     const games = set.split(';');
     let valid = true;
 
-    for (const g of games) {
+    for (let i = 0; i < games.length; i++) {
+      const g = games[i];
+      
       // Skip empty game strings
       if (!g || g.trim().length === 0) continue;
       
@@ -197,16 +226,28 @@ const pbp = {
       // Skip if no points to add
       if (!pts || pts.length === 0) {
         valid = false;
+        if (options.debug) {
+          console.log(`      Game ${i + 1}: Empty points - INVALID`);
+        }
         continue;
       }
       
       try {
         const result = game.addPoints(pts);
-        if (!game.complete() || (result.rejected && result.rejected.length > 0)) {
+        const gameValid = game.complete() && (!result.rejected || result.rejected.length === 0);
+        
+        if (options.debug && i < 3) { // Only log first 3 games
+          console.log(`      Game ${i + 1}: "${g}" -> points:"${pts}" complete:${game.complete()} rejected:${result.rejected?.length || 0} - ${gameValid ? 'VALID' : 'INVALID'}`);
+        }
+        
+        if (!gameValid) {
           valid = false;
         }
       } catch (error) {
         valid = false;
+        if (options.debug) {
+          console.log(`      Game ${i + 1}: "${g}" - ERROR: ${error}`);
+        }
       }
     }
 
@@ -215,9 +256,20 @@ const pbp = {
 
   validScore(
     matchScore: Array<{ games: number[]; tiebreak?: number[] }>, 
-    score: Array<{ 0: number; 1: number; tiebreak?: number }>
+    score: Array<{ 0: number; 1: number; tiebreak?: number }>,
+    options: ValidationOptions = {}
   ): boolean {
-    if (matchScore.length !== score.length) return false;
+    if (options.debug) {
+      console.log(`  Comparing matchScore.length=${matchScore.length} to score.length=${score.length}`);
+      matchScore.forEach((s, i) => {
+        console.log(`  Set ${i + 1}: matchScore games=[${s.games}] tiebreak=[${s.tiebreak}] vs score={0:${score[i]?.[0]}, 1:${score[i]?.[1]}, tb:${score[i]?.tiebreak}}`);
+      });
+    }
+    
+    if (matchScore.length !== score.length) {
+      if (options.debug) console.log(`  → FAIL: matchScore.length !== score.length`);
+      return false;
+    }
     
     const valid = score.map((setScore, i) => {
       const gamesEqual = setScore[0] === matchScore[i].games[0] && 
@@ -232,7 +284,11 @@ const pbp = {
         }
       }
       
-      return gamesEqual && tbEqual;
+      const result = gamesEqual && tbEqual;
+      if (options.debug && !result) {
+        console.log(`  → FAIL Set ${i + 1}: gamesEqual=${gamesEqual}, tbEqual=${tbEqual}`);
+      }
+      return result;
     });
     
     return valid.filter(f => !f).length === 0;
