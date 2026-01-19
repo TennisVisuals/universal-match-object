@@ -175,6 +175,9 @@ const pbp = {
     let valid = true;
 
     for (const g of games) {
+      // Skip empty game strings
+      if (!g || g.trim().length === 0) continue;
+      
       // Create new game for each game string
       let game: any;
       let pts: string;
@@ -191,8 +194,18 @@ const pbp = {
         pts = g;
       }
       
-      const result = game.addPoints(pts);
-      if (!game.complete() || (result.rejected && result.rejected.length > 0)) {
+      // Skip if no points to add
+      if (!pts || pts.length === 0) {
+        valid = false;
+        continue;
+      }
+      
+      try {
+        const result = game.addPoints(pts);
+        if (!game.complete() || (result.rejected && result.rejected.length > 0)) {
+          valid = false;
+        }
+      } catch (error) {
         valid = false;
       }
     }
@@ -236,6 +249,9 @@ const pbp = {
     let missingPoints = 0;
 
     games.forEach(g => {
+      // Skip empty game strings
+      if (!g || g.trim().length === 0) return;
+      
       // Create new game for each game string
       let game: any;
       let pts: string;
@@ -252,15 +268,26 @@ const pbp = {
         pts = g;
       }
       
-      const result = game.addPoints(pts);
-      if (game.complete()) {
-        if (!result.rejected || result.rejected.length === 0) {
-          validGames += 1;
-        } else {
-          excessPoints += 1;
-        }
-      } else {
+      // Skip if no points to add
+      if (!pts || pts.length === 0) {
         missingPoints += 1;
+        return;
+      }
+      
+      try {
+        const result = game.addPoints(pts);
+        if (game.complete()) {
+          if (!result.rejected || result.rejected.length === 0) {
+            validGames += 1;
+          } else {
+            excessPoints += 1;
+          }
+        } else {
+          missingPoints += 1;
+        }
+      } catch (error) {
+        // If addPoints fails, count as invalid
+        excessPoints += 1;
       }
     });
 
