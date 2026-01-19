@@ -325,7 +325,8 @@ export function createStateObject({
          while (values.length) {
             let value = values.shift();
             let episode = fx(value);
-            if (episode.result) {
+            // Null/undefined check to prevent TypeError
+            if (episode && episode.result) {
                added.push(episode);
             } else {
                values.unshift(value);
