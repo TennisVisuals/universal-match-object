@@ -1,15 +1,25 @@
 {
   "name": "pbp-validator",
-  "version": "2.0.0",
-  "description": "Point-by-Point Match Validator",
-  "main": "src/pbpValidator.js",
+  "version": "3.0.0",
+  "description": "Point-by-Point Match Validator using UMO v3",
+  "main": "src/pbpValidator.ts",
+  "type": "module",
   "private": true,
   "author": "charles@tennisvisuals.com",
   "repository": "https://github.com/TennisVisuals/universal-match-object",
+  "scripts": {
+    "build": "tsc",
+    "validate": "node dist/pbpValidator.js"
+  },
   "dependencies": {
+    "@tennisvisuals/universal-match-object": "file:../..",
     "chardet": "^0.1.0",
     "d3-dsv": "^1.0.3",
     "diacritics": "^1.3.0",
     "progress": "^1.1.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
   }
 }
