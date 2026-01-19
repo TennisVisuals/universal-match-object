@@ -29,13 +29,30 @@ interface MatchResult {
 interface ValidationOptions {
   limit?: number;
   debug?: boolean;
+  indices?: number[];
 }
 
 const pbp = {
   validateArchive(archiveName: string, options: ValidationOptions = {}): MatchResult[] {
     const matches = d3Dsv.csvParse(this.loadFile(archiveName)) as unknown as CSVRow[];
-    const matchesToProcess = options.limit ? matches.slice(0, options.limit) : matches;
-    console.log(`Validating ${matchesToProcess.length} matches${options.limit ? ` (of ${matches.length} total)` : ''}`);
+    
+    let matchesToProcess: CSVRow[];
+    let startIndex = 0;
+    
+    if (options.indices && options.indices.length > 0) {
+      // Process only specific indices
+      matchesToProcess = options.indices
+        .filter(idx => idx >= 0 && idx < matches.length)
+        .map(idx => matches[idx]);
+      console.log(`Validating ${matchesToProcess.length} specific matches (indices: ${options.indices.join(', ')})`);
+    } else if (options.limit) {
+      matchesToProcess = matches.slice(0, options.limit);
+      console.log(`Validating ${matchesToProcess.length} matches (of ${matches.length} total)`);
+    } else {
+      matchesToProcess = matches;
+      console.log(`Validating ${matchesToProcess.length} matches`);
+    }
+    
     const results = this.validateMatchArray(matchesToProcess, false, options);
     const errors = results.filter(f => f.results.errors.length);
     const valid = matchesToProcess.length - errors.length;
@@ -70,12 +87,27 @@ const pbp = {
 
   validateMatchArray(matchArray: CSVRow[], expand = false, options: ValidationOptions = {}): MatchResult[] {
     const results: MatchResult[] = [];
-    const bar = options.debug ? null : new ProgressBar(':bar', { total: matchArray.length });
+    const bar = options.debug || options.indices ? null : new ProgressBar(':bar', { total: matchArray.length });
+    
     for (let i = 0; i < matchArray.length; i++) {
+      // Calculate actual match index
+      const actualIndex = options.indices ? options.indices[i] : i;
+      
       if (options.debug) {
-        console.log(`\n=== Match ${i + 1} ===`);
+        console.log(`\n=== Match index ${actualIndex} ===`);
+        const row = matchArray[i];
+        if (row.tny_name || row.match_id) {
+          console.log(`Tournament: ${row.tny_name || 'N/A'}, Match ID: ${row.match_id || 'N/A'}`);
+        }
+        if (row.server1 && row.server2) {
+          console.log(`Players: ${row.server1} vs ${row.server2}`);
+        }
+        if (row.score) {
+          console.log(`Score: ${row.score}`);
+        }
       }
-      results.push({ i, results: this.validateMatch(matchArray[i], expand, options) });
+      
+      results.push({ i: actualIndex, results: this.validateMatch(matchArray[i], expand, options) });
       if (bar) bar.tick();
     }
     return results;
