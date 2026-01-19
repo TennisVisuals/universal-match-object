@@ -90,78 +90,243 @@ const pbp = {
 
   validateMatch(row: CSVRow, expand = false): ValidationResult {
     const errors: string[] = [];
-    const match: any = {};
     const winner = parseInt(row.winner) - 1;
     const playerArray: string[] = [];
     playerArray.push(removeDiacritics(row.server1));
     playerArray.push(removeDiacritics(row.server2));
 
-    // Detect format from PBP
-    const format = this.detectFormat(row.pbp);
+    const setsWon = [0, 0];
+    const scores = row.score.split(' ');
+    const score: Array<{ 0: number; 1: number; tiebreak?: number }> = [];
     
-    // Create match with modern API
-    const mo = matchObject.Match({ matchUpFormat: format });
-    
-    // Define players
-    mo.metadata.definePlayer({ index: 0, firstName: playerArray[0] });
-    mo.metadata.definePlayer({ index: 1, firstName: playerArray[1] });
-
-    // Parse and add points
-    const pbpArray = row.pbp ? row.pbp.trim().split(/[;.]/).filter(p => p) : [];
-    
-    for (const point of pbpArray) {
-      const pointData = this.parsePoint(point);
-      if (pointData.error) {
-        errors.push(pointData.error);
-        break;
+    // Parse official score from CSV
+    for (let c = 0; c < scores.length; c++) {
+      const tiebreakScore = scores[c].indexOf('(') >= 0 
+        ? scores[c].split('(')[1].split(')')[0] 
+        : undefined;
+      const playerScores: string[] = [];
+      
+      if (winner === 0) {
+        playerScores[0] = scores[c].split('-')[0];
+        playerScores[1] = scores[c].split('-')[1].split('(')[0];
+      } else {
+        playerScores[1] = scores[c].split('-')[0];
+        playerScores[0] = scores[c].split('-')[1].split('(')[0];
       }
-      if (pointData.winner !== undefined) {
-        mo.addPoint(pointData.winner);
+      
+      if (parseInt(playerScores[0]) > parseInt(playerScores[1])) {
+        setsWon[0] += 1;
+      } else {
+        setsWon[1] += 1;
+      }
+      
+      score.push({ 
+        0: parseInt(playerScores[0]), 
+        1: parseInt(playerScores[1]), 
+        tiebreak: tiebreakScore ? parseInt(tiebreakScore) : undefined 
+      });
+    }
+
+    const points = row.pbp;
+    const sets = points.split('.').filter((s: string) => s);
+
+    // Validate individual sets
+    for (let s = 0; s < sets.length; s++) {
+      const format = (score[s][0] > 7 || score[s][1] > 7) 
+        ? 'longSetTo6by2' 
+        : 'AdSetsTo6tb7';
+      
+      const result = this.validSet(sets[s], format);
+      if (!result.valid) {
+        errors.push('invalid set');
       }
     }
 
-    // Validate winner
-    if (mo.complete()) {
-      const matchWinner = mo.winner();
-      if (matchWinner !== winner) {
-        errors.push(`Winner mismatch: expected ${winner}, got ${matchWinner}`);
-      }
-    } else {
-      errors.push('Match incomplete after processing all points');
+    const gamesData = this.processGames(points);
+    const matchData = this.processMatch(sets, setsWon, score);
+    
+    if (matchData.rejected.length) errors.push('excess points');
+    
+    const validScore = this.validScore(matchData.sets, score);
+    if (!validScore) {
+      errors.push('invalid score');
+      if (gamesData.missing_points) errors.push('games missing points');
+      if (gamesData.excess_points) errors.push('excess game points');
     }
 
-    const result: ValidationResult = { errors };
-    if (expand && !errors.length) {
-      result.match = mo;
-      result.expanded = this.expandMatch(mo, row);
+    if (expand) {
+      return { 
+        errors, 
+        match: { 
+          points: matchData.history, 
+          format: matchData.format, 
+          metadata: row 
+        } 
+      };
     }
-
-    return result;
+    
+    return { 
+      errors 
+    };
   },
 
-  detectFormat(pbp: string): string {
-    // Detect format from PBP structure
-    // Default to best-of-3 sets
-    return 'SET3-S:6/TB7';
+  validSet(set: string, format: string): { valid: boolean } {
+    const game = matchObject.Game();
+    const games = set.split(';');
+    let valid = true;
+
+    for (const g of games) {
+      if (g.indexOf('/') > 0) {
+        game.reset('tiebreak7a');
+        const result = game.addPoints(g.split('/').join(''));
+        if (!game.complete() || result.rejected.length) {
+          valid = false;
+        }
+      } else {
+        game.reset('advantage');
+        const result = game.addPoints(g);
+        if (!game.complete() || result.rejected.length) {
+          valid = false;
+        }
+      }
+    }
+
+    return { valid };
   },
 
-  parsePoint(point: string): { winner?: number; error?: string } {
-    // Simple point parser: 'S' or 'R' = server (0), others = receiver (1)
-    const trimmed = point.trim();
-    if (!trimmed) return {};
+  validScore(
+    matchScore: Array<{ games: number[]; tiebreak?: number[] }>, 
+    score: Array<{ 0: number; 1: number; tiebreak?: number }>
+  ): boolean {
+    if (matchScore.length !== score.length) return false;
     
-    const serverWins = ['S', 'A'];  // Server wins (Serve winner, Ace)
-    const receiverWins = ['R'];     // Receiver wins
+    const valid = score.map((setScore, i) => {
+      const gamesEqual = setScore[0] === matchScore[i].games[0] && 
+                        setScore[1] === matchScore[i].games[1];
+      let tbEqual = true;
+      
+      if (setScore.tiebreak !== undefined) {
+        if (!matchScore[i].tiebreak) {
+          tbEqual = false;
+        } else {
+          tbEqual = matchScore[i].tiebreak.indexOf(setScore.tiebreak) >= 0;
+        }
+      }
+      
+      return gamesEqual && tbEqual;
+    });
     
-    const firstChar = trimmed[0];
-    if (serverWins.includes(firstChar)) {
-      return { winner: 0 };
-    } else if (receiverWins.includes(firstChar)) {
-      return { winner: 1 };
-    } else {
-      // Default: assume it's a serve indicator or other code
-      return { winner: 0 };
+    return valid.filter(f => !f).length === 0;
+  },
+
+  processGames(points: string): { 
+    valid_games: number; 
+    excess_points: number; 
+    missing_points: number 
+  } {
+    const game = matchObject.Game();
+    const games = points.split('.').join(';').split(';');
+    let validGames = 0;
+    let excessPoints = 0;
+    let missingPoints = 0;
+
+    games.forEach(g => {
+      if (g.indexOf('/') > 0) {
+        game.reset('tiebreak7a');
+        test(g.split('/').join(''));
+      } else {
+        game.reset('advantage');
+        test(g);
+      }
+    });
+
+    return { 
+      valid_games: validGames, 
+      excess_points: excessPoints, 
+      missing_points: missingPoints 
+    };
+
+    function test(pts: string) {
+      const result = game.addPoints(pts);
+      if (game.complete()) {
+        if (!result.rejected.length) {
+          validGames += 1;
+        } else {
+          excessPoints += 1;
+        }
+      } else {
+        missingPoints += 1;
+      }
     }
+  },
+
+  processMatch(
+    sets: string[], 
+    setsWon: number[], 
+    score: Array<{ 0: number; 1: number; tiebreak?: number }>
+  ): { 
+    sets: Array<{ games: number[]; tiebreak?: number[] }>; 
+    rejected: any[]; 
+    history: any[]; 
+    format: string 
+  } {
+    // Detect if 5-set format
+    const fiveSets = Math.max(...setsWon) > 2;
+    let supertiebreak = false;
+    let finalSetLong = false;
+
+    // Detect supertiebreak vs long final set
+    for (let s = 0; s < sets.length; s++) {
+      const numPoints = sets[s].split(';').join('').split('/').join('').length;
+      
+      if (score[s][0] > 7 || score[s][1] > 7) {
+        if (Math.abs(score[s][0] - score[s][1]) === 2 && numPoints > 50) {
+          finalSetLong = true;
+        } else {
+          supertiebreak = true;
+        }
+      }
+    }
+
+    // Determine format code
+    let formatCode = fiveSets ? 'SET5-S:6/TB7' : 'SET3-S:6/TB7';
+    if (supertiebreak) {
+      formatCode = fiveSets ? 'SET5-S:6/TB7-F:TB10' : 'SET3-S:6/TB7-F:TB10';
+    } else if (finalSetLong) {
+      formatCode = fiveSets ? 'SET5-S:6/TB7-F:T8' : 'SET3-S:6/TB7-F:T8';
+    }
+
+    // Create match and replay all points
+    const mo = matchObject.Match({ matchUpFormat: formatCode });
+    const allPoints = sets.join('.').split('.').join('').split(';').join('').split('/').join('');
+    const result = mo.addPoints(allPoints);
+
+    // Extract set scores
+    const matchSets = mo.sets().map((set: any) => {
+      const setScore = set.score();
+      const games = setScore.games ? setScore.games.split('-').map(Number) : [0, 0];
+      
+      // Check for tiebreaks
+      const tiebreakGames = set.games().filter((g: any) => 
+        g.format.tiebreak && typeof g.format.tiebreak === 'function' && g.format.tiebreak()
+      );
+      
+      const tiebreak = tiebreakGames.length > 0
+        ? tiebreakGames.map((g: any) => {
+            const tbScore = g.score();
+            return tbScore.points ? tbScore.points.split('-').map(Number) : [];
+          }).flat()
+        : undefined;
+
+      return { games, tiebreak };
+    });
+
+    return {
+      sets: matchSets,
+      rejected: result.rejected || [],
+      history: allPoints.split('').map((p, i) => ({ point: i + 1, winner: p })),
+      format: formatCode
+    };
   },
 
   expandMatch(mo: any, row: CSVRow): any {
