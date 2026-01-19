@@ -180,8 +180,10 @@ const pbp = {
       let pts: string;
       
       if (g.indexOf('/') > 0) {
-        // Tiebreak game
-        game = matchObject.Game({ tiebreakTo: 7 });
+        // Tiebreak game - use formatStructure
+        game = matchObject.Game({ 
+          formatStructure: { tiebreakTo: 7 } as any 
+        });
         pts = g.split('/').join('');
       } else {
         // Regular game
@@ -239,8 +241,10 @@ const pbp = {
       let pts: string;
       
       if (g.indexOf('/') > 0) {
-        // Tiebreak game
-        game = matchObject.Game({ tiebreakTo: 7 });
+        // Tiebreak game - use formatStructure
+        game = matchObject.Game({ 
+          formatStructure: { tiebreakTo: 7 } as any 
+        });
         pts = g.split('/').join('');
       } else {
         // Regular game
