@@ -3,3 +3,15 @@
 .*.un~
 .gitignore
 examples/mobile/sprity_icons
+
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+*.tsbuildinfo
+coverage
+
+# Lock files (use pnpm)
+package-lock.json
+yarn.lock

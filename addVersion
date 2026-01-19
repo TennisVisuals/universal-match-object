@@ -1,0 +1,3 @@
+#!/bin/bash
+# Replace @VERSION@ placeholder with actual version from package.json
+find dist -type f \( -name "*.js" -o -name "*.mjs" -o -name "*.cjs" -o -name "*.d.ts" -o -name "*.d.mts" \) -exec sed -i '' "s/@VERSION@/$1/g" {} \;

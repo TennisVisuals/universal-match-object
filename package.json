@@ -1,0 +1,79 @@
+{
+  "name": "@tennisvisuals/universal-match-object",
+  "version": "2.1.0",
+  "description": "Universal Match Object for Tennis with Factory Format Support",
+  "main": "./dist/matchObject.cjs",
+  "module": "./dist/matchObject.mjs",
+  "types": "./dist/matchObject.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/matchObject.d.mts",
+        "default": "./dist/matchObject.mjs"
+      },
+      "require": {
+        "types": "./dist/matchObject.d.ts",
+        "default": "./dist/matchObject.cjs"
+      }
+    },
+    "./formats": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./converter": {
+      "import": {
+        "types": "./dist/formatConverter.d.mts",
+        "default": "./dist/formatConverter.mjs"
+      },
+      "require": {
+        "types": "./dist/formatConverter.d.ts",
+        "default": "./dist/formatConverter.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "author": "charles@tennisvisuals.com",
+  "repository": "https://github.com/TennisVisuals/universal-match-object",
+  "scripts": {
+    "commits": "git log $(git describe --tags --abbrev=0)..HEAD --oneline --no-merges --pretty=format:'%s: %h'",
+    "coverage": "vitest run --coverage",
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "postbuild": "./addVersion $npm_package_version",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prebuild": "rm -rf dist/*",
+    "prepublishOnly": "pnpm run build && pnpm test",
+    "release": "pnpm run release:patch",
+    "release:major": "pnpm run commits && npm version $(semver $npm_package_version -i major) && npm publish --tag latest",
+    "release:minor": "pnpm run commits && npm version $(semver $npm_package_version -i minor) && npm publish --tag latest",
+    "release:patch": "pnpm run commits && npm version $(semver $npm_package_version -i patch) && npm publish --tag latest"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.6",
+    "@typescript-eslint/eslint-plugin": "^8.53.0",
+    "@typescript-eslint/parser": "^8.53.0",
+    "@vitest/coverage-v8": "4.0.17",
+    "esbuild": "^0.27.2",
+    "eslint": "^9.39.2",
+    "eslint-plugin-sonarjs": "^3.0.5",
+    "semver": "^7.7.3",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "dependencies": {
+    "tods-competition-factory": "^2.2.48"
+  }
+}
