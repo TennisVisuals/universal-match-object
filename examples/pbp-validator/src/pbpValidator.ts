@@ -57,8 +57,8 @@ const pbp = {
 
   loadFile(fileName: string): string {
     const targetFile = fileName;
-    const chard = chardet.detectFileSync(targetFile);
-    const encoding = (chard?.indexOf('ISO') >= 0 || chard === 'UTF-8' || chard === 'windows-1252') ? 'utf8' : 'utf16le';
+    const chard = chardet.detectFileSync(targetFile) || 'UTF-8';
+    const encoding = (chard.indexOf('ISO') >= 0 || chard === 'UTF-8' || chard === 'windows-1252') ? 'utf8' : 'utf16le';
     return fs.readFileSync(targetFile, encoding as BufferEncoding);
   },
 
