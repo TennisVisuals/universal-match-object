@@ -319,10 +319,10 @@ export function createStateObject({
       so.addScores = (values = []) => so.addMultiple({values, fx: so.addScore});
 
       so.addMultiple = ({ values = [], fx = so.addPoint }) => {
-         if (typeof values == 'string') values = values.match(/[01A-Za-z][\*\#\@]*/g);
+         if (typeof values == 'string') values = values.match(/[01A-Za-z][\*\#\@]*/g) || [];
          let added = [];
          let rejected = [];
-         while (values.length) {
+         while (values && values.length) {
             let value = values.shift();
             let episode = fx(value);
             // Null/undefined check to prevent TypeError
