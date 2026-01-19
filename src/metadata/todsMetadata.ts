@@ -7,6 +7,7 @@
 
 import type { Participant, Side, MatchUp, Person } from "../types/tods";
 import { utilities } from "tods-competition-factory";
+import { INDIVIDUAL, COMPETITOR, ACTIVE } from "../constants";
 
 export interface TODSMetadataConfig {
   participants?: Participant[];
@@ -63,9 +64,9 @@ export class TODSMetadata {
     this._participants.set(participantId, {
       ...participant,
       participantId,
-      participantType: participant.participantType || "INDIVIDUAL",
-      participantRole: participant.participantRole || "COMPETITOR",
-      participantStatus: participant.participantStatus || "ACTIVE",
+      participantType: participant.participantType || INDIVIDUAL,
+      participantRole: participant.participantRole || COMPETITOR,
+      participantStatus: participant.participantStatus || ACTIVE,
     });
   }
 
@@ -221,9 +222,9 @@ export class TODSMetadata {
     const participant: Participant = {
       participantId,
       participantName,
-      participantType: "INDIVIDUAL",
-      participantRole: "COMPETITOR",
-      participantStatus: "ACTIVE",
+      participantType: INDIVIDUAL,
+      participantRole: COMPETITOR,
+      participantStatus: ACTIVE,
     };
 
     // Add person details if available

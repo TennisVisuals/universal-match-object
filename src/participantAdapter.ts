@@ -19,6 +19,7 @@
 
 import { Participant, ParticipantTypeUnion, Person } from "./types/tods";
 import { utilities } from "tods-competition-factory";
+import { INDIVIDUAL, PAIR, GROUP, TEAM, COMPETITOR, ACTIVE } from "./constants";
 
 // Legacy player format (UMO v2.x)
 export interface LegacyPlayer {
@@ -70,9 +71,9 @@ export class ParticipantAdapter {
     return {
       participantId,
       participantName: legacy.name,
-      participantType: "INDIVIDUAL",
-      participantRole: "COMPETITOR",
-      participantStatus: "ACTIVE",
+      participantType: INDIVIDUAL,
+      participantRole: COMPETITOR,
+      participantStatus: ACTIVE,
       person,
       createdAt: new Date().toISOString(),
     };
@@ -158,10 +159,10 @@ export class ParticipantAdapter {
 
     // Validate participantType if present
     const validTypes: ParticipantTypeUnion[] = [
-      "GROUP",
-      "INDIVIDUAL",
-      "PAIR",
-      "TEAM",
+      GROUP,
+      INDIVIDUAL,
+      PAIR,
+      TEAM,
     ];
     if (
       participant.participantType &&
@@ -225,9 +226,9 @@ export class ParticipantAdapter {
       participantName:
         pairName ||
         `${participant1.participantName} / ${participant2.participantName}`,
-      participantType: "PAIR",
-      participantRole: "COMPETITOR",
-      participantStatus: "ACTIVE",
+      participantType: PAIR,
+      participantRole: COMPETITOR,
+      participantStatus: ACTIVE,
       individualParticipantIds: [
         participant1.participantId,
         participant2.participantId,

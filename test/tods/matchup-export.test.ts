@@ -9,6 +9,7 @@ import matchObject from '../../src/matchObject';
 import '../../src/matchUpAdapter'; // IMPORTANT: Import to register globally
 import { MatchUpAdapter } from '../../src/matchUpAdapter';
 import type { Participant } from '../../src/types/tods';
+import { INDIVIDUAL, COMPETITOR, SINGLES, DOUBLES, TO_BE_PLAYED, IN_PROGRESS, COMPLETED } from '../../src/constants';
 
 describe('MatchUp Export (UMO → TODS)', () => {
   
@@ -18,15 +19,15 @@ describe('MatchUp Export (UMO → TODS)', () => {
       const p1: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL',
-        participantRole: 'COMPETITOR'
+        participantType: INDIVIDUAL,
+        participantRole: COMPETITOR
       };
       
       const p2: Participant = {
         participantId: 'p2',
         participantName: 'Rafael Nadal',
-        participantType: 'INDIVIDUAL',
-        participantRole: 'COMPETITOR'
+        participantType: INDIVIDUAL,
+        participantRole: COMPETITOR
       };
       
       const match = matchObject.Match({
@@ -40,8 +41,8 @@ describe('MatchUp Export (UMO → TODS)', () => {
       
       expect(matchUp.matchUpId).toBe('match-123');
       expect(matchUp.matchUpFormat).toBe('SET3-S:6/TB7');
-      expect(matchUp.matchUpType).toBe('SINGLES');
-      expect(matchUp.matchUpStatus).toBe('TO_BE_PLAYED');
+      expect(matchUp.matchUpType).toBe(SINGLES);
+      expect(matchUp.matchUpStatus).toBe(TO_BE_PLAYED);
       expect(matchUp.sides).toHaveLength(2);
     });
     
@@ -49,13 +50,13 @@ describe('MatchUp Export (UMO → TODS)', () => {
       const p1: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL'
+        participantType: INDIVIDUAL
       };
       
       const p2: Participant = {
         participantId: 'p2',
         participantName: 'Rafael Nadal',
-        participantType: 'INDIVIDUAL'
+        participantType: INDIVIDUAL
       };
       
       const match = matchObject.Match({ matchUpFormat: 'SET3-S:6/TB7' });
@@ -78,7 +79,7 @@ describe('MatchUp Export (UMO → TODS)', () => {
       
       const matchUp = match.toMatchUp();
       
-      expect(matchUp.matchUpType).toBe('DOUBLES');
+      expect(matchUp.matchUpType).toBe(DOUBLES);
     });
   });
   
@@ -89,7 +90,7 @@ describe('MatchUp Export (UMO → TODS)', () => {
       
       const matchUp = match.toMatchUp();
       
-      expect(matchUp.matchUpStatus).toBe('TO_BE_PLAYED');
+      expect(matchUp.matchUpStatus).toBe(TO_BE_PLAYED);
     });
     
     it('should set status to IN_PROGRESS after first point', () => {
@@ -98,7 +99,7 @@ describe('MatchUp Export (UMO → TODS)', () => {
       
       const matchUp = match.toMatchUp();
       
-      expect(matchUp.matchUpStatus).toBe('IN_PROGRESS');
+      expect(matchUp.matchUpStatus).toBe(IN_PROGRESS);
     });
     
     it('should set status to COMPLETED when match is complete', () => {
@@ -112,7 +113,7 @@ describe('MatchUp Export (UMO → TODS)', () => {
       
       const matchUp = match.toMatchUp();
       
-      expect(matchUp.matchUpStatus).toBe('COMPLETED');
+      expect(matchUp.matchUpStatus).toBe(COMPLETED);
       expect(matchUp.winningSide).toBe(1); // Side 1 (player index 0)
     });
   });
@@ -238,7 +239,7 @@ describe('MatchUp Export (UMO → TODS)', () => {
       
       expect(matchUp.sides![0].participant?.participantId).toBe('p1');
       expect(matchUp.sides![0].participant?.participantName).toBe('Roger Federer');
-      expect(matchUp.sides![0].participant?.participantType).toBe('INDIVIDUAL');
+      expect(matchUp.sides![0].participant?.participantType).toBe(INDIVIDUAL);
     });
   });
 });

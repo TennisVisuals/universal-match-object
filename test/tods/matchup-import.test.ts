@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest';
 import matchObject from '../../src/matchObject';
 import '../../src/matchUpAdapter'; // IMPORTANT: Import to register globally
 import type { MatchUp, Participant } from '../../src/types/tods';
+import { INDIVIDUAL, COMPETITOR, SINGLES, DOUBLES, TO_BE_PLAYED, COMPLETED } from '../../src/constants';
 
 describe('MatchUp Import (TODS → UMO)', () => {
   
@@ -17,8 +18,8 @@ describe('MatchUp Import (TODS → UMO)', () => {
       const matchUp: MatchUp = {
         matchUpId: 'match-456',
         matchUpFormat: 'SET3-S:6/TB7',
-        matchUpType: 'SINGLES',
-        matchUpStatus: 'TO_BE_PLAYED',
+        matchUpType: SINGLES,
+        matchUpStatus: TO_BE_PLAYED,
         createdAt: new Date().toISOString()
       };
       
@@ -33,22 +34,22 @@ describe('MatchUp Import (TODS → UMO)', () => {
       const p1: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL',
-        participantRole: 'COMPETITOR'
+        participantType: INDIVIDUAL,
+        participantRole: COMPETITOR
       };
       
       const p2: Participant = {
         participantId: 'p2',
         participantName: 'Rafael Nadal',
-        participantType: 'INDIVIDUAL',
-        participantRole: 'COMPETITOR'
+        participantType: INDIVIDUAL,
+        participantRole: COMPETITOR
       };
       
       const matchUp: MatchUp = {
         matchUpId: 'match-456',
         matchUpFormat: 'SET3-S:6/TB7',
-        matchUpType: 'SINGLES',
-        matchUpStatus: 'TO_BE_PLAYED',
+        matchUpType: SINGLES,
+        matchUpStatus: TO_BE_PLAYED,
         sides: [
           {
             sideNumber: 1,
@@ -75,7 +76,7 @@ describe('MatchUp Import (TODS → UMO)', () => {
       const matchUp: MatchUp = {
         matchUpId: 'match-456',
         matchUpFormat: 'SET3-S:6/TB7',
-        matchUpType: 'DOUBLES',
+        matchUpType: DOUBLES,
         matchUpStatus: 'TO_BE_PLAYED'
       };
       
@@ -91,15 +92,15 @@ describe('MatchUp Import (TODS → UMO)', () => {
       const p1: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL',
-        participantRole: 'COMPETITOR'
+        participantType: INDIVIDUAL,
+        participantRole: COMPETITOR
       };
       
       const p2: Participant = {
         participantId: 'p2',
         participantName: 'Rafael Nadal',
-        participantType: 'INDIVIDUAL',
-        participantRole: 'COMPETITOR'
+        participantType: INDIVIDUAL,
+        participantRole: COMPETITOR
       };
       
       // Create original match
@@ -144,7 +145,7 @@ describe('MatchUp Import (TODS → UMO)', () => {
       original.doubles(true); // Set doubles mode on (true argument required)
       
       const matchUp = original.toMatchUp();
-      expect(matchUp.matchUpType).toBe('DOUBLES');
+      expect(matchUp.matchUpType).toBe(DOUBLES);
       
       const reimported = matchObject.fromMatchUp(matchUp);
       expect(reimported.doubles()).toBe(true);
@@ -158,7 +159,7 @@ describe('MatchUp Import (TODS → UMO)', () => {
         matchUpId: 'completed-match',
         matchUpFormat: 'SET3-S:6/TB7',
         matchUpType: 'SINGLES',
-        matchUpStatus: 'COMPLETED',
+        matchUpStatus: COMPLETED,
         winningSide: 1,
         score: {
           scoreStringSide1: '6 6',

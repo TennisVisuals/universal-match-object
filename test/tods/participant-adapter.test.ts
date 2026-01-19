@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { ParticipantAdapter, isTODSParticipant, isLegacyPlayer } from '../../src/participantAdapter';
 import type { Participant } from '../../src/types/tods';
+import { INDIVIDUAL, COMPETITOR, ACTIVE, PAIR } from '../../src/constants';
 
 describe('ParticipantAdapter', () => {
   
@@ -16,7 +17,7 @@ describe('ParticipantAdapter', () => {
       const tods: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL'
+        participantType: INDIVIDUAL
       };
       
       expect(ParticipantAdapter.detect(tods)).toBe('tods');
@@ -59,8 +60,8 @@ describe('ParticipantAdapter', () => {
       expect(tods.participantId).toBe('p1');
       expect(tods.participantName).toBe('Roger Federer');
       expect(tods.participantType).toBe('INDIVIDUAL');
-      expect(tods.participantRole).toBe('COMPETITOR');
-      expect(tods.participantStatus).toBe('ACTIVE');
+      expect(tods.participantRole).toBe(COMPETITOR);
+      expect(tods.participantStatus).toBe(ACTIVE);
     });
     
     it('should generate participantId if not provided', () => {
@@ -121,8 +122,8 @@ describe('ParticipantAdapter', () => {
       const tods: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL',
-        participantRole: 'COMPETITOR'
+        participantType: INDIVIDUAL,
+        participantRole: COMPETITOR
       };
       
       const legacy = ParticipantAdapter.fromTODS(tods);
@@ -135,7 +136,7 @@ describe('ParticipantAdapter', () => {
       const tods: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL'
+        participantType: INDIVIDUAL
       };
       
       const legacy = ParticipantAdapter.fromTODS(tods, 1);
@@ -146,7 +147,7 @@ describe('ParticipantAdapter', () => {
     it('should handle missing participantName', () => {
       const tods: Participant = {
         participantId: 'p1',
-        participantType: 'INDIVIDUAL'
+        participantType: INDIVIDUAL
       };
       
       const legacy = ParticipantAdapter.fromTODS(tods);
@@ -165,7 +166,7 @@ describe('ParticipantAdapter', () => {
         {
           participantId: 'p2',
           participantName: 'Rafael Nadal',
-          participantType: 'INDIVIDUAL' as const
+          participantType: INDIVIDUAL as const
         }
       ];
       
@@ -183,12 +184,12 @@ describe('ParticipantAdapter', () => {
         {
           participantId: 'p1',
           participantName: 'Roger Federer',
-          participantType: 'INDIVIDUAL'
+          participantType: INDIVIDUAL
         },
         {
           participantId: 'p2',
           participantName: 'Rafael Nadal',
-          participantType: 'INDIVIDUAL'
+          participantType: INDIVIDUAL
         }
       ];
       
@@ -210,9 +211,9 @@ describe('ParticipantAdapter', () => {
       const tods: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL',
-        participantRole: 'COMPETITOR',
-        participantStatus: 'ACTIVE'
+        participantType: INDIVIDUAL,
+        participantRole: COMPETITOR,
+        participantStatus: ACTIVE
       };
       
       const result = ParticipantAdapter.validate(tods);
@@ -275,18 +276,18 @@ describe('ParticipantAdapter', () => {
       const p1: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL'
+        participantType: INDIVIDUAL
       };
       
       const p2: Participant = {
         participantId: 'p2',
         participantName: 'Rafael Nadal',
-        participantType: 'INDIVIDUAL'
+        participantType: INDIVIDUAL
       };
       
       const pair = ParticipantAdapter.createPair(p1, p2);
       
-      expect(pair.participantType).toBe('PAIR');
+      expect(pair.participantType).toBe(PAIR);
       expect(pair.participantName).toBe('Roger Federer / Rafael Nadal');
       expect(pair.individualParticipantIds).toEqual(['p1', 'p2']);
     });
@@ -295,13 +296,13 @@ describe('ParticipantAdapter', () => {
       const p1: Participant = {
         participantId: 'p1',
         participantName: 'Roger Federer',
-        participantType: 'INDIVIDUAL'
+        participantType: INDIVIDUAL
       };
       
       const p2: Participant = {
         participantId: 'p2',
         participantName: 'Rafael Nadal',
-        participantType: 'INDIVIDUAL'
+        participantType: INDIVIDUAL
       };
       
       const pair = ParticipantAdapter.createPair(p1, p2, 'Team Europe');

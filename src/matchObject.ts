@@ -17,6 +17,7 @@ import { createSetFormat } from "./formats/setFormat";
 import { createGameFormat } from "./formats/gameFormat";
 import { createCommon } from "./core/common";
 import { createStateObject } from "./state/stateObject";
+import { SINGLES, DOUBLES, TO_BE_PLAYED, COMPLETED } from "./constants";
 
 // Version - inline to avoid import issues with bundler
 const umoVersion = "@VERSION@";
@@ -133,10 +134,9 @@ umo.Match = ({
 
   match.scoreboard = (perspective) => {
     if (!match.children.length) return "0-0";
-    if (perspective == undefined)
-      perspective = match.set.perspectiveScore()
-        ? match.nextService()
-        : undefined;
+    perspective ??= match.set.perspectiveScore()
+      ? match.nextService()
+      : undefined;
     return match.children
       .map((child) => child.scoreboard(perspective))
       .join(", ");
@@ -247,12 +247,12 @@ umo.Match = ({
     }
     // Fallback: return a basic structure
     const isDoubles = matchObj.doubles ? matchObj.doubles() : false;
-    const matchUpType = isDoubles ? "DOUBLES" : "SINGLES";
+    const matchUpType = isDoubles ? DOUBLES : SINGLES;
     return {
       matchUpId: matchObj.metadata?.match?.id || "unknown",
       matchUpFormat: matchObj.format?.code,
       matchUpType,
-      matchUpStatus: matchObj.complete?.() ? "COMPLETED" : "TO_BE_PLAYED",
+      matchUpStatus: matchObj.complete?.() ? COMPLETED : TO_BE_PLAYED,
     };
   };
 
@@ -476,7 +476,7 @@ umo.Game = ({
       (game.singleThresholdMet() && game.format.hasDecider() && min_diff == 1)
     ) {
       let progression = ["0", "15", "30", "40", "G", "G"];
-      scoreboard = score.map((points, player) => progression[points]).join("-");
+      scoreboard = score.map((points, _player) => progression[points]).join("-");
     } else {
       scoreboard = score
         .map((points, player) => {

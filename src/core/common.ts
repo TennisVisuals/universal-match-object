@@ -10,6 +10,7 @@
  */
 
 import { TODSMetadata } from "../metadata/todsMetadata";
+import { INDIVIDUAL } from "../constants";
 
 export function createCommon(umo: any) {
   let number_of_players = 2;
@@ -88,7 +89,7 @@ export function createCommon(umo: any) {
             participant || {
               participantId: `player_${i}`,
               participantName: `Player ${["One", "Two", "Three", "Four"][i]}`,
-              participantType: "INDIVIDUAL",
+              participantType: INDIVIDUAL,
             }
           );
         });
@@ -100,7 +101,7 @@ export function createCommon(umo: any) {
       return {
         participantId: `player_${index}`,
         participantName: `Player ${["One", "Two", "Three", "Four"][index]}`,
-        participantType: "INDIVIDUAL",
+        participantType: INDIVIDUAL,
       };
     },
     // TODS-NATIVE: Update participant (modern API)

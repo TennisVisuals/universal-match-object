@@ -11,6 +11,7 @@
 import type { MatchUp, Side, Score, Set, Game, Participant } from './types/tods';
 import { ParticipantAdapter } from './participantAdapter';
 import { utilities, scoreGovernor } from 'tods-competition-factory';
+import { SINGLES, DOUBLES, TO_BE_PLAYED, IN_PROGRESS, COMPLETED, INDIVIDUAL, COMPETITOR } from './constants';
 
 // Register globally for matchObject to use
 if (typeof globalThis !== 'undefined') {
@@ -33,7 +34,7 @@ export class MatchUpAdapter {
     const isDoubles = match.format?.isDoubles ?? doublesFunc;
     
     // Determine matchUpType
-    const matchUpType = isDoubles ? 'DOUBLES' : 'SINGLES';
+    const matchUpType = isDoubles ? DOUBLES : SINGLES;
     
     // Determine matchUpStatus
     const matchUpStatus = this._getMatchUpStatus(match);
@@ -79,22 +80,22 @@ export class MatchUpAdapter {
           participants.push({
             ...side.participant,
             participantId: side.participant.participantId || side.participantId,
-            participantType: side.participant.participantType || 'INDIVIDUAL',
-            participantRole: side.participant.participantRole || 'COMPETITOR'
+            participantType: side.participant.participantType || INDIVIDUAL,
+            participantRole: side.participant.participantRole || COMPETITOR
           });
         } else if (side.participantId) {
           // Create minimal participant if only ID provided
           participants.push({
             participantId: side.participantId,
-            participantType: 'INDIVIDUAL',
-            participantRole: 'COMPETITOR'
+            participantType: INDIVIDUAL,
+            participantRole: COMPETITOR
           });
         }
       }
     }
     
     // Check if doubles
-    const isDoubles = matchUp.matchUpType === 'DOUBLES';
+    const isDoubles = matchUp.matchUpType === DOUBLES;
     
     // Return UMO initialization object
     return {
@@ -140,7 +141,7 @@ export class MatchUpAdapter {
    */
   private static _getMatchUpStatus(match: any): string {
     if (match.complete?.()) {
-      return 'COMPLETED';
+      return COMPLETED;
     }
     
     // Check if match has started
@@ -149,10 +150,10 @@ export class MatchUpAdapter {
     const points = history?.action ? history.action('addPoint') : (history?.points || []);
     const hasPoints = points.length > 0;
     if (hasPoints) {
-      return 'IN_PROGRESS';
+      return IN_PROGRESS;
     }
     
-    return 'TO_BE_PLAYED';
+    return TO_BE_PLAYED;
   }
   
   /**
@@ -361,7 +362,7 @@ export class MatchUpAdapter {
     matchUpFormat?: string;
     matchUpType?: 'SINGLES' | 'DOUBLES' | 'TEAM';
   }): MatchUp {
-    const { participants, matchUpFormat = 'SET3-S:6/TB7', matchUpType = 'SINGLES' } = params;
+    const { participants, matchUpFormat = 'SET3-S:6/TB7', matchUpType = SINGLES } = params;
     
     const sides: Side[] = participants.map((participant, index) => ({
       sideNumber: index + 1,
@@ -373,7 +374,7 @@ export class MatchUpAdapter {
       matchUpId: utilities.UUID(),
       matchUpFormat,
       matchUpType,
-      matchUpStatus: 'TO_BE_PLAYED' as any,
+      matchUpStatus: TO_BE_PLAYED as any,
       sides,
       createdAt: new Date().toISOString()
     };
