@@ -395,22 +395,35 @@ const pbp = {
     const allPoints = sets.join('.').split('.').join('').split(';').join('').split('/').join('');
     const result = mo.addPoints(allPoints);
 
-    // Extract set scores
+    // Extract set scores by counting game winners
     const matchSets = mo.sets().map((set: any) => {
-      const setScore = set.score();
-      const games = setScore.games ? setScore.games.split('-').map(Number) : [0, 0];
+      const setGames = set.games();
       
-      // Check for tiebreaks
-      const tiebreakGames = set.games().filter((g: any) => 
-        g.format.tiebreak && typeof g.format.tiebreak === 'function' && g.format.tiebreak()
-      );
+      // Count games won by each player
+      const games = [0, 0];
+      setGames.forEach((game: any) => {
+        const winner = game.winner();
+        if (winner !== undefined && winner !== null) {
+          games[winner]++;
+        }
+      });
       
-      const tiebreak = tiebreakGames.length > 0
-        ? tiebreakGames.map((g: any) => {
-            const tbScore = g.score();
-            return tbScore.points ? tbScore.points.split('-').map(Number) : [];
-          }).flat()
-        : undefined;
+      // Check for tiebreak in the last game of the set
+      let tiebreak: number[] | undefined = undefined;
+      if (setGames && setGames.length > 0) {
+        const lastGame = setGames[setGames.length - 1];
+        if (lastGame && lastGame.format && lastGame.format.tiebreak && lastGame.format.tiebreak()) {
+          // Tiebreak points - use the game's local_history which has only its points
+          const tbPoints = [0, 0];
+          const localHistory = lastGame.local_history || [];
+          localHistory.forEach((pt: any) => {
+            if (pt.winner !== undefined && pt.winner !== null) {
+              tbPoints[pt.winner]++;
+            }
+          });
+          tiebreak = tbPoints;
+        }
+      }
 
       return { games, tiebreak };
     });
