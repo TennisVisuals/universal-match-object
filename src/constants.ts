@@ -4,16 +4,12 @@
  * Re-exports commonly used constants from tods-competition-factory
  * for convenient usage throughout UMO
  * 
- * Note: We use dynamic import here because TypeScript's declaration generator
- * has issues resolving these exports statically, even though they exist at runtime
- * and in the .d.ts file. This is a known issue with complex barrel exports.
+ * Note: TypeScript may show import errors during declaration generation,
+ * but these imports work correctly at runtime.
  */
 
-// Use require to bypass TypeScript's static module resolution issues
-// These exports exist at runtime and in builds, just not resolvable during declaration generation
-const factory: any = require("tods-competition-factory");
-
-const { participantTypes, participantRoles, matchUpTypes, matchUpStatusConstants, tournamentConstants, entryStatusConstants } = factory;
+// @ts-expect-error - TypeScript can't resolve these during declaration generation, but they work at runtime
+import { participantTypes, participantRoles, matchUpTypes, matchUpStatusConstants, tournamentConstants, entryStatusConstants } from 'tods-competition-factory';
 
 // Participant Types
 export const INDIVIDUAL = participantTypes.INDIVIDUAL;
