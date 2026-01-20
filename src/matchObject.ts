@@ -285,7 +285,7 @@ umo.Set = ({
   });
 
   set.pointsNeeded = () => {
-    let threshold = set.format.threshold();
+    let threshold = set.format.pointsTo;
     if (set.complete()) {
       let points_to_set = [];
       points_to_set[set.winner()] = 0;
@@ -298,9 +298,9 @@ umo.Set = ({
       points_to_set[loser] = Math.max(...pts.map((p) => p[loser]));
       return { points_to_set };
     }
-    let deciding_game = set.format.hasDecider();
+    let deciding_game = set.format.hasGoldenPoint;
     let score_difference = set.scoreDifference();
-    let min_diff = set.format.minDiff();
+    let min_diff = set.format.winBy;
     let deciding_game_format_required = [false, false];
     let games_to_set = set.counter.map((player_score, player) => {
       let opponent_score = set.counter[1 - player];
@@ -345,12 +345,12 @@ umo.Set = ({
       if (!player_games_to_set) return points_needed;
 
       if (deciding_game_format_required[player]) {
-        points_needed += set.format.decidingChild.threshold();
+        points_needed += set.format.decidingChild.pointsTo;
         player_games_to_set -= 1;
       }
 
       for (let i = player_games_to_set; i; i--) {
-        points_needed += set.format.children.threshold();
+        points_needed += set.format.children.pointsTo;
       }
       return points_needed;
     });
@@ -370,7 +370,7 @@ umo.Set = ({
     let last_game = set.lastChild();
     let score = set.perspectiveScore(set.counter, perspective);
     if (!last_game) return score.join("-");
-    let tiebreak = last_game.format.tiebreak();
+    let tiebreak = last_game.format.isTiebreak;
     if (last_game.complete() && !tiebreak) return score.join("-");
     if (!last_game.complete())
       return `${score.join("-")} (${last_game.scoreboard(perspective)})`;
@@ -430,10 +430,10 @@ umo.Game = ({
 
   game.pointsToGame = () => {
     if (game.complete()) return undefined;
-    let threshold = game.format.threshold();
-    let deciding_point = game.format.hasDecider();
+    let threshold = game.format.pointsTo;
+    let deciding_point = game.format.hasGoldenPoint;
     let score_difference = game.scoreDifference();
-    let min_diff = game.format.minDiff();
+    let min_diff = game.format.winBy;
     let points_to_game = game.counter.map((player_score, player) => {
       let opponent_score = game.counter[1 - player];
       if (player_score > opponent_score) {
@@ -465,15 +465,15 @@ umo.Game = ({
 
   game.scoreboard = (perspective) => {
     let scoreboard;
-    let threshold = game.format.threshold();
-    let min_diff = game.format.minDiff();
+    let threshold = game.format.pointsTo;
+    let min_diff = game.format.winBy;
     let score = game.perspectiveScore(game.counter, perspective);
-    let tiebreak = threshold != 4 || game.format.tiebreak();
+    let tiebreak = threshold != 4 || game.format.isTiebreak;
     if (tiebreak) return score.join("-");
     if (
       !game.thresholdMet() ||
       (game.singleThresholdMet() && game.minDifferenceMet()) ||
-      (game.singleThresholdMet() && game.format.hasDecider() && min_diff == 1)
+      (game.singleThresholdMet() && game.format.hasGoldenPoint && min_diff == 1)
     ) {
       let progression = ["0", "15", "30", "40", "G", "G"];
       scoreboard = score.map((points, _player) => progression[points]).join("-");

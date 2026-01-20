@@ -99,7 +99,7 @@ export function createStateObject({
          if (object == 'Match' && so.children.length) {
             score.components.sets = so.children.map(set => {
                let map = { games: set.score().counters.local };
-               if (set.lastChild() && set.lastChild().format.tiebreak()) map.tiebreak = set.lastChild().score().counters.local;
+               if (set.lastChild() && set.lastChild().format.isTiebreak) map.tiebreak = set.lastChild().score().counters.local;
                return map;
             });
          }
@@ -110,9 +110,9 @@ export function createStateObject({
       so.accessChildren = () => so.children;
       so.lastChild = () => so.children[so.children.length - 1];
       so.scoreDifference = () => Math.abs(so.counter[0] - so.counter[1]);
-      so.thresholdMet = () => Math.max(...so.counter) >= so.format.threshold();
-      so.minDifferenceMet = () => so.scoreDifference() >= so.format.minDiff();
-      so.singleThresholdMet = () => Math.max(...so.counter) >= so.format.threshold() && Math.min(...so.counter) < so.format.threshold();
+      so.thresholdMet = () => Math.max(...so.counter) >= so.format.pointsTo;
+      so.minDifferenceMet = () => so.scoreDifference() >= so.format.winBy;
+      so.singleThresholdMet = () => Math.max(...so.counter) >= so.format.pointsTo && Math.min(...so.counter) < so.format.pointsTo;
       so.winner = () => (so.complete()) ? (so.counter[0] > so.counter[1] ? 0 : 1) : undefined;
       so.reverseScore = () => common.perspective_score && (so.nextTeamServing() % 2) == 1;
       so.nextTeamServing = () => common.metadata.teams().map(team => team.indexOf(so.nextService()) >= 0).indexOf(true);
@@ -122,8 +122,8 @@ export function createStateObject({
          return so.reverseScore() ? counter.slice().reverse() : counter; 
       }
       so.complete = () => {
-         function beyondDoubleThreshold() { return so.counter[0] >= so.format.threshold() && so.counter[1] >= so.format.threshold(); }
-         return (so.thresholdMet() && so.minDifferenceMet()) || (beyondDoubleThreshold() && so.scoreDifference() && so.format.hasDecider()) ? true : false;
+         function beyondDoubleThreshold() { return so.counter[0] >= so.format.pointsTo && so.counter[1] >= so.format.pointsTo; }
+         return (so.thresholdMet() && so.minDifferenceMet()) || (beyondDoubleThreshold() && so.scoreDifference() && so.format.hasGoldenPoint) ? true : false;
       }
       so.nextService = () => {
          if (so.complete()) return false;
@@ -136,7 +136,7 @@ export function createStateObject({
          }
 
          if (object == 'Game') {
-            if (!so.format.tiebreak()) return so.first_service;
+            if (!so.format.isTiebreak) return so.first_service;
             return common.nextTiebreakService(so.local_history, so.first_service);
          }
 
@@ -174,11 +174,11 @@ export function createStateObject({
             next_first_service = common.advanceService(last_child.set.firstService());
          }
 
-         let threshold = so.format.threshold();
-         let min_diff = so.format.minDiff();
+         let threshold = so.format.pointsTo;
+         let min_diff = so.format.winBy;
          let countersAtValue = (value) => so.counter[0] == value && so.counter[1] == value;
          let deciding_child_required = ( 
-            (countersAtValue(threshold) && (so.format.hasDecider() || min_diff == 1)) || 
+            (countersAtValue(threshold) && (so.format.hasGoldenPoint || min_diff == 1)) || 
             (countersAtValue(threshold - 1) && min_diff == 0) );
          let total_children = so.children.length;
 
@@ -242,7 +242,7 @@ export function createStateObject({
          let breakpoint = has_game_point >= 0 && has_game_point == 1 - common.metadata.playerTeam(server);
 
          if (breakpoint) attributes.breakpoint = true;
-         if (so.format.tiebreak()) attributes.tiebreak = true;
+         if (so.format.isTiebreak) attributes.tiebreak = true;
          if (common.metadata.timestamps() && !point.uts) attributes.uts = new Date().valueOf();
          Object.assign(point, attributes);
          so.local_history.push(point);
@@ -350,9 +350,9 @@ export function createStateObject({
       so.change.points = (values) => {
          if (!numbersArray(values) || values.length != 2) return false;
          if (object == 'Game') {
-            let past_threshold = Math.max(...values) > so.format.threshold();
+            let past_threshold = Math.max(...values) > so.format.pointsTo;
             let value_difference = Math.abs(values[0] - values[1]);
-            if (past_threshold && value_difference > so.format.minDiff()) return false;
+            if (past_threshold && value_difference > so.format.winBy) return false;
             if (so.complete()) return { result: false };
             let episode = { action: 'changePoints', result: true, pointChange: { from: so.counter, to: values } };
             so.local_history.push(episode);
@@ -370,10 +370,10 @@ export function createStateObject({
       so.change.pointScore = (value) => {
          if (value == '0-0') return so.change.points([0, 0]);
          if (object == 'Game') {
-            if (so.format.tiebreak()) return so.change.points(value.split('-').map(v => parseInt(v)));
+            if (so.format.isTiebreak) return so.change.points(value.split('-').map(v => parseInt(v)));
             value = value.replace(':', '-').split('-').map(m => m.trim()).join('-').split('D').join('40');
             let progression = Object.assign({}, adProgression);
-            if (so.format.hasDecider()) Object.keys(noAdProgression).forEach(key => progression[key] = noAdProgression[key]);
+            if (so.format.hasGoldenPoint) Object.keys(noAdProgression).forEach(key => progression[key] = noAdProgression[key]);
             let valid_values = [].concat(...Object.keys(progression).map(key => progression[key]));
             if (valid_values.indexOf(value) < 0) return false;
             let point_value = ['0', '15', '30', '40', 'A', 'G'];

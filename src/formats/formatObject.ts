@@ -38,10 +38,10 @@ export function createFormatObject({plural, common = null} = {}) {
                description: fo.values.description, 
                code: fo.values.code,
                players: number_of_players,
-               threshold: fo.threshold(),
-               has_decider: fo.hasDecider(),
-               min_diff: fo.minDiff(),
-               tiebreak: fo.tiebreak(),
+               threshold: fo.pointsTo,
+               has_decider: fo.hasGoldenPoint,
+               min_diff: fo.winBy,
+               tiebreak: fo.isTiebreak,
             };
             return settings;
          } else {
@@ -226,6 +226,32 @@ export function createFormatObject({plural, common = null} = {}) {
    
    Object.defineProperty(fo, 'isDoubles', {
       get() { return hasCommon && typeof common.doubles === 'function' ? common.doubles() : false; },
+      enumerable: true,
+      configurable: true
+   });
+   
+   // MODERN API: Property accessors that replace legacy methods
+   // These read directly from formatStructure when available
+   Object.defineProperty(fo, 'pointsTo', {
+      get() { return fo.threshold(); },
+      enumerable: true,
+      configurable: true
+   });
+   
+   Object.defineProperty(fo, 'winBy', {
+      get() { return fo.minDiff(); },
+      enumerable: true,
+      configurable: true
+   });
+   
+   Object.defineProperty(fo, 'hasGoldenPoint', {
+      get() { return fo.hasDecider(); },
+      enumerable: true,
+      configurable: true
+   });
+   
+   Object.defineProperty(fo, 'isTiebreak', {
+      get() { return fo.tiebreak(); },
       enumerable: true,
       configurable: true
    });

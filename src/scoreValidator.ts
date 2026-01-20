@@ -44,7 +44,7 @@ export function validateUMOScore(match: any, matchUpStatus?: string): Validation
     
     // Check if set has tiebreak
     const lastGame = set.lastChild ? set.lastChild() : null;
-    if (lastGame && lastGame.format.tiebreak && lastGame.format.tiebreak()) {
+    if (lastGame && lastGame.format.isTiebreak) {
       const tiebreakScore = lastGame.score().counters.local;
       factorySet.side1TiebreakScore = tiebreakScore[0];
       factorySet.side2TiebreakScore = tiebreakScore[1];
@@ -90,7 +90,7 @@ export function validateUMOSetScore(
   
   // Check for tiebreak
   const lastGame = set.lastChild ? set.lastChild() : null;
-  if (lastGame && lastGame.format.tiebreak && lastGame.format.tiebreak()) {
+  if (lastGame && lastGame.format.isTiebreak) {
     const tiebreakScore = lastGame.score().counters.local;
     factorySet.side1TiebreakScore = tiebreakScore[0];
     factorySet.side2TiebreakScore = tiebreakScore[1];

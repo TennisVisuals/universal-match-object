@@ -84,7 +84,7 @@ export function defaultPointParser(value, server, last_point, format, teams, per
       if (value.split('-').length != 2) return false;
       let last_score = score_object.points;
       let combinedTotal = (score) => score.reduce((a, b) => a + b); 
-      if (format.tiebreak()) {
+      if (format.isTiebreak) {
          let values = value.split('-').map(m => parseInt(m));;
          let last_values = last_score.split('-').map(m => parseInt(m));
          if (!numbersArray(values) || values.length != 2) return false;
@@ -94,7 +94,7 @@ export function defaultPointParser(value, server, last_point, format, teams, per
          return point;
       }
       let progression = Object.assign({}, adProgression);
-      if (format.hasDecider()) Object.keys(noAdProgression).forEach(key => progression[key] = noAdProgression[key]);
+      if (format.hasGoldenPoint) Object.keys(noAdProgression).forEach(key => progression[key] = noAdProgression[key]);
 
       if (value == '0-0' && progression[last_score].join('-').indexOf('G') >= 0) {
          // one player had game point.  assign winner based on which player has greater # of points.
