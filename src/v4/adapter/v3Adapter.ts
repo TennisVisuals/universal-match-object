@@ -224,8 +224,19 @@ export function createV3Adapter() {
             return matchObj;
           },
           defineMatch: (match: any) => {
+            if (!match) return matchObj;
             if (match.id) {
               matchUp.matchUpId = match.id;
+            }
+            if (match.matchUpId) {
+              matchUp.matchUpId = match.matchUpId;
+            }
+            if (match.date !== undefined) {
+              // Store date in matchUp (TODS uses scheduledDate)
+              (matchUp as any).scheduledDate = match.date;
+            }
+            if (match.status) {
+              matchUp.matchUpStatus = match.status;
             }
             return matchObj;
           },
