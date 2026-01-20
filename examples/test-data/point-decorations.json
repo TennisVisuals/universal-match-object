@@ -1,0 +1,219 @@
+{
+  "logs": [
+    {
+      "code": "A",
+      "timestamp": 1768945266347
+    },
+    {
+      "winner": 0,
+      "result": "Winner",
+      "rally": 7,
+      "timestamp": 1768945272956
+    },
+    {
+      "winner": 1,
+      "result": "Forced Error",
+      "rally": 2,
+      "timestamp": 1768945282684
+    },
+    {
+      "winner": 1,
+      "result": "Unforced Error",
+      "rally": 5,
+      "timestamp": 1768945289563
+    },
+    {
+      "winner": 0,
+      "result": "Winner",
+      "rally": 6,
+      "timestamp": 1768945298477
+    },
+    {
+      "winner": 1,
+      "result": "Forced Error",
+      "rally": 7,
+      "timestamp": 1768945305193
+    },
+    {
+      "winner": 1,
+      "result": "Unforced Error",
+      "rally": 2,
+      "timestamp": 1768945311496
+    },
+    {
+      "winner": 0,
+      "result": "Winner",
+      "rally": 5,
+      "timestamp": 1768945321538
+    },
+    {
+      "winner": 1,
+      "result": "Forced Error",
+      "rally": 6,
+      "timestamp": 1768945329489
+    },
+    {
+      "winner": 0,
+      "result": "Unforced Error",
+      "rally": 6,
+      "timestamp": 1768945337551
+    },
+    {
+      "winner": 1,
+      "result": "Winner",
+      "timestamp": 1768945345672
+    },
+    {
+      "first_serve": {
+        "error": "Error",
+        "serves": [
+          "0e"
+        ]
+      },
+      "code": "D",
+      "timestamp": 1768945356636
+    },
+    {
+      "winner": 1,
+      "result": "Unforced Error",
+      "timestamp": 1768945360461
+    },
+    {
+      "winner": 0,
+      "result": "Forced Error",
+      "rally": 8,
+      "timestamp": 1768945367339
+    },
+    {
+      "winner": 0,
+      "result": "Unforced Error",
+      "rally": 6,
+      "timestamp": 1768945373852
+    },
+    {
+      "winner": 0,
+      "result": "Unforced Error",
+      "rally": 6,
+      "timestamp": 1768945379162
+    },
+    {
+      "first_serve": {
+        "error": "Error",
+        "serves": [
+          "0e"
+        ]
+      },
+      "code": "D",
+      "timestamp": 1768945384361
+    },
+    {
+      "winner": 1,
+      "result": "Winner",
+      "rally": 5,
+      "timestamp": 1768945387872
+    },
+    {
+      "winner": 0,
+      "result": "Unforced Error",
+      "rally": 7,
+      "timestamp": 1768945392343
+    },
+    {
+      "winner": 1,
+      "result": "Unforced Error",
+      "rally": 5,
+      "location": "Net",
+      "timestamp": 1768945395972
+    },
+    {
+      "winner": 1,
+      "timestamp": 1768945400690
+    },
+    {
+      "winner": 0,
+      "timestamp": 1768945401164
+    },
+    {
+      "code": "A",
+      "timestamp": 1768945403515
+    },
+    {
+      "first_serve": {
+        "error": "Error",
+        "serves": [
+          "0e"
+        ]
+      },
+      "code": "D",
+      "timestamp": 1768945407590
+    },
+    {
+      "first_serve": {
+        "error": "Error",
+        "serves": [
+          "0e"
+        ]
+      },
+      "winner": 1,
+      "result": "Winner",
+      "rally": 1,
+      "timestamp": 1768945410617
+    },
+    {
+      "first_serve": {
+        "error": "Error",
+        "serves": [
+          "0e"
+        ]
+      },
+      "winner": 1,
+      "result": "Forced Error",
+      "timestamp": 1768945419772
+    },
+    {
+      "winner": 0,
+      "result": "Winner",
+      "timestamp": 1768945422705
+    },
+    {
+      "winner": 1,
+      "result": "Winner",
+      "rally": 6,
+      "timestamp": 1768945436057
+    }
+  ],
+  "summary": {
+    "results": [
+      "Forced Error",
+      "Unforced Error",
+      "Winner"
+    ],
+    "strokes": [],
+    "hands": [],
+    "locations": [
+      "Net"
+    ],
+    "codes": [
+      "A",
+      "D"
+    ],
+    "totalPoints": 28,
+    "fields": {
+      "code": 5,
+      "winner": 23,
+      "result": 21,
+      "rally": 17,
+      "first_serve": 5,
+      "location": 1
+    }
+  },
+  "stats": {
+    "byResult": {
+      "Winner": 8,
+      "Forced Error": 5,
+      "Unforced Error": 8
+    },
+    "byStroke": {},
+    "breakpoints": 0
+  }
+}
