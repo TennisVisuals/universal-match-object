@@ -61,7 +61,7 @@ export function enrichPoint(
   
   // Derive result from code if missing
   if (point.code && !point.result) {
-    point.result = CODE_TO_RESULT[point.code];
+    point.result = CODE_TO_RESULT[point.code] as any;
   }
   
   // Derive serve number from first_serve presence
