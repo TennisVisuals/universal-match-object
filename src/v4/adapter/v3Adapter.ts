@@ -250,6 +250,48 @@ export function createV3Adapter() {
             }
             return matchObj;
           },
+          updateParticipant: (update: any) => {
+            // Modern TODS-style update using sideNumber
+            const { sideNumber, person, participantName, participantId } = update;
+            const index = sideNumber - 1; // Convert to 0-based index
+            
+            // Ensure side exists
+            if (!matchUp.sides[index]) {
+              matchUp.sides[index] = {
+                sideNumber,
+              };
+            }
+            
+            // Create or update participant
+            if (!matchUp.sides[index].participant) {
+              matchUp.sides[index].participant = {
+                participantId: participantId || `player-${index}`,
+                participantName: participantName || `${person?.standardGivenName || ''} ${person?.standardFamilyName || ''}`.trim(),
+                person: person || {},
+              };
+            } else {
+              // Update existing participant
+              if (participantName) {
+                matchUp.sides[index].participant!.participantName = participantName;
+              }
+              if (participantId) {
+                matchUp.sides[index].participant!.participantId = participantId;
+              }
+              if (person) {
+                matchUp.sides[index].participant!.person = {
+                  ...matchUp.sides[index].participant!.person,
+                  ...person,
+                };
+                // Update participantName from person if not explicitly provided
+                if (!participantName && person.standardGivenName && person.standardFamilyName) {
+                  matchUp.sides[index].participant!.participantName = 
+                    `${person.standardGivenName} ${person.standardFamilyName}`.trim();
+                }
+              }
+            }
+            
+            return matchObj;
+          },
           defineMatch: (match?: any) => {
             // When called without arguments, return current match metadata
             if (match === undefined) {
