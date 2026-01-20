@@ -656,12 +656,12 @@ export function createV3Adapter() {
         stats: {
           counters: (setFilter?: number) => {
             // Use matchUp.history.points directly since that has the data
-            const points = (matchUp.history?.points || []) as PointWithMetadata[];
+            const points = (matchUp.history?.points || []) as unknown as PointWithMetadata[];
             return buildCounters(points, { setFilter });
           },
           calculated: (setFilter?: number) => {
             // Use matchUp.history.points directly since that has the data
-            const points = (matchUp.history?.points || []) as PointWithMetadata[];
+            const points = (matchUp.history?.points || []) as unknown as PointWithMetadata[];
             const counters = buildCounters(points, { setFilter });
             return calculateStats(counters);
           },
