@@ -12,7 +12,7 @@
  *   const matchUp = engine.getState();
  */
 
-import type { MatchUp, AddPointOptions } from '../types';
+import type { MatchUp, AddPointOptions, Point } from '../types';
 import { createMatchUp } from '../core/createMatchUp';
 import { addPoint } from '../scoring/addPoint';
 import { getScore } from '../query/getScore';
