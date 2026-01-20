@@ -223,7 +223,20 @@ export function createV3Adapter() {
             }
             return matchObj;
           },
-          defineMatch: (match: any) => {
+          defineMatch: (match?: any) => {
+            // When called without arguments, return current match metadata
+            if (match === undefined) {
+              return {
+                id: matchUp.matchUpId,
+                matchUpId: matchUp.matchUpId,
+                date: (matchUp as any).scheduledDate,
+                status: matchUp.matchUpStatus,
+                court: (matchUp as any).court,
+                umpire: (matchUp as any).umpire,
+              };
+            }
+            
+            // When called with arguments, set match metadata
             if (!match) return matchObj;
             if (match.id) {
               matchUp.matchUpId = match.id;
@@ -237,6 +250,12 @@ export function createV3Adapter() {
             }
             if (match.status) {
               matchUp.matchUpStatus = match.status;
+            }
+            if (match.court) {
+              (matchUp as any).court = match.court;
+            }
+            if (match.umpire) {
+              (matchUp as any).umpire = match.umpire;
             }
             return matchObj;
           },
