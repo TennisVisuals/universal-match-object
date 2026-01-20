@@ -267,6 +267,8 @@ export function createV3Adapter() {
               matchUp.sides[index].participant = {
                 participantId: participantId || `player-${index}`,
                 participantName: participantName || `${person?.standardGivenName || ''} ${person?.standardFamilyName || ''}`.trim(),
+                participantType: 'INDIVIDUAL',
+                participantRole: 'COMPETITOR',
                 person: person || {},
               };
             } else {
