@@ -123,6 +123,27 @@ export function createV3Adapter() {
           return matchObj;
         },
 
+        // Events API for v3 compatibility
+        events: {
+          addPoint: (callback: Function) => {
+            // Store callback for point events
+            // Note: In v3, this was used to register event listeners
+            // For now, we'll store it but v4 doesn't have event system yet
+            (matchObj as any)._pointCallback = callback;
+          },
+          undo: (callback: Function) => {
+            (matchObj as any)._undoCallback = callback;
+          },
+          reset: (callback: Function) => {
+            (matchObj as any)._resetCallback = callback;
+          },
+          clearEvents: () => {
+            delete (matchObj as any)._pointCallback;
+            delete (matchObj as any)._undoCallback;
+            delete (matchObj as any)._resetCallback;
+          },
+        },
+
         // Query methods (read from matchUp)
         score: () => {
           const score = getScore(matchUp);
