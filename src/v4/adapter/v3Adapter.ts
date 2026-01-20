@@ -171,15 +171,18 @@ export function createV3Adapter() {
         // Query methods (read from matchUp)
         score: () => {
           const score = getScore(matchUp);
+          
+          // Count completed sets (sets with a winner)
+          const completedSets = matchUp.score.sets.filter(s => s.winningSide !== undefined);
+          const sets1 = completedSets.filter(s => s.winningSide === 1).length;
+          const sets2 = completedSets.filter(s => s.winningSide === 2).length;
+          
           return {
             scoreString: score.scoreString,
             counters: {
               points: score.points,
               games: score.games,
-              sets: score.sets?.map(set => ({
-                side1Score: set.side1Score,
-                side2Score: set.side2Score,
-              })),
+              sets: [sets1, sets2], // Array of set counts, not set details
               local: score.games,
             },
             points: `${score.points[0]}-${score.points[1]}`,
