@@ -298,6 +298,31 @@ export function createV3Adapter() {
             // For singles, each player is a team
             return [[0], [1]];
           },
+          timestamps: (value?: boolean) => {
+            // Get/set timestamps flag
+            if (value !== undefined) {
+              (matchUp as any).useTimestamps = value;
+              return matchObj;
+            }
+            return (matchUp as any).useTimestamps || false;
+          },
+          liveStats: (value?: boolean) => {
+            // Get/set live stats flag
+            if (value !== undefined) {
+              (matchUp as any).liveStats = value;
+              return matchObj;
+            }
+            return (matchUp as any).liveStats || false;
+          },
+          resetStats: () => {
+            // Reset statistics
+            (matchUp as any).stats = {};
+            return matchObj;
+          },
+          reset: () => {
+            // Reset metadata to defaults
+            return matchObj;
+          },
         },
 
         // History access
