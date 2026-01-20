@@ -35,6 +35,21 @@
         "types": "./dist/formatConverter.d.ts",
         "default": "./dist/formatConverter.cjs"
       }
+    },
+    "./v4": {
+      "import": {
+        "types": "./dist/v4/index.d.mts",
+        "default": "./dist/v4/index.mjs"
+      },
+      "require": {
+        "types": "./dist/v4/index.d.ts",
+        "default": "./dist/v4/index.cjs"
+      }
+    },
+    "./v4-umo": {
+      "import": "./src/v4-umo.ts",
+      "require": "./src/v4-umo.ts",
+      "types": "./src/v4-umo.ts"
     }
   },
   "files": [

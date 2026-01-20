@@ -52,7 +52,7 @@ export function createV3Adapter() {
           throw new Error(`Unknown point code: ${code}`);
         }
         
-        return { winner, server };
+        return { winner: winner as 0 | 1, server: server as 0 | 1 };
       }
       
       /**
@@ -363,6 +363,22 @@ export function createV3Adapter() {
       };
 
       return matchObj;
+    },
+    /**
+     * fromMatchUp - Convert TODS matchUp to v3 format (stub for now)
+     * 
+     * @param matchUp - TODS matchUp object
+     * @returns Configuration object for v3 adapter
+     */
+    fromMatchUp: (matchUp: any) => {
+      return {
+        id: matchUp.matchUpId,
+        type: matchUp.matchUpFormat,
+        participants: matchUp.sides?.flatMap((side: any) => 
+          side.participant ? [side.participant] : []
+        ),
+        isDoubles: matchUp.matchUpType === 'DOUBLES',
+      };
     },
   };
 

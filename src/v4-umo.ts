@@ -15,4 +15,5 @@ export default umo;
 // Also export individual methods for named imports
 export const {
   Match,
+  fromMatchUp,
 } = umo;
