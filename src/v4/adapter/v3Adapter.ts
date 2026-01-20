@@ -736,6 +736,7 @@ export function createV3Adapter() {
 
         // Access internal matchUp for debugging
         _matchUp: () => matchUp,
+        _pointHistory: () => pointHistory,
       };
 
       return matchObj;
