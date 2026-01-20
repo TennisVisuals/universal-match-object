@@ -178,10 +178,11 @@ export function createV3Adapter() {
               index: pointIndex++,
               set: currentSet,
               game: currentGame,
-              needed,
-              breakpoint: needed.is_breakpoint || false,
             }
           );
+          // Add v3-specific metadata (not part of TODS Point type)
+          (enrichedPoint as any).needed = needed;
+          (enrichedPoint as any).breakpoint = needed.is_breakpoint || false;
           pointHistory.push(enrichedPoint);
           
           // Update service tracking after point
@@ -496,7 +497,7 @@ export function createV3Adapter() {
           },
           common: () => {
             // Return common history (addPoint episodes)
-            return (matchUp.history?.points || []).map((point, index) => ({
+            return (matchUp.history?.points || []).map((point: any, index) => ({
               action: 'addPoint',
               point: {
                 ...point,
@@ -508,7 +509,7 @@ export function createV3Adapter() {
           action: (actionName: string) => {
             if (actionName === 'addPoint') {
               // Return addPoint episodes with point data and metadata
-              return (matchUp.history?.points || []).map((point, index) => ({
+              return (matchUp.history?.points || []).map((point: any, index) => ({
                 action: 'addPoint',
                 point: {
                   ...point,
