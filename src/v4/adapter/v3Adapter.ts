@@ -655,41 +655,15 @@ export function createV3Adapter() {
         // Statistics API (v3 compatible)
         stats: {
           counters: (setFilter?: number) => {
-            console.log('📊 Stats counters CALLED:', {
-              pointHistoryLength: pointHistory.length,
-              setFilter,
-              samplePoints: pointHistory.slice(0, 3).map(p => ({ 
-                result: p.result, 
-                winner: p.winner, 
-                server: p.server 
-              })),
-            });
-            const result = buildCounters(pointHistory, { setFilter });
-            console.log('📊 Stats counters RESULT:', {
-              teams: result.teams,
-              team0Keys: Object.keys(result.teams[0] || {}),
-              team1Keys: Object.keys(result.teams[1] || {}),
-            });
-            return result;
+            // Use matchUp.history.points directly since that has the data
+            const points = (matchUp.history?.points || []) as PointWithMetadata[];
+            return buildCounters(points, { setFilter });
           },
           calculated: (setFilter?: number) => {
-            console.log('📊 Stats calculated CALLED:', {
-              pointHistoryLength: pointHistory.length,
-              setFilter,
-              samplePoints: pointHistory.slice(0, 3).map(p => ({ 
-                result: p.result, 
-                winner: p.winner, 
-                server: p.server,
-                index: p.index 
-              })),
-            });
-            const counters = buildCounters(pointHistory, { setFilter });
-            const stats = calculateStats(counters);
-            console.log('📊 Stats calculated RESULT:', {
-              statsLength: stats.length,
-              firstStat: stats[0],
-            });
-            return stats;
+            // Use matchUp.history.points directly since that has the data
+            const points = (matchUp.history?.points || []) as PointWithMetadata[];
+            const counters = buildCounters(points, { setFilter });
+            return calculateStats(counters);
           },
         },
         
