@@ -64,6 +64,53 @@ export function createV3Adapter() {
       }
       
       /**
+       * Calculate "needed" metadata for current game state
+       */
+      function calculateNeeded(matchUp: any, score: any): any {
+        const currentSet = score.sets?.[score.sets.length - 1];
+        if (!currentSet) {
+          return {
+            points_to_game: undefined,
+            points_to_set: undefined,
+            is_breakpoint: false,
+          };
+        }
+        
+        const gameScore = currentSet.gameScore;
+        if (!gameScore) {
+          return {
+            points_to_game: undefined,
+            points_to_set: undefined,
+            is_breakpoint: false,
+          };
+        }
+        
+        // Calculate points to game (simplified - doesn't handle all edge cases)
+        const points_to_game = [
+          gameScore.side1Points >= 3 && gameScore.side1Points > gameScore.side2Points ? 1 : undefined,
+          gameScore.side2Points >= 3 && gameScore.side2Points > gameScore.side1Points ? 1 : undefined,
+        ];
+        
+        // Calculate points to set (simplified)
+        const side1GamesNeeded = 6 - (currentSet.side1Score || 0);
+        const side2GamesNeeded = 6 - (currentSet.side2Score || 0);
+        const points_to_set = [
+          side1GamesNeeded <= 1 ? side1GamesNeeded : undefined,
+          side2GamesNeeded <= 1 ? side2GamesNeeded : undefined,
+        ];
+        
+        // Breakpoint detection (receiver is one point from winning game)
+        const receiverIndex = 1 - currentServer;
+        const is_breakpoint = points_to_game[receiverIndex] === 1;
+        
+        return {
+          points_to_game,
+          points_to_set,
+          is_breakpoint,
+        };
+      }
+      
+      /**
        * Update service tracking based on game/set completion
        */
       function updateServiceTracking() {
@@ -113,13 +160,17 @@ export function createV3Adapter() {
             throw new Error(`Invalid point input: ${winner}`);
           }
           
+          // Calculate metadata BEFORE adding the point
+          const scoreBefore = getScore(matchUp);
+          const currentSet = scoreBefore.sets?.length ? scoreBefore.sets.length - 1 : 0;
+          const currentGame = scoreBefore.sets?.[currentSet]?.side1Score + scoreBefore.sets?.[currentSet]?.side2Score || 0;
+          
+          // Calculate "needed" metadata (points to game, points to set, etc.)
+          const needed = calculateNeeded(matchUp, scoreBefore);
+          
           matchUp = addPoint(matchUp, pointOptions);
           
           // Store point with metadata for statistics
-          const score = getScore(matchUp);
-          const currentSet = score.sets?.length ? score.sets.length - 1 : 0;
-          const currentGame = score.sets?.[currentSet]?.side1Score + score.sets?.[currentSet]?.side2Score || 0;
-          
           const enrichedPoint = enrichPoint(
             { ...pointOptions, ...metadata },
             {
@@ -127,6 +178,8 @@ export function createV3Adapter() {
               index: pointIndex++,
               set: currentSet,
               game: currentGame,
+              needed,
+              breakpoint: needed.is_breakpoint || false,
             }
           );
           pointHistory.push(enrichedPoint);
@@ -437,11 +490,33 @@ export function createV3Adapter() {
         // History access
         history: {
           points: () => matchUp.history?.points || [],
+          lastPoint: () => {
+            const points = matchUp.history?.points || [];
+            return points.length > 0 ? points[points.length - 1] : undefined;
+          },
+          common: () => {
+            // Return common history (addPoint episodes)
+            return (matchUp.history?.points || []).map((point, index) => ({
+              action: 'addPoint',
+              point: {
+                ...point,
+                index,
+              },
+              needed: point.needed || {},
+            }));
+          },
           action: (actionName: string) => {
             if (actionName === 'addPoint') {
-              return (matchUp.history?.points || []).map(point => ({
+              // Return addPoint episodes with point data and metadata
+              return (matchUp.history?.points || []).map((point, index) => ({
                 action: 'addPoint',
-                point,
+                point: {
+                  ...point,
+                  index,
+                  breakpoint: point.breakpoint || false,
+                  server: point.server !== undefined ? point.server : index % 2,
+                },
+                needed: point.needed || {},
               }));
             }
             return [];
