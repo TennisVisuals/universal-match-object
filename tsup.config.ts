@@ -5,7 +5,8 @@ export default defineConfig({
     'src/matchObject.ts',
     'src/index.ts',
     'src/formatConverter.ts',
-    'src/formatAdapter.ts'
+    'src/formatAdapter.ts',
+    'src/v4/index.ts',
   ],
   format: ['cjs', 'esm'],
   dts: true,

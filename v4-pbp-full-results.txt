@@ -1,0 +1,63 @@
+
+Validating: examples/pbp-validator/data/pbp_matches_atp_main_current.csv
+
+Testing 2466 matches
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Valid Matches: 2391 (96.96%), Invalid Matches: 75
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+--- Sample Failures (first 10) ---
+
+Match index 132:
+  Expected: 6-3, 2-6, 6-4, 2-6, 8-10
+  Actual: 6-3, 2-6, 6-4, 2-6, 6(4)-7
+  - Score mismatch: expected "6-3, 2-6, 6-4, 2-6, 8-10", got "6-3, 2-6, 6-4, 2-6, 6(4)-7"
+
+Match index 155:
+  Expected: 5-7, 7-5, 2-6, 4-6
+  Actual: 5-7, 7-5, 3-7, 3-5
+  - Score mismatch: expected "5-7, 7-5, 2-6, 4-6", got "5-7, 7-5, 3-7, 3-5"
+
+Match index 167:
+  Expected: 5-7, 6-3, 2-6, 1-6
+  Actual: 5-7, 7-4, 1-7, 1-4
+  - Score mismatch: expected "5-7, 6-3, 2-6, 1-6", got "5-7, 7-4, 1-7, 1-4"
+
+Match index 181:
+  Expected: 5-7, 6-3, 6-4, 6-2
+  Actual: 5-7, 7-4, 7-5, 4-0
+  - Score mismatch: expected "5-7, 6-3, 6-4, 6-2", got "5-7, 7-4, 7-5, 4-0"
+
+Match index 187:
+  Expected: 7-6(3), 4-6, 7-9
+  Actual: 7-6(3), 4-6, 6(6)-7, 1-1
+  - Score mismatch: expected "7-6(3), 4-6, 7-9", got "7-6(3), 4-6, 6(6)-7, 1-1"
+
+Match index 204:
+  Expected: 7-5, 3-6, 6-2, 1-6, 4-6
+  Actual: 7-5, 3-7, 7(4)-8, 4-5
+  - Score mismatch: expected "7-5, 3-6, 6-2, 1-6, 4-6", got "7-5, 3-7, 7(4)-8, 4-5"
+
+Match index 219:
+  Expected: 5-7, 6-0, 1-6, 7-6(2), 8-6
+  Actual: 5-7, 6-0, 1-6, 7-6(2), 7-6(5)
+  - Score mismatch: expected "5-7, 6-0, 1-6, 7-6(2), 8-6", got "5-7, 6-0, 1-6, 7-6(2), 7-6(5)"
+
+Match index 260:
+  Expected: 7-5, 6-1, 6-4
+  Actual: 7-5, 7-2, 5-3
+  - Score mismatch: expected "7-5, 6-1, 6-4", got "7-5, 7-2, 5-3"
+
+Match index 261:
+  Expected: 5-7, 4-6, 6-3, 7-6(5), 8-6
+  Actual: 5-7, 4-6, 6-3, 7-6(5), 7-6(3)
+  - Score mismatch: expected "5-7, 4-6, 6-3, 7-6(5), 8-6", got "5-7, 4-6, 6-3, 7-6(5), 7-6(3)"
+
+Match index 282:
+  Expected: 7-5, 2-6, 4-6
+  Actual: 7-5, 2-7, 4-5
+  - Score mismatch: expected "7-5, 2-6, 4-6", got "7-5, 2-7, 4-5"
+
+... and 65 more failures

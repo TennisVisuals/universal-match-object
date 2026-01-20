@@ -13,9 +13,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import matchObject from '../../src/matchObject';
+// USE V4 ADAPTER
+import matchObject from '../../src/v4-umo';
 
-describe.skip('Standalone Game Usage', () => {
+describe.skip('Standalone Game Usage - NOT IMPLEMENTED', () => {
   describe('Regular Games', () => {
     it('should create and score a regular game', () => {
       const game = matchObject.Game();
