@@ -657,11 +657,24 @@ export function createV3Adapter() {
         // Statistics API (v3 compatible)
         stats: {
           counters: (setFilter?: number) => {
-            return buildCounters(pointHistory, { setFilter });
+            const result = buildCounters(pointHistory, { setFilter });
+            console.log('📊 Stats counters:', {
+              pointHistoryLength: pointHistory.length,
+              setFilter,
+              teams: result.teams,
+            });
+            return result;
           },
           calculated: (setFilter?: number) => {
             const counters = buildCounters(pointHistory, { setFilter });
-            return calculateStats(counters);
+            const stats = calculateStats(counters);
+            console.log('📊 Stats calculated:', {
+              pointHistoryLength: pointHistory.length,
+              setFilter,
+              statsLength: stats.length,
+              stats: stats.slice(0, 3), // First 3 stats for debugging
+            });
+            return stats;
           },
         },
         
