@@ -218,6 +218,40 @@ export function createV3Adapter() {
         // Format access
         format: {
           code: matchUp.matchUpFormat,
+          get structure() {
+            // Return format structure (Factory-style)
+            return (matchUp as any).formatStructure || {
+              bestOf: 3,
+              setFormat: {
+                setTo: 6,
+                tiebreakAt: 6,
+                tiebreakFormat: { tiebreakTo: 7 },
+                NoAD: false,
+              },
+            };
+          },
+          get setsToWin() {
+            // Derive from matchUpFormat or default to 2 (best of 3)
+            const structure = matchObj.format.structure;
+            const bestOf = structure?.bestOf || 3;
+            return Math.ceil(bestOf / 2);
+          },
+          settings: (formatConfig?: any) => {
+            if (formatConfig) {
+              // Update format
+              if (formatConfig.code) {
+                matchUp.matchUpFormat = formatConfig.code;
+              }
+              if (formatConfig.structure) {
+                (matchUp as any).formatStructure = formatConfig.structure;
+              }
+            }
+            return matchObj.format;
+          },
+          changeFormat: (newFormat: string) => {
+            matchUp.matchUpFormat = newFormat;
+            return matchObj;
+          },
           pointsTo: 4, // Default for regular game
           winBy: 2,
           hasGoldenPoint: false,
@@ -227,6 +261,10 @@ export function createV3Adapter() {
         // Metadata access
         metadata: {
           match: { id: matchUp.matchUpId },
+          get tournament() {
+            // Tournament property access
+            return (matchUp as any).tournamentName || '';
+          },
           players: () => matchUp.sides.map(side => side.participant).filter(Boolean),
           definePlayer: (player: any) => {
             // Update matchUp sides with player info
@@ -378,10 +416,10 @@ export function createV3Adapter() {
             return (matchUp as any).useTimestamps || false;
           },
           liveStats: (value?: boolean) => {
-            // Get/set live stats flag
+            // Get/set live stats flag (in metadata for consistency)
             if (value !== undefined) {
               (matchUp as any).liveStats = value;
-              return matchObj;
+              return matchObj.set;
             }
             return (matchUp as any).liveStats || false;
           },
@@ -418,6 +456,14 @@ export function createV3Adapter() {
               return matchObj.set;
             }
             return firstService;
+          },
+          liveStats: (value?: boolean) => {
+            // Get/set live stats flag
+            if (value !== undefined) {
+              (matchUp as any).liveStats = value;
+              return matchObj.set;
+            }
+            return (matchUp as any).liveStats || false;
           },
           perspectiveScore: (value?: boolean) => {
             // v4 doesn't have global perspective, handled per-query
@@ -541,6 +587,47 @@ export function createV3Adapter() {
             const counters = buildCounters(pointHistory, { setFilter });
             return calculateStats(counters);
           },
+        },
+        
+        // Export as TODS matchUp
+        toMatchUp: () => {
+          // Return full matchUp with all metadata
+          return {
+            ...matchUp,
+            // Ensure metadata is preserved
+            tournamentName: (matchUp as any).tournamentName,
+            category: (matchUp as any).category,
+            level: (matchUp as any).level,
+            court: (matchUp as any).court,
+            umpire: (matchUp as any).umpire,
+            scheduledDate: (matchUp as any).scheduledDate,
+          };
+        },
+        
+        // Decorate point with additional metadata
+        decoratePoint: (point: any, metadata: any) => {
+          if (!point || point.index === undefined) return matchObj;
+          
+          // Find point in history and update it
+          const pointInHistory = pointHistory.find(p => p.index === point.index);
+          if (pointInHistory) {
+            Object.assign(pointInHistory, metadata);
+          }
+          
+          // Also update in matchUp history if exists
+          if (matchUp.history?.points && matchUp.history.points[point.index]) {
+            Object.assign(matchUp.history.points[point.index], metadata);
+          }
+          
+          return matchObj;
+        },
+        
+        // Match status property (getter/setter)
+        get status() {
+          return (matchUp as any).status || '';
+        },
+        set status(value: string) {
+          (matchUp as any).status = value;
         },
 
         // Access internal matchUp for debugging
