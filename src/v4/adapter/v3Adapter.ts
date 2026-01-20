@@ -259,6 +259,33 @@ export function createV3Adapter() {
             }
             return matchObj;
           },
+          defineTournament: (tournament?: any) => {
+            // When called without arguments, return current tournament metadata
+            if (tournament === undefined) {
+              return {
+                name: (matchUp as any).tournamentName,
+                tournamentName: (matchUp as any).tournamentName,
+                category: (matchUp as any).category,
+                level: (matchUp as any).level,
+              };
+            }
+            
+            // When called with arguments, set tournament metadata
+            if (!tournament) return matchObj;
+            if (tournament.name) {
+              (matchUp as any).tournamentName = tournament.name;
+            }
+            if (tournament.tournamentName) {
+              (matchUp as any).tournamentName = tournament.tournamentName;
+            }
+            if (tournament.category) {
+              (matchUp as any).category = tournament.category;
+            }
+            if (tournament.level) {
+              (matchUp as any).level = tournament.level;
+            }
+            return matchObj;
+          },
           serviceOrder: () => {
             // Return array of player indices in service order
             return [0, 1];
