@@ -193,10 +193,8 @@ export function createV3Adapter() {
 
         addPoints: (points: any[]) => {
           points.forEach(point => {
-            const pointOptions: AddPointOptions = typeof point === 'number'
-              ? { winner: point }
-              : point;
-            matchUp = addPoint(matchUp, pointOptions);
+            // Use addPoint to ensure pointHistory is updated
+            matchObj.addPoint(point);
           });
           return matchObj;
         },
