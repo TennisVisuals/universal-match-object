@@ -7,6 +7,10 @@
 
 import type { MatchUp, AddPointOptions } from '../types';
 import { createMatchUp, addPoint, getScore, getScoreboard, getWinner, isComplete } from '../index';
+import { PointWithMetadata } from '../statistics/types';
+import { enrichPoint } from '../statistics/pointParser';
+import { buildCounters } from '../statistics/counters';
+import { calculateStats } from '../statistics/calculator';
 
 /**
  * Adapter that creates a v3-compatible API around v4 matchUp
@@ -28,6 +32,10 @@ export function createV3Adapter() {
       // Track first service and current server
       let firstService = 0;
       let currentServer = 0;
+      
+      // Track point history for statistics
+      const pointHistory: PointWithMetadata[] = [];
+      let pointIndex = 0;
       
       /**
        * Parse point code (S, R, A, D) to determine winner
@@ -106,6 +114,22 @@ export function createV3Adapter() {
           }
           
           matchUp = addPoint(matchUp, pointOptions);
+          
+          // Store point with metadata for statistics
+          const score = getScore(matchUp);
+          const currentSet = score.sets?.length ? score.sets.length - 1 : 0;
+          const currentGame = score.sets?.[currentSet]?.side1Score + score.sets?.[currentSet]?.side2Score || 0;
+          
+          const enrichedPoint = enrichPoint(
+            { ...pointOptions, ...metadata },
+            {
+              server: currentServer as 0 | 1,
+              index: pointIndex++,
+              set: currentSet,
+              game: currentGame,
+            }
+          );
+          pointHistory.push(enrichedPoint);
           
           // Update service tracking after point
           updateServiceTracking();
@@ -459,6 +483,17 @@ export function createV3Adapter() {
             return matchObj;
           }
           return matchUp.matchUpType === 'SINGLES';
+        },
+        
+        // Statistics API (v3 compatible)
+        stats: {
+          counters: (setFilter?: number) => {
+            return buildCounters(pointHistory, { setFilter });
+          },
+          calculated: (setFilter?: number) => {
+            const counters = buildCounters(pointHistory, { setFilter });
+            return calculateStats(counters);
+          },
         },
 
         // Access internal matchUp for debugging
