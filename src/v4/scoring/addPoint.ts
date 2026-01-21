@@ -18,7 +18,7 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
   // Clone matchUp for immutability
   const newMatchUp = structuredClone(matchUp);
 
-  const { winner, server, timestamp, rallyLength } = options;
+  const { winner, server, timestamp } = options;
 
   // Initialize history if not present
   newMatchUp.history ??= { points: [] };
@@ -33,14 +33,14 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
   const bestOf = formatStructure.bestOf || 3;
   const setsToWin = Math.ceil(bestOf / 2);
 
-  // Create point record
+  // Create point record - preserve all metadata from options
   const pointNumber = newMatchUp.history.points.length + 1;
   const point: Point = {
+    ...options, // Preserve all fields (result, code, etc.)
     pointNumber,
     winner,
     server,
     timestamp: timestamp || new Date().toISOString(),
-    rallyLength,
   };
 
   // Add point to history

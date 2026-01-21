@@ -60,6 +60,16 @@ export function buildCounters(
     const categories = categorizePoint(point);
     const winner = point.winner;
     
+    // DEBUG: Log first few points
+    if (index < 3) {
+      console.log(`buildCounters Point ${index}:`, { 
+        result: point.result, 
+        winner: point.winner, 
+        server: point.server,
+        categories 
+      });
+    }
+    
     // Add to each category
     categories.forEach(category => {
       // Team counters
