@@ -612,10 +612,17 @@ export function createV3Adapter() {
             participants: matchUp.sides.map(s => s.participant).filter(Boolean),
           });
           
+          // Suppress point callbacks during replay
+          const savedPointCallback = (matchObj as any)._pointCallback;
+          (matchObj as any)._pointCallback = null;
+          
           // Replay points
           points.forEach(point => {
             matchUp = addPoint(matchUp, point);
           });
+          
+          // Restore point callback
+          (matchObj as any)._pointCallback = savedPointCallback;
           
           // Trigger undo callback if registered
           if ((matchObj as any)._undoCallback) {
@@ -731,24 +738,34 @@ export function createV3Adapter() {
         
         // Decorate point with additional metadata
         decoratePoint: (point: any, metadata: any) => {
+          console.log('🎨 decoratePoint called with:', { index: point?.index, metadata });
+          
           if (!point || point.index === undefined) {
+            console.log('❌ Invalid point, returning');
             return matchObj;
           }
           
-          // CRITICAL: Update the actual point object reference
-          // The point parameter IS the point from history.points()
-          Object.assign(point, metadata);
+          // V4 addPoint() mutates matchUp in place (no cloning).
+          // So we can directly update the point in matchUp.history.points.
           
-          // Also find and update in pointHistory array
+          console.log('   matchUp.history.points[', point.index, '] before:', matchUp.history.points[point.index]);
+          
+          // Update the actual point in the CURRENT matchUp's history
+          if (matchUp.history?.points && matchUp.history.points[point.index]) {
+            Object.assign(matchUp.history.points[point.index], metadata);
+            console.log('   ✅ After assign:', matchUp.history.points[point.index]);
+          } else {
+            console.log('   ❌ Could not find point at index', point.index);
+          }
+          
+          // Also update in pointHistory array for statistics
           const pointInHistory = pointHistory.find(p => p.index === point.index);
           if (pointInHistory) {
             Object.assign(pointInHistory, metadata);
           }
           
-          // And update in matchUp.history.points if it exists
-          if (matchUp.history?.points && matchUp.history.points[point.index]) {
-            Object.assign(matchUp.history.points[point.index], metadata);
-          }
+          // Update the point parameter so caller sees the change
+          Object.assign(point, metadata);
           
           return matchObj;
         },

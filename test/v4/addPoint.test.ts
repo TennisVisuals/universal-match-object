@@ -17,17 +17,15 @@ describe('addPoint', () => {
     expect(matchUp.matchUpStatus).toBe('IN_PROGRESS');
   });
 
-  test('should not mutate original matchUp (immutability)', () => {
+  test('should mutate matchUp in place (v3 adapter compatibility)', () => {
     const original = createMatchUp({ matchUpFormat: 'SET3-S:6/TB7' });
     const updated = addPoint(original, { winner: 0 });
     
-    // Original should be unchanged
-    expect(original.history?.points.length).toBeUndefined();
-    expect(original.matchUpStatus).toBe('TO_BE_PLAYED');
-    
-    // Updated should have changes
-    expect(updated.history?.points.length).toBe(1);
-    expect(updated.matchUpStatus).toBe('IN_PROGRESS');
+    // NOTE: v4 addPoint now mutates in place (no structuredClone) for v3 adapter compatibility
+    // Original and updated are the SAME object
+    expect(updated).toBe(original);
+    expect(original.history?.points.length).toBe(1);
+    expect(original.matchUpStatus).toBe('IN_PROGRESS');
   });
 
   test('should track point history', () => {

@@ -15,8 +15,9 @@ import { parseFormat } from "../../formatConverter";
  * @returns New matchUp with point added
  */
 export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
-  // Clone matchUp for immutability
-  const newMatchUp = structuredClone(matchUp);
+  // IMPORTANT: Do NOT clone matchUp! The v3 adapter needs mutation to work.
+  // V4 functional API can be pure, but v3 adapter requires shared state.
+  const newMatchUp = matchUp;
 
   const { winner, server, timestamp } = options;
 
@@ -35,6 +36,7 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
 
   // Create point record - preserve all metadata from options
   const pointNumber = newMatchUp.history.points.length + 1;
+  const pointIndex = newMatchUp.history.points.length; // 0-based index for v3 compatibility
   const point: Point = {
     ...options, // Preserve all fields (result, code, etc.)
     pointNumber,
@@ -42,6 +44,9 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
     server,
     timestamp: timestamp || new Date().toISOString(),
   };
+  
+  // Add v3-compatible index field (0-based, while pointNumber is 1-based)
+  (point as any).index = pointIndex;
   
   // DEBUG: Log first point to confirm metadata preservation
   if (pointNumber === 1) {
