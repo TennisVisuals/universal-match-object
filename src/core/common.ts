@@ -409,9 +409,13 @@ export function createCommon(umo: any) {
     stats: {
       calculated(set_filter) {
         // V4 STATS ENGINE: Use v4 statistics for accurate counting
-        // Import inline to avoid circular dependencies
-        const { buildCounters } = require('../v4/statistics/counters');
-        const { calculateStats } = require('../v4/statistics/calculator');
+        // Dynamically import v4 stats functions (available at runtime)
+        const v4Stats = (globalThis as any).__UMO_V4_STATS__;
+        
+        if (!v4Stats) {
+          console.error('V4 stats engine not loaded!');
+          return calculatedStats(pub.stats.counters(set_filter));
+        }
         
         // Get points from history
         const episodes = pub.history.filter((episode: any) => episode.action == "addPoint");
@@ -420,8 +424,8 @@ export function createCommon(umo: any) {
           : episodes.map((e: any) => e.point);
         
         // Use v4 engine
-        const counters = buildCounters(points, { setFilter: set_filter });
-        return calculateStats(counters);
+        const counters = v4Stats.buildCounters(points, { setFilter: set_filter });
+        return v4Stats.calculateStats(counters);
       },
       counters(set_filter) {
         if (
