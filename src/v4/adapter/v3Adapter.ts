@@ -701,17 +701,28 @@ export function createV3Adapter() {
         
         // Decorate point with additional metadata
         decoratePoint: (point: any, metadata: any) => {
-          if (!point || point.index === undefined) return matchObj;
+          console.log('🔧 decoratePoint called:', { pointIndex: point?.index, metadata });
+          
+          if (!point || point.index === undefined) {
+            console.warn('decoratePoint: invalid point', point);
+            return matchObj;
+          }
           
           // Find point in history and update it
           const pointInHistory = pointHistory.find(p => p.index === point.index);
           if (pointInHistory) {
             Object.assign(pointInHistory, metadata);
+            console.log('✅ Updated pointHistory:', { index: point.index, hand: pointInHistory.hand, stroke: pointInHistory.stroke });
+          } else {
+            console.warn('Point not found in pointHistory:', point.index);
           }
           
           // Also update in matchUp history if exists
           if (matchUp.history?.points && matchUp.history.points[point.index]) {
             Object.assign(matchUp.history.points[point.index], metadata);
+            console.log('✅ Updated matchUp.history.points');
+          } else {
+            console.warn('Point not found in matchUp.history.points:', point.index);
           }
           
           return matchObj;
