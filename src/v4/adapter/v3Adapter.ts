@@ -615,6 +615,15 @@ export function createV3Adapter() {
             matchUp = addPoint(matchUp, point);
           });
           
+          // Trigger undo callback if registered
+          if ((matchObj as any)._undoCallback) {
+            try {
+              (matchObj as any)._undoCallback(matchObj);
+            } catch (error) {
+              console.error('Error in undo callback:', error);
+            }
+          }
+          
           return matchObj;
         },
 
