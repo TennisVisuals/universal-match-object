@@ -665,6 +665,18 @@ export function createV3Adapter() {
           calculated: (setFilter?: number) => {
             // Use matchUp.history.points directly since that has the data
             const points = (matchUp.history?.points || []) as unknown as PointWithMetadata[];
+            
+            // DEBUG: Log first 3 points to see what data we have
+            console.log('🔍 stats.calculated() called with', points.length, 'points');
+            if (points.length > 0) {
+              console.log('  First 3 points:', points.slice(0, 3).map((p: any) => ({
+                result: p.result,
+                code: p.code,
+                winner: p.winner,
+                server: p.server
+              })));
+            }
+            
             const counters = buildCounters(points, { setFilter });
             return calculateStats(counters);
           },
