@@ -207,11 +207,20 @@ export function createV3Adapter() {
           // V3 addPoint returns { point, result, match } object
           // Hive-eye checks what.point.result to show stroke slider
           const lastPoint = matchUp.history.points[matchUp.history.points.length - 1];
-          return {
+          const returnValue = {
             point: lastPoint || enrichedPoint,
             result: matchUp.matchUpStatus === 'COMPLETE' ? 'complete' : undefined,
             match: matchObj
           };
+          
+          console.log('🎯 addPoint returning:', {
+            hasPoint: !!returnValue.point,
+            pointResult: returnValue.point?.result,
+            matchResult: returnValue.result,
+            pointKeys: returnValue.point ? Object.keys(returnValue.point) : []
+          });
+          
+          return returnValue;
         },
 
         addPoints: (points: any[]) => {
