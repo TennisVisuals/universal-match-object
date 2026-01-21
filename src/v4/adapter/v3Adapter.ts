@@ -241,12 +241,12 @@ export function createV3Adapter() {
           const sets1 = completedSets.filter(s => s.winningSide === 1).length;
           const sets2 = completedSets.filter(s => s.winningSide === 2).length;
           
+          // V3 score() returns object WITHOUT scoreString property
           return {
-            scoreString: score.scoreString,
             counters: {
               points: score.points,
               games: score.games,
-              sets: [sets1, sets2], // Array of set counts, not set details
+              sets: [sets1, sets2],
               local: score.games,
             },
             points: `${score.points[0]}-${score.points[1]}`,
@@ -262,6 +262,7 @@ export function createV3Adapter() {
                   : undefined,
               })),
             },
+            display: {},
           };
         },
 
@@ -500,6 +501,7 @@ export function createV3Adapter() {
 
         // History access
         history: {
+          // Return the SAME array reference so decoratePoint mutations persist
           points: () => matchUp.history?.points || [],
           lastPoint: () => {
             const points = matchUp.history?.points || [];
@@ -729,28 +731,23 @@ export function createV3Adapter() {
         
         // Decorate point with additional metadata
         decoratePoint: (point: any, metadata: any) => {
-          console.log('🔧 decoratePoint called:', { pointIndex: point?.index, metadata });
-          
           if (!point || point.index === undefined) {
-            console.warn('decoratePoint: invalid point', point);
             return matchObj;
           }
           
-          // Find point in history and update it
+          // CRITICAL: Update the actual point object reference
+          // The point parameter IS the point from history.points()
+          Object.assign(point, metadata);
+          
+          // Also find and update in pointHistory array
           const pointInHistory = pointHistory.find(p => p.index === point.index);
           if (pointInHistory) {
             Object.assign(pointInHistory, metadata);
-            console.log('✅ Updated pointHistory:', { index: point.index, hand: pointInHistory.hand, stroke: pointInHistory.stroke });
-          } else {
-            console.warn('Point not found in pointHistory:', point.index);
           }
           
-          // Also update in matchUp history if exists
+          // And update in matchUp.history.points if it exists
           if (matchUp.history?.points && matchUp.history.points[point.index]) {
             Object.assign(matchUp.history.points[point.index], metadata);
-            console.log('✅ Updated matchUp.history.points');
-          } else {
-            console.warn('Point not found in matchUp.history.points:', point.index);
           }
           
           return matchObj;
