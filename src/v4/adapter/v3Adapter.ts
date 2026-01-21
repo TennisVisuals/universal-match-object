@@ -191,6 +191,15 @@ export function createV3Adapter() {
           // Update service tracking after point
           updateServiceTracking();
           
+          // Trigger event callback if registered
+          if ((matchObj as any)._pointCallback) {
+            try {
+              (matchObj as any)._pointCallback(matchObj);
+            } catch (error) {
+              console.error('Error in point callback:', error);
+            }
+          }
+          
           return matchObj; // Chainable
         },
 
@@ -615,6 +624,16 @@ export function createV3Adapter() {
             matchUpFormat: matchUp.matchUpFormat,
             matchUpId: matchUp.matchUpId,
           });
+          
+          // Trigger reset callback if registered
+          if ((matchObj as any)._resetCallback) {
+            try {
+              (matchObj as any)._resetCallback(matchObj);
+            } catch (error) {
+              console.error('Error in reset callback:', error);
+            }
+          }
+          
           return matchObj;
         },
         
