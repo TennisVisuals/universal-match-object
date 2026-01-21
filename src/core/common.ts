@@ -410,22 +410,27 @@ export function createCommon(umo: any) {
       calculated(set_filter) {
         // V4 STATS ENGINE: Use v4 statistics for accurate counting
         // Dynamically import v4 stats functions (available at runtime)
-        const v4Stats = (globalThis as any).__UMO_V4_STATS__;
-        
-        if (!v4Stats) {
-          console.error('V4 stats engine not loaded!');
+        try {
+          const v4Stats = (globalThis as any).__UMO_V4_STATS__;
+          
+          if (!v4Stats) {
+            console.warn('V4 stats engine not loaded, using fallback');
+            return calculatedStats(pub.stats.counters(set_filter));
+          }
+          
+          // Get points from history
+          const episodes = pub.history.filter((episode: any) => episode.action == "addPoint");
+          const points = set_filter !== undefined
+            ? episodes.filter((episode: any) => episode.point.set == set_filter).map((e: any) => e.point)
+            : episodes.map((e: any) => e.point);
+          
+          // Use v4 engine
+          const counters = v4Stats.buildCounters(points, { setFilter: set_filter });
+          return v4Stats.calculateStats(counters);
+        } catch (error) {
+          console.error('Error in v4 stats calculation, using fallback:', error);
           return calculatedStats(pub.stats.counters(set_filter));
         }
-        
-        // Get points from history
-        const episodes = pub.history.filter((episode: any) => episode.action == "addPoint");
-        const points = set_filter !== undefined
-          ? episodes.filter((episode: any) => episode.point.set == set_filter).map((e: any) => e.point)
-          : episodes.map((e: any) => e.point);
-        
-        // Use v4 engine
-        const counters = v4Stats.buildCounters(points, { setFilter: set_filter });
-        return v4Stats.calculateStats(counters);
       },
       counters(set_filter) {
         if (
