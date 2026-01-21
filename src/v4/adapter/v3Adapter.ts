@@ -17,14 +17,14 @@ import { calculateStats } from '../statistics/calculator';
  */
 export function createV3Adapter() {
   // Log version on first load to confirm which code is running
-  console.log('🔧 UMO v4 Adapter loaded - BUILD:', new Date().toISOString(), '- STATS FIX APPLIED');
+  console.log('[UMO-V4] Adapter loaded - BUILD:', new Date().toISOString());
   
   const adapter = {
     /**
      * Match factory - wraps v4.createMatchUp and provides v3 API
      */
     Match: (options: any = {}) => {
-      console.log('🏗️ v4 Match created with options:', options);
+      console.log('[UMO-V4] Match created with options:', options);
       
       // Create initial matchUp
       let matchUp = createMatchUp({
@@ -34,7 +34,7 @@ export function createV3Adapter() {
         isDoubles: options.isDoubles,
       });
       
-      console.log('✅ matchUp created with format:', matchUp.matchUpFormat);
+      console.log('[UMO-V4] matchUp created with format:', matchUp.matchUpFormat);
 
       // Track first service and current server
       let firstService = 0;
@@ -213,7 +213,7 @@ export function createV3Adapter() {
             match: matchObj
           };
           
-          console.log('🎯 addPoint returning:', {
+          console.log('[UMO-V4] addPoint returning:', {
             hasPoint: !!returnValue.point,
             pointResult: returnValue.point?.result,
             matchResult: returnValue.result,
@@ -288,8 +288,8 @@ export function createV3Adapter() {
 
         scoreboard: (perspective?: number) => {
           const board = getScoreboard(matchUp, { perspective });
-          console.log('📊 scoreboard() called, returning:', board);
-          console.log('   matchUp.score.sets:', matchUp.score.sets);
+          console.log('[UMO-V4] scoreboard() called, returning:', board);
+          console.log('[UMO-V4]   matchUp.score.sets:', matchUp.score.sets);
           return board;
         },
 
@@ -718,7 +718,7 @@ export function createV3Adapter() {
         // Statistics API (v3 compatible)
         stats: {
           counters: (setFilter?: number) => {
-            console.log('🔍 stats.counters() called');
+            console.log('[UMO-V4] stats.counters() called');
 
             // Use matchUp.history.points directly since that has the data
             const points = (matchUp.history?.points || []) as unknown as PointWithMetadata[];
@@ -729,9 +729,9 @@ export function createV3Adapter() {
             const points = (matchUp.history?.points || []) as unknown as PointWithMetadata[];
             
             // DEBUG: Log first 3 points to see what data we have
-            console.log('🔍 stats.calculated() called with', points.length, 'points');
+            console.log('[UMO-V4] stats.calculated() called with', points.length, 'points');
             if (points.length > 0) {
-              console.log('  First 3 points:', points.slice(0, 3).map((p: any) => ({
+              console.log('[UMO-V4]   First 3 points:', points.slice(0, 3).map((p: any) => ({
                 result: p.result,
                 code: p.code,
                 winner: p.winner,
@@ -761,24 +761,24 @@ export function createV3Adapter() {
         
         // Decorate point with additional metadata
         decoratePoint: (point: any, metadata: any) => {
-          console.log('🎨 decoratePoint called with:', { index: point?.index, metadata });
+          console.log('[UMO-V4] decoratePoint called with:', { index: point?.index, metadata });
           
           if (!point || point.index === undefined) {
-            console.log('❌ Invalid point, returning');
+            console.log('[UMO-V4] Invalid point, returning');
             return matchObj;
           }
           
           // V4 addPoint() mutates matchUp in place (no cloning).
           // So we can directly update the point in matchUp.history.points.
           
-          console.log('   matchUp.history.points[', point.index, '] before:', matchUp.history.points[point.index]);
+          console.log('[UMO-V4]   Point before decoration:', matchUp.history.points[point.index]);
           
           // Update the actual point in the CURRENT matchUp's history
           if (matchUp.history?.points && matchUp.history.points[point.index]) {
             Object.assign(matchUp.history.points[point.index], metadata);
-            console.log('   ✅ After assign:', matchUp.history.points[point.index]);
+            console.log('[UMO-V4]   Point after decoration:', matchUp.history.points[point.index]);
           } else {
-            console.log('   ❌ Could not find point at index', point.index);
+            console.log('[UMO-V4] ERROR: Could not find point at index', point.index);
           }
           
           // Also update in pointHistory array for statistics
