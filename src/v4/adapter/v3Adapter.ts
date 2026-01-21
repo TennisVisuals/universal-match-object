@@ -271,7 +271,10 @@ export function createV3Adapter() {
         },
 
         scoreboard: (perspective?: number) => {
-          return getScoreboard(matchUp, { perspective });
+          const board = getScoreboard(matchUp, { perspective });
+          console.log('📊 scoreboard() called, returning:', board);
+          console.log('   matchUp.score.sets:', matchUp.score.sets);
+          return board;
         },
 
         winner: () => {
