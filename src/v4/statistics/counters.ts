@@ -62,12 +62,12 @@ export function buildCounters(
     
     // DEBUG: Log first few points
     if (index < 3) {
-      console.log(`buildCounters Point ${index}:`, { 
-        result: point.result, 
-        winner: point.winner, 
-        server: point.server,
-        categories 
-      });
+      // console.log(`buildCounters Point ${index}:`, { 
+      //   result: point.result, 
+      //   winner: point.winner, 
+      //   server: point.server,
+      //   categories 
+      // });
     }
     
     // Add to each category
@@ -88,15 +88,15 @@ export function buildCounters(
     // Track stroke/hand breakdown (v3 compatibility)
     if (point.hand) {
       const handCategory = point.hand; // 'Forehand' or 'Backhand'
-      console.log(`🎾 Hand tracking: Point ${index} - winner: ${winner}, hand: ${handCategory}`);
+      // console.log(`[UMO-V4] Hand tracking: Point ${index} - winner: ${winner}, hand: ${handCategory}`);
       if (!counters.teams[winner][handCategory]) {
         counters.teams[winner][handCategory] = [];
       }
       counters.teams[winner][handCategory].push({ point, index });
-      console.log(`✅ Added to counters.teams[${winner}].${handCategory}, length now:`, counters.teams[winner][handCategory].length);
+      // console.log(`[UMO-V4] Added to counters.teams[${winner}].${handCategory}, length now:`, counters.teams[winner][handCategory].length);
     } else {
       if (index < 3) {
-        console.log(`⚠️ Point ${index} has NO hand field:`, point);
+        // console.log(`[UMO-V4] Point ${index} has NO hand field:`, point);
       }
     }
     
