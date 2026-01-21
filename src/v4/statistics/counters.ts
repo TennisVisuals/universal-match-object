@@ -88,10 +88,16 @@ export function buildCounters(
     // Track stroke/hand breakdown (v3 compatibility)
     if (point.hand) {
       const handCategory = point.hand; // 'Forehand' or 'Backhand'
+      console.log(`🎾 Hand tracking: Point ${index} - winner: ${winner}, hand: ${handCategory}`);
       if (!counters.teams[winner][handCategory]) {
         counters.teams[winner][handCategory] = [];
       }
       counters.teams[winner][handCategory].push({ point, index });
+      console.log(`✅ Added to counters.teams[${winner}].${handCategory}, length now:`, counters.teams[winner][handCategory].length);
+    } else {
+      if (index < 3) {
+        console.log(`⚠️ Point ${index} has NO hand field:`, point);
+      }
     }
     
     // Track game completions for gamesWon stat
