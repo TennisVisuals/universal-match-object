@@ -259,6 +259,7 @@ export function createStateObject({
       }
 
       so.addPoint = (value) => {
+         console.log('[UMO-V3] addPoint called with:', value);
          if (Array.isArray(value)) return false;
          if (object == 'Game') return addPoint(value);
 

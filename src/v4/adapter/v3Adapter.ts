@@ -1,31 +1,38 @@
 /**
  * v3→v4 Adapter
- * 
+ *
  * Wraps v4.0 functional API to match v3.x object-oriented API
  * Allows existing v3.x tests to run against v4.0 implementation
  */
 
-import type { MatchUp, AddPointOptions } from '../types';
-import { createMatchUp, addPoint, getScore, getScoreboard, getWinner, isComplete } from '../index';
-import { PointWithMetadata } from '../statistics/types';
-import { enrichPoint } from '../statistics/pointParser';
-import { buildCounters } from '../statistics/counters';
-import { calculateStats } from '../statistics/calculator';
+import type { AddPointOptions } from "../types";
+import {
+  createMatchUp,
+  addPoint,
+  getScore,
+  getScoreboard,
+  getWinner,
+  isComplete,
+} from "../index";
+import { PointWithMetadata } from "../statistics/types";
+import { enrichPoint } from "../statistics/pointParser";
+import { buildCounters } from "../statistics/counters";
+import { calculateStats } from "../statistics/calculator";
 
 /**
  * Adapter that creates a v3-compatible API around v4 matchUp
  */
 export function createV3Adapter() {
   // Log version on first load to confirm which code is running
-  console.log('[UMO-V4] Adapter loaded - BUILD:', new Date().toISOString());
-  
+  console.log("[UMO-V4] Adapter loaded - BUILD:", new Date().toISOString());
+
   const adapter = {
     /**
      * Match factory - wraps v4.createMatchUp and provides v3 API
      */
     Match: (options: any = {}) => {
-      console.log('[UMO-V4] Match created with options:', options);
-      
+      console.log("[UMO-V4] Match created with options:", options);
+
       // Create initial matchUp
       let matchUp = createMatchUp({
         matchUpId: options.matchUpId,
@@ -33,43 +40,45 @@ export function createV3Adapter() {
         participants: options.participants,
         isDoubles: options.isDoubles,
       });
-      
-      console.log('[UMO-V4] matchUp created with format:', matchUp.matchUpFormat);
+
+      console.log(
+        "[UMO-V4] matchUp created with format:",
+        matchUp.matchUpFormat,
+      );
 
       // Track first service and current server
       let firstService = 0;
       let currentServer = 0;
-      
+
       // Track point history for statistics
       const pointHistory: PointWithMetadata[] = [];
       let pointIndex = 0;
-      
+
       /**
        * Parse point code (S, R, A, D) to determine winner
        */
       function parsePointCode(code: string, server: number): AddPointOptions {
         const upper = code.toUpperCase();
         let winner: number;
-        
+
         // S = Server wins, A = Ace (server wins)
-        if (upper === 'S' || upper === 'A') {
+        if (upper === "S" || upper === "A") {
           winner = server;
         }
         // R = Receiver wins, D = Double fault (receiver wins)
-        else if (upper === 'R' || upper === 'D') {
+        else if (upper === "R" || upper === "D") {
           winner = 1 - server;
         }
         // P/Q = Penalty (assign to non-penalized player - assume receiver)
-        else if (upper === 'P' || upper === 'Q') {
+        else if (upper === "P" || upper === "Q") {
           winner = 1 - server;
-        }
-        else {
+        } else {
           throw new Error(`Unknown point code: ${code}`);
         }
-        
+
         return { winner: winner as 0 | 1, server: server as 0 | 1 };
       }
-      
+
       /**
        * Calculate "needed" metadata for current game state
        */
@@ -82,7 +91,7 @@ export function createV3Adapter() {
             is_breakpoint: false,
           };
         }
-        
+
         const gameScore = currentSet.gameScore;
         if (!gameScore) {
           return {
@@ -91,13 +100,19 @@ export function createV3Adapter() {
             is_breakpoint: false,
           };
         }
-        
+
         // Calculate points to game (simplified - doesn't handle all edge cases)
         const points_to_game = [
-          gameScore.side1Points >= 3 && gameScore.side1Points > gameScore.side2Points ? 1 : undefined,
-          gameScore.side2Points >= 3 && gameScore.side2Points > gameScore.side1Points ? 1 : undefined,
+          gameScore.side1Points >= 3 &&
+          gameScore.side1Points > gameScore.side2Points
+            ? 1
+            : undefined,
+          gameScore.side2Points >= 3 &&
+          gameScore.side2Points > gameScore.side1Points
+            ? 1
+            : undefined,
         ];
-        
+
         // Calculate points to set (simplified)
         const side1GamesNeeded = 6 - (currentSet.side1Score || 0);
         const side2GamesNeeded = 6 - (currentSet.side2Score || 0);
@@ -105,46 +120,47 @@ export function createV3Adapter() {
           side1GamesNeeded <= 1 ? side1GamesNeeded : undefined,
           side2GamesNeeded <= 1 ? side2GamesNeeded : undefined,
         ];
-        
+
         // Breakpoint detection (receiver is one point from winning game)
         const receiverIndex = 1 - currentServer;
         const is_breakpoint = points_to_game[receiverIndex] === 1;
-        
+
         return {
           points_to_game,
           points_to_set,
           is_breakpoint,
         };
       }
-      
+
       /**
        * Update service tracking based on game/set completion
        */
       function updateServiceTracking() {
         const score = getScore(matchUp);
         const totalPoints = matchUp.history?.points.length || 0;
-        
+
         // In tiebreak, alternate every 2 points
         const currentSet = matchUp.score.sets[matchUp.score.sets.length - 1];
         if (currentSet) {
           const s1 = currentSet.side1Score || 0;
           const s2 = currentSet.side2Score || 0;
-          
+
           // Check if in tiebreak (6-6)
           if (s1 === 6 && s2 === 6) {
-            const tiebreakPoints = (currentSet.side1GameScores?.slice(-1)[0] || 0) + 
-                                   (currentSet.side2GameScores?.slice(-1)[0] || 0);
+            const tiebreakPoints =
+              (currentSet.side1GameScores?.slice(-1)[0] || 0) +
+              (currentSet.side2GameScores?.slice(-1)[0] || 0);
             // Alternate every 2 points in tiebreak, starting with player who didn't serve last
             currentServer = Math.floor(tiebreakPoints / 2) % 2;
             return;
           }
         }
-        
+
         // Regular games: alternate server each game
         const gamesCompleted = score.sets
-          .flatMap(set => [(set.side1Score || 0), (set.side2Score || 0)])
+          .flatMap((set) => [set.side1Score || 0, set.side2Score || 0])
           .reduce((a, b) => a + b, 0);
-        
+
         currentServer = (firstService + gamesCompleted) % 2;
       }
 
@@ -153,30 +169,34 @@ export function createV3Adapter() {
         // State mutation methods (update internal matchUp)
         addPoint: (winner: number | any, metadata?: any) => {
           let pointOptions: AddPointOptions;
-          
-          if (typeof winner === 'number') {
+
+          if (typeof winner === "number") {
             // Numeric input: 0 or 1
             pointOptions = { winner, ...metadata };
-          } else if (typeof winner === 'string') {
+          } else if (typeof winner === "string") {
             // Code-based input: 'S', 'R', 'A', 'D', etc.
             pointOptions = parsePointCode(winner, firstService);
-          } else if (typeof winner === 'object') {
+          } else if (typeof winner === "object") {
             // Object input: { winner: 0, code: 'S' }
             pointOptions = winner;
           } else {
             throw new Error(`Invalid point input: ${winner}`);
           }
-          
+
           // Calculate metadata BEFORE adding the point
           const scoreBefore = getScore(matchUp);
-          const currentSet = scoreBefore.sets?.length ? scoreBefore.sets.length - 1 : 0;
-          const currentGame = scoreBefore.sets?.[currentSet]?.side1Score + scoreBefore.sets?.[currentSet]?.side2Score || 0;
-          
+          const currentSet = scoreBefore.sets?.length
+            ? scoreBefore.sets.length - 1
+            : 0;
+          const currentGame =
+            scoreBefore.sets?.[currentSet]?.side1Score +
+              scoreBefore.sets?.[currentSet]?.side2Score || 0;
+
           // Calculate "needed" metadata (points to game, points to set, etc.)
           const needed = calculateNeeded(matchUp, scoreBefore);
-          
+
           matchUp = addPoint(matchUp, pointOptions);
-          
+
           // Store point with metadata for statistics
           const enrichedPoint = enrichPoint(
             { ...pointOptions, ...metadata },
@@ -185,46 +205,48 @@ export function createV3Adapter() {
               index: pointIndex++,
               set: currentSet,
               game: currentGame,
-            }
+            },
           );
           // Add v3-specific metadata (not part of TODS Point type)
           (enrichedPoint as any).needed = needed;
           (enrichedPoint as any).breakpoint = needed.is_breakpoint || false;
           pointHistory.push(enrichedPoint);
-          
+
           // Update service tracking after point
           updateServiceTracking();
-          
+
           // Trigger event callback if registered
           if ((matchObj as any)._pointCallback) {
             try {
               (matchObj as any)._pointCallback(matchObj);
             } catch (error) {
-              console.error('Error in point callback:', error);
+              console.error("Error in point callback:", error);
             }
           }
-          
+
           // V3 addPoint returns { point, result, match } object
           // Hive-eye checks what.point.result to show stroke slider
-          const lastPoint = matchUp.history.points[matchUp.history.points.length - 1];
+          const lastPoint =
+            matchUp.history.points[matchUp.history.points.length - 1];
           const returnValue = {
             point: lastPoint || enrichedPoint,
-            result: matchUp.matchUpStatus === 'COMPLETE' ? 'complete' : undefined,
-            match: matchObj
+            result:
+              matchUp.matchUpStatus === "COMPLETE" ? "complete" : undefined,
+            match: matchObj,
           };
-          
-          console.log('[UMO-V4] addPoint returning:', {
+
+          console.log("[UMO-V4] addPoint returning:", {
             hasPoint: !!returnValue.point,
             pointResult: returnValue.point?.result,
             matchResult: returnValue.result,
-            pointKeys: returnValue.point ? Object.keys(returnValue.point) : []
+            pointKeys: returnValue.point ? Object.keys(returnValue.point) : [],
           });
-          
+
           return returnValue;
         },
 
         addPoints: (points: any[]) => {
-          points.forEach(point => {
+          points.forEach((point) => {
             // Use addPoint to ensure pointHistory is updated
             matchObj.addPoint(point);
           });
@@ -255,12 +277,14 @@ export function createV3Adapter() {
         // Query methods (read from matchUp)
         score: () => {
           const score = getScore(matchUp);
-          
+
           // Count completed sets (sets with a winner)
-          const completedSets = matchUp.score.sets.filter(s => s.winningSide !== undefined);
-          const sets1 = completedSets.filter(s => s.winningSide === 1).length;
-          const sets2 = completedSets.filter(s => s.winningSide === 2).length;
-          
+          const completedSets = matchUp.score.sets.filter(
+            (s) => s.winningSide !== undefined,
+          );
+          const sets1 = completedSets.filter((s) => s.winningSide === 1).length;
+          const sets2 = completedSets.filter((s) => s.winningSide === 2).length;
+
           // V3 score() returns object WITHOUT scoreString property
           return {
             counters: {
@@ -271,15 +295,17 @@ export function createV3Adapter() {
             },
             points: `${score.points[0]}-${score.points[1]}`,
             games: `${score.games[0]}-${score.games[1]}`,
-            sets: matchUp.score.sets.length > 0 
-              ? `${matchUp.score.sets.filter(s => s.winningSide === 1).length}-${matchUp.score.sets.filter(s => s.winningSide === 2).length}`
-              : '0-0',
+            sets:
+              matchUp.score.sets.length > 0
+                ? `${matchUp.score.sets.filter((s) => s.winningSide === 1).length}-${matchUp.score.sets.filter((s) => s.winningSide === 2).length}`
+                : "0-0",
             components: {
-              sets: matchUp.score.sets.map(set => ({
+              sets: matchUp.score.sets.map((set) => ({
                 games: [set.side1Score || 0, set.side2Score || 0],
-                tiebreak: set.side1TiebreakScore !== undefined 
-                  ? [set.side1TiebreakScore, set.side2TiebreakScore]
-                  : undefined,
+                tiebreak:
+                  set.side1TiebreakScore !== undefined
+                    ? [set.side1TiebreakScore, set.side2TiebreakScore]
+                    : undefined,
               })),
             },
             display: {},
@@ -288,8 +314,8 @@ export function createV3Adapter() {
 
         scoreboard: (perspective?: number) => {
           const board = getScoreboard(matchUp, { perspective });
-          console.log('[UMO-V4] scoreboard() called, returning:', board);
-          console.log('[UMO-V4]   matchUp.score.sets:', matchUp.score.sets);
+          console.log("[UMO-V4] scoreboard() called, returning:", board);
+          console.log("[UMO-V4]   matchUp.score.sets:", matchUp.score.sets);
           return board;
         },
 
@@ -308,15 +334,17 @@ export function createV3Adapter() {
           code: matchUp.matchUpFormat,
           get structure() {
             // Return format structure (Factory-style)
-            return (matchUp as any).formatStructure || {
-              bestOf: 3,
-              setFormat: {
-                setTo: 6,
-                tiebreakAt: 6,
-                tiebreakFormat: { tiebreakTo: 7 },
-                NoAD: false,
-              },
-            };
+            return (
+              (matchUp as any).formatStructure || {
+                bestOf: 3,
+                setFormat: {
+                  setTo: 6,
+                  tiebreakAt: 6,
+                  tiebreakFormat: { tiebreakTo: 7 },
+                  NoAD: false,
+                },
+              }
+            );
           },
           get setsToWin() {
             // Derive from matchUpFormat or default to 2 (best of 3)
@@ -351,24 +379,28 @@ export function createV3Adapter() {
           match: { id: matchUp.matchUpId },
           get tournament() {
             // Tournament property access
-            return (matchUp as any).tournamentName || '';
+            return (matchUp as any).tournamentName || "";
           },
-          players: () => matchUp.sides.map(side => side.participant).filter(Boolean),
+          players: () =>
+            matchUp.sides.map((side) => side.participant).filter(Boolean),
           definePlayer: (player: any) => {
             // Update matchUp sides with player info
-            const sideIndex = player.index !== undefined ? player.index : matchUp.sides.length;
+            const sideIndex =
+              player.index !== undefined ? player.index : matchUp.sides.length;
             if (sideIndex < matchUp.sides.length) {
               matchUp.sides[sideIndex].participant = {
-                participantId: player.puid || player.id || `player-${sideIndex}`,
-                participantName: player.firstName && player.lastName 
-                  ? `${player.firstName} ${player.lastName}`
-                  : player.name || `Player ${sideIndex + 1}`,
-                participantType: 'INDIVIDUAL',
-                participantRole: 'COMPETITOR',
-                participantStatus: 'ACTIVE',
+                participantId:
+                  player.puid || player.id || `player-${sideIndex}`,
+                participantName:
+                  player.firstName && player.lastName
+                    ? `${player.firstName} ${player.lastName}`
+                    : player.name || `Player ${sideIndex + 1}`,
+                participantType: "INDIVIDUAL",
+                participantRole: "COMPETITOR",
+                participantStatus: "ACTIVE",
                 person: {
-                  standardGivenName: player.firstName || player.name || '',
-                  standardFamilyName: player.lastName || '',
+                  standardGivenName: player.firstName || player.name || "",
+                  standardFamilyName: player.lastName || "",
                   nationalityCode: player.ioc || player.nationality,
                   sex: player.sex,
                 },
@@ -378,29 +410,33 @@ export function createV3Adapter() {
           },
           updateParticipant: (update: any) => {
             // Modern TODS-style update using sideNumber
-            const { sideNumber, person, participantName, participantId } = update;
+            const { sideNumber, person, participantName, participantId } =
+              update;
             const index = sideNumber - 1; // Convert to 0-based index
-            
+
             // Ensure side exists
             if (!matchUp.sides[index]) {
               matchUp.sides[index] = {
                 sideNumber,
               };
             }
-            
+
             // Create or update participant
             if (!matchUp.sides[index].participant) {
               matchUp.sides[index].participant = {
                 participantId: participantId || `player-${index}`,
-                participantName: participantName || `${person?.standardGivenName || ''} ${person?.standardFamilyName || ''}`.trim(),
-                participantType: 'INDIVIDUAL',
-                participantRole: 'COMPETITOR',
+                participantName:
+                  participantName ||
+                  `${person?.standardGivenName || ""} ${person?.standardFamilyName || ""}`.trim(),
+                participantType: "INDIVIDUAL",
+                participantRole: "COMPETITOR",
                 person: person || {},
               };
             } else {
               // Update existing participant
               if (participantName) {
-                matchUp.sides[index].participant!.participantName = participantName;
+                matchUp.sides[index].participant!.participantName =
+                  participantName;
               }
               if (participantId) {
                 matchUp.sides[index].participant!.participantId = participantId;
@@ -411,13 +447,17 @@ export function createV3Adapter() {
                   ...person,
                 };
                 // Update participantName from person if not explicitly provided
-                if (!participantName && person.standardGivenName && person.standardFamilyName) {
-                  matchUp.sides[index].participant!.participantName = 
+                if (
+                  !participantName &&
+                  person.standardGivenName &&
+                  person.standardFamilyName
+                ) {
+                  matchUp.sides[index].participant!.participantName =
                     `${person.standardGivenName} ${person.standardFamilyName}`.trim();
                 }
               }
             }
-            
+
             return matchObj;
           },
           defineMatch: (match?: any) => {
@@ -432,7 +472,7 @@ export function createV3Adapter() {
                 umpire: (matchUp as any).umpire,
               };
             }
-            
+
             // When called with arguments, set match metadata
             if (!match) return matchObj;
             if (match.id) {
@@ -466,7 +506,7 @@ export function createV3Adapter() {
                 level: (matchUp as any).level,
               };
             }
-            
+
             // When called with arguments, set tournament metadata
             if (!tournament) return matchObj;
             if (tournament.name) {
@@ -533,7 +573,7 @@ export function createV3Adapter() {
           common: () => {
             // Return common history (addPoint episodes)
             return (matchUp.history?.points || []).map((point: any, index) => ({
-              action: 'addPoint',
+              action: "addPoint",
               point: {
                 ...point,
                 index,
@@ -542,18 +582,21 @@ export function createV3Adapter() {
             }));
           },
           action: (actionName: string) => {
-            if (actionName === 'addPoint') {
+            if (actionName === "addPoint") {
               // Return addPoint episodes with point data and metadata
-              return (matchUp.history?.points || []).map((point: any, index) => ({
-                action: 'addPoint',
-                point: {
-                  ...point,
-                  index,
-                  breakpoint: point.breakpoint || false,
-                  server: point.server !== undefined ? point.server : index % 2,
-                },
-                needed: point.needed || {},
-              }));
+              return (matchUp.history?.points || []).map(
+                (point: any, index) => ({
+                  action: "addPoint",
+                  point: {
+                    ...point,
+                    index,
+                    breakpoint: point.breakpoint || false,
+                    server:
+                      point.server !== undefined ? point.server : index % 2,
+                  },
+                  needed: point.needed || {},
+                }),
+              );
             }
             return [];
           },
@@ -595,7 +638,7 @@ export function createV3Adapter() {
               const s1 = set.side1Score || 0;
               const s2 = set.side2Score || 0;
               if (set.side1TiebreakScore !== undefined) {
-                return s1 > s2 
+                return s1 > s2
                   ? `${s1}-${s2}(${set.side2TiebreakScore})`
                   : `${s1}(${set.side1TiebreakScore})-${s2}`;
               }
@@ -603,14 +646,18 @@ export function createV3Adapter() {
             },
             games: () => {
               // Return game objects (simplified for now)
-              const gameCount = Math.max(set.side1Score || 0, set.side2Score || 0);
+              const gameCount = Math.max(
+                set.side1Score || 0,
+                set.side2Score || 0,
+              );
               return Array.from({ length: gameCount }, (_, i) => ({
                 index: i,
                 score: () => ({ counters: { local: [0, 0] } }),
               }));
             },
             complete: () => set.winningSide !== undefined,
-            winner: () => set.winningSide !== undefined ? set.winningSide - 1 : undefined,
+            winner: () =>
+              set.winningSide !== undefined ? set.winningSide - 1 : undefined,
           }));
         },
 
@@ -626,36 +673,38 @@ export function createV3Adapter() {
           if (!matchUp.history || matchUp.history.points.length === 0) {
             return matchObj;
           }
-          
+
           // Recreate matchUp without last point
           const points = matchUp.history.points.slice(0, -1);
           matchUp = createMatchUp({
             matchUpFormat: matchUp.matchUpFormat,
             matchUpId: matchUp.matchUpId,
-            participants: matchUp.sides.map(s => s.participant).filter(Boolean),
+            participants: matchUp.sides
+              .map((s) => s.participant)
+              .filter(Boolean),
           });
-          
+
           // Suppress point callbacks during replay
           const savedPointCallback = (matchObj as any)._pointCallback;
           (matchObj as any)._pointCallback = null;
-          
+
           // Replay points
-          points.forEach(point => {
+          points.forEach((point) => {
             matchUp = addPoint(matchUp, point);
           });
-          
+
           // Restore point callback
           (matchObj as any)._pointCallback = savedPointCallback;
-          
+
           // Trigger undo callback if registered
           if ((matchObj as any)._undoCallback) {
             try {
               (matchObj as any)._undoCallback(matchObj);
             } catch (error) {
-              console.error('Error in undo callback:', error);
+              console.error("Error in undo callback:", error);
             }
           }
-          
+
           return matchObj;
         },
 
@@ -665,28 +714,28 @@ export function createV3Adapter() {
             matchUpFormat: matchUp.matchUpFormat,
             matchUpId: matchUp.matchUpId,
           });
-          
+
           // Trigger reset callback if registered
           if ((matchObj as any)._resetCallback) {
             try {
               (matchObj as any)._resetCallback(matchObj);
             } catch (error) {
-              console.error('Error in reset callback:', error);
+              console.error("Error in reset callback:", error);
             }
           }
-          
+
           return matchObj;
         },
-        
+
         nextService: () => {
           updateServiceTracking();
           return currentServer;
         },
-        
+
         nextTeamServing: () => {
           return firstService % 2;
         },
-        
+
         nextTeamReceiving: () => {
           return (firstService + 1) % 2;
         },
@@ -696,7 +745,7 @@ export function createV3Adapter() {
             // Set participants
             return matchObj;
           }
-          return matchUp.sides.map(side => side.participant);
+          return matchUp.sides.map((side) => side.participant);
         },
 
         doubles: (value?: boolean) => {
@@ -704,7 +753,7 @@ export function createV3Adapter() {
             // Set doubles mode
             return matchObj;
           }
-          return matchUp.matchUpType === 'DOUBLES';
+          return matchUp.matchUpType === "DOUBLES";
         },
 
         singles: (value?: boolean) => {
@@ -712,38 +761,47 @@ export function createV3Adapter() {
             // Set singles mode
             return matchObj;
           }
-          return matchUp.matchUpType === 'SINGLES';
+          return matchUp.matchUpType === "SINGLES";
         },
-        
+
         // Statistics API (v3 compatible)
         stats: {
           counters: (setFilter?: number) => {
-            console.log('[UMO-V4] stats.counters() called');
+            console.log("[UMO-V4] stats.counters() called");
 
             // Use matchUp.history.points directly since that has the data
-            const points = (matchUp.history?.points || []) as unknown as PointWithMetadata[];
+            const points = (matchUp.history?.points ||
+              []) as unknown as PointWithMetadata[];
             return buildCounters(points, { setFilter });
           },
           calculated: (setFilter?: number) => {
             // Use matchUp.history.points directly since that has the data
-            const points = (matchUp.history?.points || []) as unknown as PointWithMetadata[];
-            
+            const points = (matchUp.history?.points ||
+              []) as unknown as PointWithMetadata[];
+
             // DEBUG: Log first 3 points to see what data we have
-            console.log('[UMO-V4] stats.calculated() called with', points.length, 'points');
+            console.log(
+              "[UMO-V4] stats.calculated() called with",
+              points.length,
+              "points",
+            );
             if (points.length > 0) {
-              console.log('[UMO-V4]   First 3 points:', points.slice(0, 3).map((p: any) => ({
-                result: p.result,
-                code: p.code,
-                winner: p.winner,
-                server: p.server
-              })));
+              console.log(
+                "[UMO-V4]   First 3 points:",
+                points.slice(0, 3).map((p: any) => ({
+                  result: p.result,
+                  code: p.code,
+                  winner: p.winner,
+                  server: p.server,
+                })),
+              );
             }
-            
+
             const counters = buildCounters(points, { setFilter });
             return calculateStats(counters);
           },
         },
-        
+
         // Export as TODS matchUp
         toMatchUp: () => {
           // Return full matchUp with all metadata
@@ -758,44 +816,58 @@ export function createV3Adapter() {
             scheduledDate: (matchUp as any).scheduledDate,
           };
         },
-        
+
         // Decorate point with additional metadata
         decoratePoint: (point: any, metadata: any) => {
-          console.log('[UMO-V4] decoratePoint called with:', { index: point?.index, metadata });
-          
+          console.log("[UMO-V4] decoratePoint called with:", {
+            index: point?.index,
+            metadata,
+          });
+
           if (!point || point.index === undefined) {
-            console.log('[UMO-V4] Invalid point, returning');
+            console.log("[UMO-V4] Invalid point, returning");
             return matchObj;
           }
-          
+
           // V4 addPoint() mutates matchUp in place (no cloning).
           // So we can directly update the point in matchUp.history.points.
-          
-          console.log('[UMO-V4]   Point before decoration:', matchUp.history.points[point.index]);
-          
+
+          console.log(
+            "[UMO-V4]   Point before decoration:",
+            matchUp.history.points[point.index],
+          );
+
           // Update the actual point in the CURRENT matchUp's history
           if (matchUp.history?.points && matchUp.history.points[point.index]) {
             Object.assign(matchUp.history.points[point.index], metadata);
-            console.log('[UMO-V4]   Point after decoration:', matchUp.history.points[point.index]);
+            console.log(
+              "[UMO-V4]   Point after decoration:",
+              matchUp.history.points[point.index],
+            );
           } else {
-            console.log('[UMO-V4] ERROR: Could not find point at index', point.index);
+            console.log(
+              "[UMO-V4] ERROR: Could not find point at index",
+              point.index,
+            );
           }
-          
+
           // Also update in pointHistory array for statistics
-          const pointInHistory = pointHistory.find(p => p.index === point.index);
+          const pointInHistory = pointHistory.find(
+            (p) => p.index === point.index,
+          );
           if (pointInHistory) {
             Object.assign(pointInHistory, metadata);
           }
-          
+
           // Update the point parameter so caller sees the change
           Object.assign(point, metadata);
-          
+
           return matchObj;
         },
-        
+
         // Match status property (getter/setter)
         get status() {
-          return (matchUp as any).status || '';
+          return (matchUp as any).status || "";
         },
         set status(value: string) {
           (matchUp as any).status = value;
@@ -810,7 +882,7 @@ export function createV3Adapter() {
     },
     /**
      * fromMatchUp - Convert TODS matchUp to v3 format (stub for now)
-     * 
+     *
      * @param matchUp - TODS matchUp object
      * @returns Configuration object for v3 adapter
      */
@@ -818,10 +890,10 @@ export function createV3Adapter() {
       return {
         id: matchUp.matchUpId,
         type: matchUp.matchUpFormat,
-        participants: matchUp.sides?.flatMap((side: any) => 
-          side.participant ? [side.participant] : []
+        participants: matchUp.sides?.flatMap((side: any) =>
+          side.participant ? [side.participant] : [],
         ),
-        isDoubles: matchUp.matchUpType === 'DOUBLES',
+        isDoubles: matchUp.matchUpType === "DOUBLES",
       };
     },
   };
