@@ -338,6 +338,7 @@ export function createStateObject({
       }
 
       so.decoratePoint = (point, attributes) => {
+         console.log('[UMO-V3] decoratePoint called with:', { index: point?.index, attributes });
          let indices = common.history
             .map((episode, i)  => { if (episode.action == 'addPoint' && episode.point.index == point.index) return i; })
             .filter(index => index != undefined);

@@ -55,6 +55,8 @@ umo.Match = ({
   matchUp,
   common = umo.common(),
 } = {}) => {
+  console.log('[UMO-V3] Match created with options:', { matchUpFormat, matchUpId, participants, isDoubles });
+  
   // If full matchUp provided, use MatchUpAdapter to extract parameters
   if (matchUp) {
     const MatchUpAdapter = (globalThis as any).MatchUpAdapter;
