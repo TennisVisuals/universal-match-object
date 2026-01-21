@@ -658,6 +658,8 @@ export function createV3Adapter() {
         // Statistics API (v3 compatible)
         stats: {
           counters: (setFilter?: number) => {
+            console.log('🔍 stats.counters() called');
+
             // Use matchUp.history.points directly since that has the data
             const points = (matchUp.history?.points || []) as unknown as PointWithMetadata[];
             return buildCounters(points, { setFilter });

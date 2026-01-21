@@ -408,7 +408,20 @@ export function createCommon(umo: any) {
     },
     stats: {
       calculated(set_filter) {
-        return calculatedStats(pub.stats.counters(set_filter));
+        // V4 STATS ENGINE: Use v4 statistics for accurate counting
+        // Import inline to avoid circular dependencies
+        const { buildCounters } = require('../v4/statistics/counters');
+        const { calculateStats } = require('../v4/statistics/calculator');
+        
+        // Get points from history
+        const episodes = pub.history.filter((episode: any) => episode.action == "addPoint");
+        const points = set_filter !== undefined
+          ? episodes.filter((episode: any) => episode.point.set == set_filter).map((e: any) => e.point)
+          : episodes.map((e: any) => e.point);
+        
+        // Use v4 engine
+        const counters = buildCounters(points, { setFilter: set_filter });
+        return calculateStats(counters);
       },
       counters(set_filter) {
         if (
