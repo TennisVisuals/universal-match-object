@@ -24,6 +24,8 @@ export function createV3Adapter() {
      * Match factory - wraps v4.createMatchUp and provides v3 API
      */
     Match: (options: any = {}) => {
+      console.log('🏗️ v4 Match created with options:', options);
+      
       // Create initial matchUp
       let matchUp = createMatchUp({
         matchUpId: options.matchUpId,
@@ -31,6 +33,8 @@ export function createV3Adapter() {
         participants: options.participants,
         isDoubles: options.isDoubles,
       });
+      
+      console.log('✅ matchUp created with format:', matchUp.matchUpFormat);
 
       // Track first service and current server
       let firstService = 0;
