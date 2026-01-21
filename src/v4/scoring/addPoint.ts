@@ -42,6 +42,16 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
     server,
     timestamp: timestamp || new Date().toISOString(),
   };
+  
+  // DEBUG: Log first point to confirm metadata preservation
+  if (pointNumber === 1) {
+    console.log('🔧 v4 addPoint - First point stored:', { 
+      result: point.result, 
+      code: point.code, 
+      winner: point.winner,
+      hasMetadata: !!point.result 
+    });
+  }
 
   // Add point to history
   newMatchUp.history.points.push(point);

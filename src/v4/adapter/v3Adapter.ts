@@ -16,6 +16,9 @@ import { calculateStats } from '../statistics/calculator';
  * Adapter that creates a v3-compatible API around v4 matchUp
  */
 export function createV3Adapter() {
+  // Log version on first load to confirm which code is running
+  console.log('🔧 UMO v4 Adapter loaded - BUILD:', new Date().toISOString(), '- STATS FIX APPLIED');
+  
   const adapter = {
     /**
      * Match factory - wraps v4.createMatchUp and provides v3 API
