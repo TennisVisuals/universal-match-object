@@ -85,6 +85,15 @@ export function buildCounters(
       counters.players[winner][category].push(point);
     });
     
+    // Track stroke/hand breakdown (v3 compatibility)
+    if (point.hand) {
+      const handCategory = point.hand; // 'Forehand' or 'Backhand'
+      if (!counters.teams[winner][handCategory]) {
+        counters.teams[winner][handCategory] = [];
+      }
+      counters.teams[winner][handCategory].push({ point, index });
+    }
+    
     // Track game completions for gamesWon stat
     if (isGameComplete(point, lastPoint)) {
       gameCompletions.push({ winner, point });
