@@ -46,10 +46,10 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
   // DEBUG: Log first point to confirm metadata preservation
   if (pointNumber === 1) {
     console.log('🔧 v4 addPoint - First point stored:', { 
-      result: point.result, 
-      code: point.code, 
+      result: (point as any).result, 
+      code: (point as any).code, 
       winner: point.winner,
-      hasMetadata: !!point.result 
+      hasMetadata: !!(point as any).result 
     });
   }
 
