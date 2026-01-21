@@ -19,6 +19,11 @@ import { createCommon } from "./core/common";
 import { createStateObject } from "./state/stateObject";
 import { SINGLES, DOUBLES, TO_BE_PLAYED, COMPLETED } from "./constants";
 
+// Register v4 statistics engine globally for v3 to use
+import { buildCounters } from './v4/statistics/counters';
+import { calculateStats } from './v4/statistics/calculator';
+(globalThis as any).__UMO_V4_STATS__ = { buildCounters, calculateStats };
+
 // Version - inline to avoid import issues with bundler
 const umoVersion = "@VERSION@";
 
