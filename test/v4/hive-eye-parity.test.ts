@@ -304,6 +304,42 @@ describe('Hive-Eye v3/v4 Parity Tests', () => {
     });
   });
 
+  describe('Scoreboard Display', () => {
+    it('should return same scoreboard format for tennis scoring', () => {
+      const v3Match = matchObjectV3.Match({ matchUpFormat: 'SET3-S:6/TB7' });
+      const v4Adapter = createV3Adapter();
+      const v4Match = v4Adapter.Match({ matchUpFormat: 'SET3-S:6/TB7' });
+      
+      // Test initial state
+      expect(v4Match.scoreboard()).toBe(v3Match.scoreboard());
+      
+      // Add points and check scoreboard after each
+      // 15-0
+      v3Match.addPoint({ winner: 0, server: 0 });
+      v4Match.addPoint({ winner: 0, server: 0 });
+      console.log('After 1 point - V3:', v3Match.scoreboard(), 'V4:', v4Match.scoreboard());
+      expect(v4Match.scoreboard()).toBe(v3Match.scoreboard());
+      
+      // 15-15
+      v3Match.addPoint({ winner: 1, server: 0 });
+      v4Match.addPoint({ winner: 1, server: 0 });
+      console.log('After 2 points - V3:', v3Match.scoreboard(), 'V4:', v4Match.scoreboard());
+      expect(v4Match.scoreboard()).toBe(v3Match.scoreboard());
+      
+      // 30-15
+      v3Match.addPoint({ winner: 0, server: 0 });
+      v4Match.addPoint({ winner: 0, server: 0 });
+      console.log('After 3 points - V3:', v3Match.scoreboard(), 'V4:', v4Match.scoreboard());
+      expect(v4Match.scoreboard()).toBe(v3Match.scoreboard());
+      
+      // 40-15
+      v3Match.addPoint({ winner: 0, server: 0 });
+      v4Match.addPoint({ winner: 0, server: 0 });
+      console.log('After 4 points - V3:', v3Match.scoreboard(), 'V4:', v4Match.scoreboard());
+      expect(v4Match.scoreboard()).toBe(v3Match.scoreboard());
+    });
+  });
+
   describe('Complete/Winner Detection', () => {
     it('should detect match NOT complete after partial game', () => {
       const v3Match = matchObjectV3.Match({ matchUpFormat: 'SET3-S:6/TB7' });
