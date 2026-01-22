@@ -161,10 +161,31 @@ umo.Match = ({
     nextTeamServing: match.nextTeamServing,
     nextTeamReceiving: match.nextTeamReceiving,
     change: match.change,
-    undo: match.undo,
-    addPoint: match.addPoint,
+    undo: (count = 1) => {
+      console.log('[UMO-V3] undo() called with count:', count);
+      try {
+        const result = match.undo(count);
+        console.log('[UMO-V3] undo() returning:', result);
+        return result;
+      } catch (error) {
+        console.error('[UMO-V3] undo() FAILED with error:', error);
+        console.error('[UMO-V3] undo() error stack:', error.stack);
+        throw error;
+      }
+    },
+    addPoint: (value: any, metadata?: any) => {
+      console.log('[UMO-V3] addPoint() called with:', value);
+      const result = match.addPoint(value, metadata);
+      console.log('[UMO-V3] addPoint() returning:', { result: result?.result, complete: result?.complete });
+      return result;
+    },
     addPoints: match.addPoints,
-    decoratePoint: match.decoratePoint,
+    decoratePoint: (point: any, attributes: any) => {
+      console.log('[UMO-V3] decoratePoint() called with:', { index: point?.index, attributes });
+      const result = match.decoratePoint(point, attributes);
+      console.log('[UMO-V3] decoratePoint() returning:', result);
+      return result;
+    },
     addScore: match.addScore,
     addScores: match.addScores,
     complete: match.complete,

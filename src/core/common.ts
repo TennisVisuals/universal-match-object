@@ -408,6 +408,7 @@ export function createCommon(umo: any) {
     },
     stats: {
       calculated(set_filter) {
+        console.log('[UMO-V3] stats.calculated called with set_filter:', set_filter);
         // V4 STATS ENGINE: Use v4 statistics for accurate counting
         // Dynamically import v4 stats functions (available at runtime)
         try {
@@ -433,6 +434,7 @@ export function createCommon(umo: any) {
         }
       },
       counters(set_filter) {
+        console.log('[UMO-V3] stats.counters called with set_filter:', set_filter);
         if (
           (set_filter != undefined && filtered_stats != set_filter) ||
           (set_filter == undefined && filtered_stats != undefined)

@@ -168,6 +168,7 @@ export function createV3Adapter() {
       const matchObj: any = {
         // State mutation methods (update internal matchUp)
         addPoint: (winner: number | any, metadata?: any) => {
+          console.log("[UMO-V4] addPoint called with:", winner);
           let pointOptions: AddPointOptions;
 
           if (typeof winner === "number") {
@@ -231,13 +232,13 @@ export function createV3Adapter() {
           const returnValue = {
             point: lastPoint || enrichedPoint,
             result:
-              matchUp.matchUpStatus === "COMPLETE" ? "complete" : undefined,
+              (matchUp as any).matchUpStatus === "COMPLETE" ? "complete" : undefined,
             match: matchObj,
           };
 
           console.log("[UMO-V4] addPoint returning:", {
             hasPoint: !!returnValue.point,
-            pointResult: returnValue.point?.result,
+            pointResult: (returnValue.point as any)?.result,
             matchResult: returnValue.result,
             pointKeys: returnValue.point ? Object.keys(returnValue.point) : [],
           });
@@ -670,9 +671,15 @@ export function createV3Adapter() {
 
         // Undo functionality
         undo: () => {
+          console.log("[UMO-V4] undo() called");
+          
           if (!matchUp.history || matchUp.history.points.length === 0) {
+            console.log("[UMO-V4] undo() returning: matchObj (no points to undo)");
             return matchObj;
           }
+
+          // Get the point being undone for logging
+          const undonePoint = matchUp.history.points[matchUp.history.points.length - 1];
 
           // Recreate matchUp without last point
           const points = matchUp.history.points.slice(0, -1);
@@ -705,6 +712,7 @@ export function createV3Adapter() {
             }
           }
 
+          console.log("[UMO-V4] undo() returning: undone point", undonePoint);
           return matchObj;
         },
 
@@ -767,7 +775,7 @@ export function createV3Adapter() {
         // Statistics API (v3 compatible)
         stats: {
           counters: (setFilter?: number) => {
-            console.log("[UMO-V4] stats.counters() called");
+            console.log("[UMO-V4] stats.counters() called with setFilter:", setFilter);
 
             // Use matchUp.history.points directly since that has the data
             const points = (matchUp.history?.points ||
@@ -775,27 +783,11 @@ export function createV3Adapter() {
             return buildCounters(points, { setFilter });
           },
           calculated: (setFilter?: number) => {
+            console.log("[UMO-V4] stats.calculated() called with setFilter:", setFilter);
+            
             // Use matchUp.history.points directly since that has the data
             const points = (matchUp.history?.points ||
               []) as unknown as PointWithMetadata[];
-
-            // DEBUG: Log first 3 points to see what data we have
-            console.log(
-              "[UMO-V4] stats.calculated() called with",
-              points.length,
-              "points",
-            );
-            if (points.length > 0) {
-              console.log(
-                "[UMO-V4]   First 3 points:",
-                points.slice(0, 3).map((p: any) => ({
-                  result: p.result,
-                  code: p.code,
-                  winner: p.winner,
-                  server: p.server,
-                })),
-              );
-            }
 
             const counters = buildCounters(points, { setFilter });
             return calculateStats(counters);

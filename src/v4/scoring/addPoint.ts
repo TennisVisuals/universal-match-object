@@ -37,13 +37,26 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
   // Create point record - preserve all metadata from options
   const pointNumber = newMatchUp.history.points.length + 1;
   const pointIndex = newMatchUp.history.points.length; // 0-based index for v3 compatibility
+  
+  // Derive 'code' if not provided (V4 should be self-sufficient)
+  // 'S' = server wins, 'R' = receiver wins
+  let derivedCode = (options as any).code;
+  if (!derivedCode && winner !== undefined && server !== undefined) {
+    derivedCode = winner === server ? 'S' : 'R';
+  }
+  
   const point: Point = {
-    ...options, // Preserve all fields (result, code, etc.)
+    ...options, // Preserve all fields (result, rally, etc.)
     pointNumber,
     winner,
     server,
     timestamp: timestamp || new Date().toISOString(),
   };
+  
+  // Add derived code if calculated
+  if (derivedCode) {
+    (point as any).code = derivedCode;
+  }
   
   // Add v3-compatible index field (0-based, while pointNumber is 1-based)
   (point as any).index = pointIndex;

@@ -31,6 +31,7 @@ export function createFormatObject({plural, common = null} = {}) {
          }
       },
       settings({name, description, players, threshold, has_decider, min_diff, tiebreak} = {}) {
+         console.log('[UMO-V3] format.settings called with:', { name, threshold, has_decider, min_diff, tiebreak });
          if (!threshold || !has_decider || !min_diff || !tiebreak) {
             let number_of_players = hasCommon && typeof common.singles == 'function' ? common.singles() ? 2 : 4 : '';
             let settings = { 
@@ -259,6 +260,7 @@ export function createFormatObject({plural, common = null} = {}) {
    // DEPRECATED: changeFormat via code
    // Format changes should be done by creating a new Match with new matchUpFormat
    fo.changeFormat = function(formatCode) {
+      console.log('[UMO-V3] format.changeFormat called with:', formatCode);
       console.warn('⚠️  format.changeFormat() is deprecated. Create a new Match with the desired matchUpFormat instead.');
       return false;
    };

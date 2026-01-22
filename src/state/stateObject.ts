@@ -67,7 +67,7 @@ export function createStateObject({
 
       so.history = {};
       so.history.local = () => so.local_history;
-      so.history.action = (action) =>  common.history.filter(episode => episode.action == action);
+      so.history.action = (action) => common.history.filter(episode => episode.action == action);
       so.history.points = (set) => {
          let points = common.history.filter(episode => episode.action == 'addPoint').map(episode => episode.point); 
          if (set != undefined) points = points.filter(point => point.set == set);
@@ -259,7 +259,6 @@ export function createStateObject({
       }
 
       so.addPoint = (value) => {
-         console.log('[UMO-V3] addPoint called with:', value);
          if (Array.isArray(value)) return false;
          if (object == 'Game') return addPoint(value);
 
@@ -339,7 +338,6 @@ export function createStateObject({
       }
 
       so.decoratePoint = (point, attributes) => {
-         console.log('[UMO-V3] decoratePoint called with:', { index: point?.index, attributes });
          let indices = common.history
             .map((episode, i)  => { if (episode.action == 'addPoint' && episode.point.index == point.index) return i; })
             .filter(index => index != undefined);
