@@ -134,6 +134,32 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
     side2GameScores.push(0);
   }
 
+  // Get format details for score calculation
+  const setTo = formatStructure.setFormat?.setTo || 6;
+  const tiebreakAt = formatStructure.setFormat?.tiebreakAt || setTo;
+
+  // Calculate score BEFORE adding the point (like V3 does)
+  // Check if current game is a tiebreak
+  const isTiebreakGame =
+    isFinalSetTiebreak ||
+    (!finalSetNoTiebreak &&
+      side1Games === tiebreakAt &&
+      side2Games === tiebreakAt);
+  const gameScore = formatGameScore(side1Points, side2Points, isTiebreakGame);
+  
+  // Store score on point object (like V3)
+  (point as any).score = gameScore;
+  
+  // DEBUG: Log score calculation for first 3 points
+  if (pointNumber <= 3) {
+    console.log(`🎾 v4 addPoint - Point ${pointNumber} score calculation:`, {
+      side1Points_before: side1Points,
+      side2Points_before: side2Points,
+      isTiebreak: isTiebreakGame,
+      calculatedScore: gameScore
+    });
+  }
+
   // Add point to winner
   if (winner === 0) {
     side1Points++;
@@ -148,9 +174,8 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
   currentSet.side2GameScores = side2GameScores;
 
   // Check if game is won
-  const setTo = formatStructure.setFormat?.setTo || 6;
-  const tiebreakAt = formatStructure.setFormat?.tiebreakAt || setTo;
-
+  // (setTo and tiebreakAt already declared above for score calculation)
+  
   // For final set tiebreak (match tiebreak), the entire set is one tiebreak game
   // BUT if final set has noTiebreak (advantage format), don't play tiebreak at 6-6
   const isTiebreak =
@@ -281,6 +306,49 @@ function checkGameWon(
   }
 
   return undefined;
+}
+
+/**
+ * Format game score as tennis score string (e.g., '0-15', '30-30', '40-A')
+ */
+function formatGameScore(p1: number, p2: number, isTiebreak: boolean): string {
+  // Tiebreak: show numeric score
+  if (isTiebreak) {
+    return `${p1}-${p2}`;
+  }
+  
+  // Regular game: convert to tennis score
+  const points = ['0', '15', '30', '40'];
+  
+  // Both under 4 points (0-40 range)
+  if (p1 < 4 && p2 < 4) {
+    return `${points[p1]}-${points[p2]}`;
+  }
+  
+  // Deuce
+  if (p1 >= 3 && p2 >= 3 && p1 === p2) {
+    return '40-40';
+  }
+  
+  // Advantage or game point
+  if (p1 >= 3 && p2 >= 3) {
+    const diff = p1 - p2;
+    if (diff === 1) return 'A-40';
+    if (diff === -1) return '40-A';
+    if (diff >= 2) return 'G-40';
+    if (diff <= -2) return '40-G';
+  }
+  
+  // One side at 40 or beyond
+  if (p1 >= 3) {
+    return `40-${p2 < 4 ? points[p2] : '40'}`;
+  }
+  
+  if (p2 >= 3) {
+    return `${p1 < 4 ? points[p1] : '40'}-40`;
+  }
+  
+  return `${p1 < 4 ? points[p1] : '0'}-${p2 < 4 ? points[p2] : '0'}`;
 }
 
 /**
