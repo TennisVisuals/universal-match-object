@@ -138,7 +138,16 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
   const setTo = formatStructure.setFormat?.setTo || 6;
   const tiebreakAt = formatStructure.setFormat?.tiebreakAt || setTo;
 
-  // Calculate score BEFORE adding the point (like V3 does)
+  // Add point to winner FIRST
+  if (winner === 0) {
+    side1Points++;
+    side1GameScores[side1GameScores.length - 1] = side1Points;
+  } else {
+    side2Points++;
+    side2GameScores[side2GameScores.length - 1] = side2Points;
+  }
+  
+  // Calculate score AFTER adding the point (like V3 does)
   // Check if current game is a tiebreak
   const isTiebreakGame =
     isFinalSetTiebreak ||
@@ -153,20 +162,11 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
   // DEBUG: Log score calculation for first 3 points
   if (pointNumber <= 3) {
     console.log(`🎾 v4 addPoint - Point ${pointNumber} score calculation:`, {
-      side1Points_before: side1Points,
-      side2Points_before: side2Points,
+      side1Points_after: side1Points,
+      side2Points_after: side2Points,
       isTiebreak: isTiebreakGame,
       calculatedScore: gameScore
     });
-  }
-
-  // Add point to winner
-  if (winner === 0) {
-    side1Points++;
-    side1GameScores[side1GameScores.length - 1] = side1Points;
-  } else {
-    side2Points++;
-    side2GameScores[side2GameScores.length - 1] = side2Points;
   }
 
   // Update the set's game scores arrays
