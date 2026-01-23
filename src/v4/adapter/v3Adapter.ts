@@ -18,6 +18,7 @@ import { PointWithMetadata } from "../statistics/types";
 import { enrichPoint } from "../statistics/pointParser";
 import { buildCounters } from "../statistics/counters";
 import { calculateStats } from "../statistics/calculator";
+import { parseFormat } from "../../formatConverter";
 
 /**
  * Adapter that creates a v3-compatible API around v4 matchUp
@@ -31,7 +32,7 @@ export function createV3Adapter() {
      * Match factory - wraps v4.createMatchUp and provides v3 API
      */
     Match: (options: any = {}) => {
-      console.log("[UMO-V4] Match created with options:", options);
+      // console.log("[UMO-V4] Match created with options:", options);
 
       // Create initial matchUp
       let matchUp = createMatchUp({
@@ -81,6 +82,7 @@ export function createV3Adapter() {
 
       /**
        * Calculate "needed" metadata for current game state
+       * Based on V3's pointsNeeded() logic
        */
       function calculateNeeded(matchUp: any, score: any): any {
         const currentSet = score.sets?.[score.sets.length - 1];
@@ -88,38 +90,101 @@ export function createV3Adapter() {
           return {
             points_to_game: undefined,
             points_to_set: undefined,
+            games_to_set: undefined,
             is_breakpoint: false,
           };
         }
 
-        const gameScore = currentSet.gameScore;
-        if (!gameScore) {
-          return {
-            points_to_game: undefined,
-            points_to_set: undefined,
-            is_breakpoint: false,
-          };
-        }
+        const side1Games = currentSet.side1Score || 0;
+        const side2Games = currentSet.side2Score || 0;
+        
+        // Get current point score from score.points (not gameScore)
+        const side1Points = score.points?.[0] || 0;
+        const side2Points = score.points?.[1] || 0;
 
-        // Calculate points to game (simplified - doesn't handle all edge cases)
-        const points_to_game = [
-          gameScore.side1Points >= 3 &&
-          gameScore.side1Points > gameScore.side2Points
-            ? 1
-            : undefined,
-          gameScore.side2Points >= 3 &&
-          gameScore.side2Points > gameScore.side1Points
-            ? 1
-            : undefined,
-        ];
+        // Get format parameters (default to standard tennis)
+        const formatStructure = matchUp.matchUpFormat ? parseFormat(matchUp.matchUpFormat).format : null;
+        const setTo = formatStructure?.setFormat?.setTo || 6;
+        const winBy = formatStructure?.setFormat?.winBy || 2;
+        const tiebreakAt = formatStructure?.setFormat?.tiebreakAt || setTo;
+        const hasGoldenPoint = formatStructure?.setFormat?.hasGoldenPoint || false;
 
-        // Calculate points to set (simplified)
-        const side1GamesNeeded = 6 - (currentSet.side1Score || 0);
-        const side2GamesNeeded = 6 - (currentSet.side2Score || 0);
-        const points_to_set = [
-          side1GamesNeeded <= 1 ? side1GamesNeeded : undefined,
-          side2GamesNeeded <= 1 ? side2GamesNeeded : undefined,
-        ];
+        // Calculate games_to_set (how many games each player needs to win the set)
+        const threshold = setTo;
+        const score_difference = Math.abs(side1Games - side2Games);
+        const min_diff = winBy;
+
+        const games_to_set = [side1Games, side2Games].map((player_score, idx) => {
+          const opponent_score = idx === 0 ? side2Games : side1Games;
+          
+          // If at tiebreak threshold (e.g., 6-6), need 1 game (the tiebreak)
+          if (player_score === tiebreakAt && opponent_score === tiebreakAt) {
+            return 1;
+          }
+
+          // If in golden point situation or close to threshold
+          if (hasGoldenPoint && player_score === threshold && opponent_score === threshold) {
+            return 1;
+          }
+
+          // Normal case: need to reach threshold with required margin
+          if (opponent_score >= threshold - 1) {
+            // Close to threshold, need margin
+            return threshold + min_diff - player_score;
+          } else {
+            // Just need to reach threshold
+            return threshold - player_score;
+          }
+        });
+
+        // Calculate points to game for current game
+        const points_to_game = [0, 1].map((player) => {
+          const playerPoints = player === 0 ? side1Points : side2Points;
+          const opponentPoints = player === 0 ? side2Points : side1Points;
+          
+          // Standard game scoring (not tiebreak)
+          if (side1Games !== tiebreakAt || side2Games !== tiebreakAt) {
+            // Need 4 points to win, but must win by 2 in deuce
+            if (playerPoints >= 3 && opponentPoints >= 3) {
+              // Deuce or advantage
+              return 2; // Need 2 points to win from deuce
+            } else if (playerPoints >= 3) {
+              // At 40-x where x < 30
+              return 1;
+            } else {
+              // Still building to 40
+              return 4 - playerPoints;
+            }
+          } else {
+            // Tiebreak game
+            const tiebreakTo = 7;
+            if (playerPoints >= tiebreakTo - 1 && opponentPoints >= tiebreakTo - 1) {
+              return 2; // Need 2-point margin
+            } else if (playerPoints >= tiebreakTo - 1) {
+              return 1;
+            } else {
+              return tiebreakTo - playerPoints;
+            }
+          }
+        });
+
+        // Calculate total points to set
+        const points_to_set = [0, 1].map((player) => {
+          let points_needed = 0;
+          let player_games_to_set = games_to_set[player];
+
+          // Add points needed for current game (if not complete)
+          points_needed += points_to_game[player];
+          player_games_to_set -= 1;
+
+          // Add points for remaining games (assume 4 points per game)
+          const pointsPerGame = 4; // Simplified: assume winning games 4-0
+          for (let i = player_games_to_set; i > 0; i--) {
+            points_needed += pointsPerGame;
+          }
+
+          return points_needed;
+        });
 
         // Breakpoint detection (receiver is one point from winning game)
         const receiverIndex = 1 - currentServer;
@@ -128,6 +193,7 @@ export function createV3Adapter() {
         return {
           points_to_game,
           points_to_set,
+          games_to_set,
           is_breakpoint,
         };
       }
@@ -168,7 +234,7 @@ export function createV3Adapter() {
       const matchObj: any = {
         // State mutation methods (update internal matchUp)
         addPoint: (winner: number | any, metadata?: any) => {
-          console.log("[UMO-V4] addPoint called with:", winner);
+          // console.log("[UMO-V4] addPoint called with:", winner);
           let pointOptions: AddPointOptions;
 
           if (typeof winner === "number") {
@@ -213,6 +279,16 @@ export function createV3Adapter() {
           (enrichedPoint as any).breakpoint = needed.is_breakpoint || false;
           pointHistory.push(enrichedPoint);
 
+          // CRITICAL: Also add needed to the actual point in matchUp.history for set history API
+          const lastPointInMatchUp = matchUp.history.points[matchUp.history.points.length - 1];
+          if (lastPointInMatchUp) {
+            // Recalculate needed AFTER point is added for more accurate values
+            const scoreAfter = getScore(matchUp);
+            const neededAfter = calculateNeeded(matchUp, scoreAfter);
+            (lastPointInMatchUp as any).needed = neededAfter;
+            (lastPointInMatchUp as any).breakpoint = neededAfter.is_breakpoint || false;
+          }
+
           // Update service tracking after point
           updateServiceTracking();
 
@@ -227,21 +303,28 @@ export function createV3Adapter() {
 
           // V3 addPoint returns { point, result, match } object
           // Hive-eye checks what.point.result to show stroke slider
+          // But also need to support chaining for tests
           const lastPoint =
             matchUp.history.points[matchUp.history.points.length - 1];
-          const returnValue = {
+          const returnValue: any = {
             point: lastPoint || enrichedPoint,
             result:
-              (matchUp as any).matchUpStatus === "COMPLETE" ? "complete" : undefined,
+              (matchUp as any).matchUpStatus === "COMPLETE"
+                ? "complete"
+                : undefined,
             match: matchObj,
+            // Support chaining by adding addPoint method
+            addPoint: (w: any, m?: any) => matchObj.addPoint(w, m),
           };
 
+          /*
           console.log("[UMO-V4] addPoint returning:", {
             hasPoint: !!returnValue.point,
             pointResult: (returnValue.point as any)?.result,
             matchResult: returnValue.result,
             pointKeys: returnValue.point ? Object.keys(returnValue.point) : [],
           });
+          */
 
           return returnValue;
         },
@@ -596,24 +679,38 @@ export function createV3Adapter() {
                   const side1Games = currentSet?.side1Score || 0;
                   const side2Games = currentSet?.side2Score || 0;
                   const setComplete = currentSet?.winningSide !== undefined;
-                  const setWinner = setComplete ? (currentSet.winningSide === 1 ? 0 : 1) : undefined;
-                  
+                  const setWinner = setComplete
+                    ? currentSet.winningSide === 1
+                      ? 0
+                      : 1
+                    : undefined;
+
                   // Determine game state
                   const gameScores = currentSet?.side1GameScores || [];
                   const side1Points = gameScores[pointGameIndex] || 0;
-                  const side2Points = (currentSet?.side2GameScores || [])[pointGameIndex] || 0;
-                  
+                  const side2Points =
+                    (currentSet?.side2GameScores || [])[pointGameIndex] || 0;
+
                   // Game is complete if we moved to next game or set
                   const nextPoint = matchUp.history?.points[index + 1] as any;
-                  const gameComplete = nextPoint ? (nextPoint.game !== pointGameIndex || nextPoint.set !== pointSetIndex) : false;
-                  const gameWinner = gameComplete ? (side1Points > side2Points ? 0 : 1) : undefined;
-                  
+                  const gameComplete = nextPoint
+                    ? nextPoint.game !== pointGameIndex ||
+                      nextPoint.set !== pointSetIndex
+                    : false;
+                  const gameWinner = gameComplete
+                    ? side1Points > side2Points
+                      ? 0
+                      : 1
+                    : undefined;
+
                   // Match complete
-                  const matchComplete = matchUp.matchUpStatus === 'COMPLETED';
-                  
+                  const matchComplete = matchUp.matchUpStatus === "COMPLETED";
+
                   // Next service (alternates or changes on game completion)
-                  const next_service = gameComplete ? 1 - (point.server || 0) : (point.server || 0);
-                  
+                  const next_service = gameComplete
+                    ? 1 - (point.server || 0)
+                    : point.server || 0;
+
                   return {
                     action: "addPoint",
                     result: true,
@@ -622,7 +719,8 @@ export function createV3Adapter() {
                       ...point,
                       index,
                       breakpoint: point.breakpoint || false,
-                      server: point.server !== undefined ? point.server : index % 2,
+                      server:
+                        point.server !== undefined ? point.server : index % 2,
                     },
                     game: {
                       complete: gameComplete,
@@ -633,7 +731,11 @@ export function createV3Adapter() {
                     set: {
                       complete: setComplete,
                       winner: setWinner,
-                      sets: matchUp.score.sets.map(s => s.side1Score || 0).concat(matchUp.score.sets.map(s => s.side2Score || 0)),
+                      sets: matchUp.score.sets
+                        .map((s) => s.side1Score || 0)
+                        .concat(
+                          matchUp.score.sets.map((s) => s.side2Score || 0),
+                        ),
                       index: pointSetIndex,
                     },
                     needed: point.needed || {
@@ -676,7 +778,7 @@ export function createV3Adapter() {
         // Set/Game access
         sets: () => {
           // Return array of set objects with v3 API
-          return matchUp.score.sets.map((set, index) => ({
+          return matchUp.score.sets.map((set, setIndex) => ({
             score: () => ({
               counters: {
                 local: [set.side1Score || 0, set.side2Score || 0],
@@ -706,6 +808,61 @@ export function createV3Adapter() {
             complete: () => set.winningSide !== undefined,
             winner: () =>
               set.winningSide !== undefined ? set.winningSide - 1 : undefined,
+            
+            // Add history property to match V3 API
+            history: {
+              points: () => {
+                // Return points filtered by this set index
+                const allPoints = matchUp.history?.points || [];
+                return allPoints.filter((point: any) => point.set === setIndex);
+              },
+              action: (actionType: string) => {
+                // Return transformed points as action episodes for this set
+                const allPoints = matchUp.history?.points || [];
+                const setPoints = allPoints.filter((point: any) => point.set === setIndex);
+                
+                if (actionType === 'addPoint') {
+                  return setPoints.map((point: any) => ({
+                    action: 'addPoint',
+                    point: point,
+                    result: true,
+                    complete: point.matchComplete || false,
+                    set: point.set,
+                    game: point.game,
+                    needed: point.needed, // Include needed metadata for ptsChart
+                  }));
+                }
+                return [];
+              },
+              local: () => {
+                // Return local history for this set (games won)
+                const allPoints = matchUp.history?.points || [];
+                const setPoints = allPoints.filter((point: any) => point.set === setIndex);
+                return setPoints;
+              },
+              score: () => {
+                // Return score history for all games in this set
+                const allPoints = matchUp.history?.points || [];
+                const setPoints = allPoints.filter((point: any) => point.set === setIndex);
+                return setPoints.map((point: any) => point.score || '0-0');
+              },
+              games: () => {
+                // Return games history for this set
+                const allPoints = matchUp.history?.points || [];
+                const setPoints = allPoints.filter((point: any) => point.set === setIndex);
+                return setPoints;
+              },
+              lastPoint: () => {
+                // Return the last point of this set
+                const allPoints = matchUp.history?.points || [];
+                const setPoints = allPoints.filter((point: any) => point.set === setIndex);
+                return setPoints.length > 0 ? setPoints[setPoints.length - 1] : { score: '0-0' };
+              },
+              common: () => {
+                // Return all history (not just this set)
+                return matchUp.history?.points || [];
+              },
+            },
           }));
         },
 
@@ -719,14 +876,17 @@ export function createV3Adapter() {
         // Undo functionality
         undo: () => {
           console.log("[UMO-V4] undo() called");
-          
+
           if (!matchUp.history || matchUp.history.points.length === 0) {
-            console.log("[UMO-V4] undo() returning: matchObj (no points to undo)");
+            console.log(
+              "[UMO-V4] undo() returning: matchObj (no points to undo)",
+            );
             return matchObj;
           }
 
           // Get the point being undone for logging
-          const undonePoint = matchUp.history.points[matchUp.history.points.length - 1];
+          const undonePoint =
+            matchUp.history.points[matchUp.history.points.length - 1];
 
           // Recreate matchUp without last point
           const points = matchUp.history.points.slice(0, -1);
@@ -822,21 +982,24 @@ export function createV3Adapter() {
         // Statistics API (v3 compatible)
         stats: {
           counters: (setFilter?: number) => {
-            console.log("[UMO-V4] stats.counters() called with setFilter:", setFilter);
+            console.log(
+              "[UMO-V4] stats.counters() called with setFilter:",
+              setFilter,
+            );
 
-            // Use matchUp.history.points directly since that has the data
-            const points = (matchUp.history?.points ||
-              []) as unknown as PointWithMetadata[];
-            return buildCounters(points, { setFilter });
+            // CRITICAL: Use pointHistory instead of matchUp.history.points
+            // pointHistory has enriched points with serve, result, etc. from enrichPoint()
+            // matchUp.history.points only has raw points from addPoint()
+            return buildCounters(pointHistory, { setFilter });
           },
           calculated: (setFilter?: number) => {
-            console.log("[UMO-V4] stats.calculated() called with setFilter:", setFilter);
-            
-            // Use matchUp.history.points directly since that has the data
-            const points = (matchUp.history?.points ||
-              []) as unknown as PointWithMetadata[];
+            console.log(
+              "[UMO-V4] stats.calculated() called with setFilter:",
+              setFilter,
+            );
 
-            const counters = buildCounters(points, { setFilter });
+            // CRITICAL: Use pointHistory for enriched points
+            const counters = buildCounters(pointHistory, { setFilter });
             return calculateStats(counters);
           },
         },

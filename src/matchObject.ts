@@ -20,8 +20,8 @@ import { createStateObject } from "./state/stateObject";
 import { SINGLES, DOUBLES, TO_BE_PLAYED, COMPLETED } from "./constants";
 
 // Register v4 statistics engine globally for v3 to use
-import { buildCounters } from './v4/statistics/counters';
-import { calculateStats } from './v4/statistics/calculator';
+import { buildCounters } from "./v4/statistics/counters";
+import { calculateStats } from "./v4/statistics/calculator";
 (globalThis as any).__UMO_V4_STATS__ = { buildCounters, calculateStats };
 
 // Version - inline to avoid import issues with bundler
@@ -55,8 +55,6 @@ umo.Match = ({
   matchUp,
   common = umo.common(),
 } = {}) => {
-  console.log('[UMO-V3] Match created with options:', { matchUpFormat, matchUpId, participants, isDoubles });
-  
   // If full matchUp provided, use MatchUpAdapter to extract parameters
   if (matchUp) {
     const MatchUpAdapter = (globalThis as any).MatchUpAdapter;
@@ -162,28 +160,31 @@ umo.Match = ({
     nextTeamReceiving: match.nextTeamReceiving,
     change: match.change,
     undo: (count = 1) => {
-      console.log('[UMO-V3] undo() called with count:', count);
+      console.log("[UMO-V3] undo() called with count:", count);
       try {
         const result = match.undo(count);
-        console.log('[UMO-V3] undo() returning:', result);
+        console.log("[UMO-V3] undo() returning:", result);
         return result;
       } catch (error) {
-        console.error('[UMO-V3] undo() FAILED with error:', error);
-        console.error('[UMO-V3] undo() error stack:', error.stack);
+        console.error("[UMO-V3] undo() FAILED with error:", error);
+        console.error("[UMO-V3] undo() error stack:", error.stack);
         throw error;
       }
     },
     addPoint: (value: any, metadata?: any) => {
-      console.log('[UMO-V3] addPoint() called with:', value);
+      // console.log('[UMO-V3] addPoint() called with:', value);
       const result = match.addPoint(value, metadata);
-      console.log('[UMO-V3] addPoint() returning:', { result: result?.result, complete: result?.complete });
+      // console.log('[UMO-V3] addPoint() returning:', { result: result?.result, complete: result?.complete });
       return result;
     },
     addPoints: match.addPoints,
     decoratePoint: (point: any, attributes: any) => {
-      console.log('[UMO-V3] decoratePoint() called with:', { index: point?.index, attributes });
+      console.log("[UMO-V3] decoratePoint() called with:", {
+        index: point?.index,
+        attributes,
+      });
       const result = match.decoratePoint(point, attributes);
-      console.log('[UMO-V3] decoratePoint() returning:', result);
+      console.log("[UMO-V3] decoratePoint() returning:", result);
       return result;
     },
     addScore: match.addScore,
@@ -504,7 +505,9 @@ umo.Game = ({
       (game.singleThresholdMet() && game.format.hasGoldenPoint && min_diff == 1)
     ) {
       let progression = ["0", "15", "30", "40", "G", "G"];
-      scoreboard = score.map((points, _player) => progression[points]).join("-");
+      scoreboard = score
+        .map((points, _player) => progression[points])
+        .join("-");
     } else {
       scoreboard = score
         .map((points, player) => {

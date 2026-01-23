@@ -19,7 +19,7 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
   // V4 functional API can be pure, but v3 adapter requires shared state.
   const newMatchUp = matchUp;
 
-  const { winner, server, timestamp } = options;
+  let { winner, server, timestamp } = options;
 
   // Initialize history if not present
   newMatchUp.history ??= { points: [] };
@@ -37,14 +37,53 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
   // Create point record - preserve all metadata from options
   const pointNumber = newMatchUp.history.points.length + 1;
   const pointIndex = newMatchUp.history.points.length; // 0-based index for v3 compatibility
-  
+
+  // Derive 'server' if not provided (calculate from match state)
+  // In tennis, server alternates every point within tiebreaks or every game otherwise
+  if (server === undefined) {
+    // Get current set and game state to check if in tiebreak
+    const currentSetIndex = newMatchUp.score.sets.length - 1;
+    const currentSet = currentSetIndex >= 0 ? newMatchUp.score.sets[currentSetIndex] : undefined;
+    
+    // Check if in tiebreak (game scores are equal at tiebreak threshold)
+    const side1Games = currentSet?.side1Score || 0;
+    const side2Games = currentSet?.side2Score || 0;
+    const formatParsedForServer = parseFormat(matchUp.matchUpFormat);
+    const setTo = formatParsedForServer.format?.setFormat?.setTo || 6;
+    const tiebreakAt = formatParsedForServer.format?.setFormat?.tiebreakAt || setTo;
+    const inTiebreak = (side1Games === tiebreakAt && side2Games === tiebreakAt);
+    
+    if (inTiebreak) {
+      // In tiebreak: server alternates every 2 points, starting with whoever would serve next
+      // The player who would serve the next game serves first in tiebreak
+      // Total games determines initial server: even = player 0, odd = player 1
+      const totalGames = side1Games + side2Games;
+      const tiebreakInitialServer = totalGames % 2;
+      
+      // Get tiebreak point number (points in current game)
+      const side1GameScores = currentSet?.side1GameScores || [];
+      const side2GameScores = currentSet?.side2GameScores || [];
+      const tiebreakPoints = (side1GameScores[side1GameScores.length - 1] || 0) + 
+                             (side2GameScores[side2GameScores.length - 1] || 0);
+      
+      // Server changes every 2 points in tiebreak (0-1: server A, 2-3: server B, 4-5: server A, ...)
+      const serverOffset = Math.floor(tiebreakPoints / 2) % 2;
+      server = ((tiebreakInitialServer + serverOffset) % 2) as 0 | 1;
+    } else {
+      // Regular game: server is determined by number of completed games
+      // If we have sets, count total games to determine server
+      const totalGames = side1Games + side2Games;
+      server = (totalGames % 2) as 0 | 1; // Even games: player 0 serves, odd games: player 1 serves
+    }
+  }
+
   // Derive 'code' if not provided (V4 should be self-sufficient)
   // 'S' = server wins, 'R' = receiver wins
   let derivedCode = (options as any).code;
   if (!derivedCode && winner !== undefined && server !== undefined) {
-    derivedCode = winner === server ? 'S' : 'R';
+    derivedCode = winner === server ? "S" : "R";
   }
-  
+
   const point: Point = {
     ...options, // Preserve all fields (result, rally, etc.)
     pointNumber,
@@ -52,24 +91,14 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
     server,
     timestamp: timestamp || new Date().toISOString(),
   };
-  
+
   // Add derived code if calculated
   if (derivedCode) {
     (point as any).code = derivedCode;
   }
-  
+
   // Add v3-compatible index field (0-based, while pointNumber is 1-based)
   (point as any).index = pointIndex;
-  
-  // DEBUG: Log first point to confirm metadata preservation
-  if (pointNumber === 1) {
-    console.log('🔧 v4 addPoint - First point stored:', { 
-      result: (point as any).result, 
-      code: (point as any).code, 
-      winner: point.winner,
-      hasMetadata: !!(point as any).result 
-    });
-  }
 
   // Add point to history
   newMatchUp.history.points.push(point);
@@ -134,6 +163,15 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
     side2GameScores.push(0);
   }
 
+  // Add V3-compatible set and game indices to point
+  (point as any).set = currentSetIndex;
+  (point as any).game = Math.max(side1GameScores.length, side2GameScores.length) - 1;
+  
+  // Add 'number' - point number within current game (0-based)
+  // This is the total number of points played in the current game before this point
+  const pointsInCurrentGame = side1Points + side2Points;
+  (point as any).number = pointsInCurrentGame;
+
   // Get format details for score calculation
   const setTo = formatStructure.setFormat?.setTo || 6;
   const tiebreakAt = formatStructure.setFormat?.tiebreakAt || setTo;
@@ -146,36 +184,14 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
     side2Points++;
     side2GameScores[side2GameScores.length - 1] = side2Points;
   }
-  
-  // Calculate score AFTER adding the point (like V3 does)
-  // Check if current game is a tiebreak
-  const isTiebreakGame =
-    isFinalSetTiebreak ||
-    (!finalSetNoTiebreak &&
-      side1Games === tiebreakAt &&
-      side2Games === tiebreakAt);
-  const gameScore = formatGameScore(side1Points, side2Points, isTiebreakGame);
-  
-  // Store score on point object (like V3)
-  (point as any).score = gameScore;
-  
-  // DEBUG: Log score calculation for first 3 points
-  if (pointNumber <= 3) {
-    console.log(`🎾 v4 addPoint - Point ${pointNumber} score calculation:`, {
-      side1Points_after: side1Points,
-      side2Points_after: side2Points,
-      isTiebreak: isTiebreakGame,
-      calculatedScore: gameScore
-    });
-  }
 
   // Update the set's game scores arrays
   currentSet.side1GameScores = side1GameScores;
   currentSet.side2GameScores = side2GameScores;
 
-  // Check if game is won
+  // Check if game is won FIRST (before calculating score)
   // (setTo and tiebreakAt already declared above for score calculation)
-  
+
   // For final set tiebreak (match tiebreak), the entire set is one tiebreak game
   // BUT if final set has noTiebreak (advantage format), don't play tiebreak at 6-6
   const isTiebreak =
@@ -190,6 +206,26 @@ export function addPoint(matchUp: MatchUp, options: AddPointOptions): MatchUp {
     isTiebreak,
     isFinalSetTiebreak,
   );
+
+  // Calculate score AFTER checking if game is won
+  // If game is won, V3 shows '0-0' (start of next game), not the winning score
+  const isTiebreakGame =
+    isFinalSetTiebreak ||
+    (!finalSetNoTiebreak &&
+      side1Games === tiebreakAt &&
+      side2Games === tiebreakAt);
+  
+  let gameScore: string;
+  if (gameWon !== undefined) {
+    // Game is won - V3 shows '0-0' for the start of the next game
+    gameScore = '0-0';
+  } else {
+    // Game not yet won - show current score
+    gameScore = formatGameScore(side1Points, side2Points, isTiebreakGame);
+  }
+
+  // Store score on point object (like V3)
+  (point as any).score = gameScore;
 
   if (gameWon !== undefined) {
     // Game won - increment game score
@@ -316,39 +352,39 @@ function formatGameScore(p1: number, p2: number, isTiebreak: boolean): string {
   if (isTiebreak) {
     return `${p1}-${p2}`;
   }
-  
+
   // Regular game: convert to tennis score
-  const points = ['0', '15', '30', '40'];
-  
+  const points = ["0", "15", "30", "40"];
+
   // Both under 4 points (0-40 range)
   if (p1 < 4 && p2 < 4) {
     return `${points[p1]}-${points[p2]}`;
   }
-  
+
   // Deuce
   if (p1 >= 3 && p2 >= 3 && p1 === p2) {
-    return '40-40';
+    return "40-40";
   }
-  
+
   // Advantage or game point
   if (p1 >= 3 && p2 >= 3) {
     const diff = p1 - p2;
-    if (diff === 1) return 'A-40';
-    if (diff === -1) return '40-A';
-    if (diff >= 2) return 'G-40';
-    if (diff <= -2) return '40-G';
+    if (diff === 1) return "A-40";
+    if (diff === -1) return "40-A";
+    if (diff >= 2) return "G-40";
+    if (diff <= -2) return "40-G";
   }
-  
+
   // One side at 40 or beyond
   if (p1 >= 3) {
-    return `40-${p2 < 4 ? points[p2] : '40'}`;
+    return `40-${p2 < 4 ? points[p2] : "40"}`;
   }
-  
+
   if (p2 >= 3) {
-    return `${p1 < 4 ? points[p1] : '40'}-40`;
+    return `${p1 < 4 ? points[p1] : "40"}-40`;
   }
-  
-  return `${p1 < 4 ? points[p1] : '0'}-${p2 < 4 ? points[p2] : '0'}`;
+
+  return `${p1 < 4 ? points[p1] : "0"}-${p2 < 4 ? points[p2] : "0"}`;
 }
 
 /**
@@ -375,10 +411,11 @@ function checkSetWon(
 
   // Extract winBy from the parsed format structure
   // Use finalSetFormat if this is the deciding set, otherwise use regular setFormat
-  const setFormat = isDecidingSet && formatStructure.finalSetFormat 
-    ? formatStructure.finalSetFormat 
-    : formatStructure.setFormat;
-  
+  const setFormat =
+    isDecidingSet && formatStructure.finalSetFormat
+      ? formatStructure.finalSetFormat
+      : formatStructure.setFormat;
+
   const winBy = setFormat?.winBy || 2; // Default to 2 (standard tennis) if not specified
 
   // Check if at tiebreak score (e.g., 7-6 after tiebreak at 6-6)
