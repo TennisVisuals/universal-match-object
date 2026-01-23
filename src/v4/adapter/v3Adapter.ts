@@ -589,7 +589,10 @@ export function createV3Adapter() {
               return (matchUp.history?.points || []).map(
                 (point: any, index) => {
                   // Determine current game and set state at this point in history
-                  const currentSet = matchUp.score.sets[point.set || 0];
+                  // Use extended point data (game, set) added by enrichPoint
+                  const pointSetIndex = (point as any).set || 0;
+                  const pointGameIndex = (point as any).game || 0;
+                  const currentSet = matchUp.score.sets[pointSetIndex];
                   const side1Games = currentSet?.side1Score || 0;
                   const side2Games = currentSet?.side2Score || 0;
                   const setComplete = currentSet?.winningSide !== undefined;
@@ -597,13 +600,12 @@ export function createV3Adapter() {
                   
                   // Determine game state
                   const gameScores = currentSet?.side1GameScores || [];
-                  const currentGameIndex = point.game || 0;
-                  const side1Points = gameScores[currentGameIndex] || 0;
-                  const side2Points = (currentSet?.side2GameScores || [])[currentGameIndex] || 0;
+                  const side1Points = gameScores[pointGameIndex] || 0;
+                  const side2Points = (currentSet?.side2GameScores || [])[pointGameIndex] || 0;
                   
                   // Game is complete if we moved to next game or set
-                  const nextPoint = matchUp.history?.points[index + 1];
-                  const gameComplete = nextPoint ? (nextPoint.game !== point.game || nextPoint.set !== point.set) : false;
+                  const nextPoint = matchUp.history?.points[index + 1] as any;
+                  const gameComplete = nextPoint ? (nextPoint.game !== pointGameIndex || nextPoint.set !== pointSetIndex) : false;
                   const gameWinner = gameComplete ? (side1Points > side2Points ? 0 : 1) : undefined;
                   
                   // Match complete
@@ -626,13 +628,13 @@ export function createV3Adapter() {
                       complete: gameComplete,
                       winner: gameWinner,
                       games: [side1Games, side2Games],
-                      index: currentGameIndex,
+                      index: pointGameIndex,
                     },
                     set: {
                       complete: setComplete,
                       winner: setWinner,
                       sets: matchUp.score.sets.map(s => s.side1Score || 0).concat(matchUp.score.sets.map(s => s.side2Score || 0)),
-                      index: point.set || 0,
+                      index: pointSetIndex,
                     },
                     needed: point.needed || {
                       points_to_game: [4 - side1Points, 4 - side2Points],
