@@ -585,18 +585,63 @@ export function createV3Adapter() {
           action: (actionName: string) => {
             if (actionName === "addPoint") {
               // Return addPoint episodes with point data and metadata
+              // Must include game, set, result, complete, next_service for visualization compatibility
               return (matchUp.history?.points || []).map(
-                (point: any, index) => ({
-                  action: "addPoint",
-                  point: {
-                    ...point,
-                    index,
-                    breakpoint: point.breakpoint || false,
-                    server:
-                      point.server !== undefined ? point.server : index % 2,
-                  },
-                  needed: point.needed || {},
-                }),
+                (point: any, index) => {
+                  // Determine current game and set state at this point in history
+                  const currentSet = matchUp.score.sets[point.set || 0];
+                  const side1Games = currentSet?.side1Score || 0;
+                  const side2Games = currentSet?.side2Score || 0;
+                  const setComplete = currentSet?.winningSide !== undefined;
+                  const setWinner = setComplete ? (currentSet.winningSide === 1 ? 0 : 1) : undefined;
+                  
+                  // Determine game state
+                  const gameScores = currentSet?.side1GameScores || [];
+                  const currentGameIndex = point.game || 0;
+                  const side1Points = gameScores[currentGameIndex] || 0;
+                  const side2Points = (currentSet?.side2GameScores || [])[currentGameIndex] || 0;
+                  
+                  // Game is complete if we moved to next game or set
+                  const nextPoint = matchUp.history?.points[index + 1];
+                  const gameComplete = nextPoint ? (nextPoint.game !== point.game || nextPoint.set !== point.set) : false;
+                  const gameWinner = gameComplete ? (side1Points > side2Points ? 0 : 1) : undefined;
+                  
+                  // Match complete
+                  const matchComplete = matchUp.matchUpStatus === 'COMPLETED';
+                  
+                  // Next service (alternates or changes on game completion)
+                  const next_service = gameComplete ? 1 - (point.server || 0) : (point.server || 0);
+                  
+                  return {
+                    action: "addPoint",
+                    result: true,
+                    complete: matchComplete,
+                    point: {
+                      ...point,
+                      index,
+                      breakpoint: point.breakpoint || false,
+                      server: point.server !== undefined ? point.server : index % 2,
+                    },
+                    game: {
+                      complete: gameComplete,
+                      winner: gameWinner,
+                      games: [side1Games, side2Games],
+                      index: currentGameIndex,
+                    },
+                    set: {
+                      complete: setComplete,
+                      winner: setWinner,
+                      sets: matchUp.score.sets.map(s => s.side1Score || 0).concat(matchUp.score.sets.map(s => s.side2Score || 0)),
+                      index: point.set || 0,
+                    },
+                    needed: point.needed || {
+                      points_to_game: [4 - side1Points, 4 - side2Points],
+                      points_to_set: [],
+                      games_to_set: [],
+                    },
+                    next_service,
+                  };
+                },
               );
             }
             return [];
