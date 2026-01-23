@@ -116,13 +116,10 @@ export interface MatchUpHistory {
  * - 0 = side 1 (first player/team)  
  * - 1 = side 2 (second player/team)
  * 
- * **IMPORTANT - Data Loss Issue:**
- * ATP/WTA datasets contain rich point detail (aces, double faults, winners, errors)
- * in alpha code format (S/R/A/D). Currently this detail is DISCARDED during conversion
- * to numeric format. Only the winner (0/1) is captured.
- * 
- * Future enhancement: Add metadata field to preserve ace/fault/winner/error information.
- * See: docs/PBP_NOTATION.md for details.
+ * **MCP Decorations:**
+ * Rich point metadata from Match Charting Project includes serve locations,
+ * stroke types, court positions, and rally sequences. These decorations are
+ * compatible with hive-eye-tracker visualization requirements.
  */
 export interface Point {
   /** Sequential point number (1-indexed) */
@@ -143,14 +140,100 @@ export interface Point {
   /** Score after this point (e.g., "15-0") */
   score?: string;
   
-  // Future: Add metadata field to capture point detail from alpha codes
-  // metadata?: {
-  //   pointType?: 'ace' | 'doubleFault' | 'winner' | 'unforcedError' | 'forcedError';
-  //   shotCount?: number;
-  //   atNet?: boolean;
-  //   breakPoint?: boolean;
-  //   setPoint?: boolean;
-  // };
+  // MCP Decorations (from Match Charting Project data)
+  /** Result of the point */
+  result?: PointResult;
+  
+  /** Stroke type used on the final shot */
+  stroke?: StrokeType;
+  
+  /** Hand/wing used on the final shot */
+  hand?: 'Forehand' | 'Backhand';
+  
+  /** Which serve (1st or 2nd) */
+  serve?: 1 | 2;
+  
+  /** Serve location */
+  serveLocation?: ServeLocation;
+  
+  /** Full rally shot sequence with details */
+  rally?: RallyShot[];
+  
+  /** Court location information */
+  location?: string;
+  
+  /** Was this a break point? */
+  breakpoint?: boolean;
+  
+  /** Original MCP code for traceability */
+  code?: string;
+}
+
+/**
+ * Point result types (how the point ended)
+ */
+export type PointResult = 
+  | 'Ace'
+  | 'Winner'
+  | 'Serve Winner'
+  | 'Forced Error'
+  | 'Unforced Error'
+  | 'Double Fault'
+  | 'Penalty'
+  | 'Unknown';
+
+/**
+ * Stroke types in tennis
+ */
+export type StrokeType =
+  | 'Forehand'
+  | 'Backhand'
+  | 'Forehand Slice'
+  | 'Backhand Slice'
+  | 'Forehand Volley'
+  | 'Backhand Volley'
+  | 'Overhead Smash'
+  | 'Backhand Overhead Smash'
+  | 'Forehand Drop Shot'
+  | 'Backhand Drop Shot'
+  | 'Forehand Lob'
+  | 'Backhand Lob'
+  | 'Forehand Half-volley'
+  | 'Backhand Half-volley'
+  | 'Forehand Drive Volley'
+  | 'Backhand Drive Volley'
+  | 'Trick Shot'
+  | 'Unknown Shot';
+
+/**
+ * Serve locations
+ */
+export type ServeLocation = 'Wide' | 'Body' | 'T';
+
+/**
+ * Rally shot with court position and stroke details
+ */
+export interface RallyShot {
+  /** Shot number in the rally (1-indexed) */
+  shotNumber: number;
+  
+  /** Player who hit this shot (0 or 1) */
+  player: 0 | 1;
+  
+  /** Stroke type */
+  stroke: StrokeType;
+  
+  /** Direction of shot (1=FH side, 2=middle, 3=BH side) */
+  direction?: 1 | 2 | 3;
+  
+  /** Depth of shot */
+  depth?: 'shallow' | 'deep' | 'very deep';
+  
+  /** Court position */
+  position?: 'baseline' | 'net' | 'approach';
+  
+  /** Original MCP code for this shot */
+  code?: string;
 }
 
 /**

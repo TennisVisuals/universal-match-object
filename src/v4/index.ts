@@ -46,6 +46,34 @@ export type {
   PBPValidationResult,
 } from "./validation/pbpValidator";
 
+// MCP Validator - Match Charting Project parser
+export {
+  mcpValidator,
+  validateMCPMatch,
+  exportMatchUpJSON,
+} from "./validation/mcpValidator";
+export type {
+  MCPValidationOptions,
+  MCPValidationResult,
+  MCPMatchResult,
+} from "./validation/mcpValidator";
+
+// MCP Parser - Shot sequence parser
+export {
+  parseCSV,
+  groupByMatch,
+  parseMCPPoint,
+  shotSplitter,
+  analyzeSequence,
+  pointParser,
+  shotParser,
+} from "./validation/mcpParser";
+export type {
+  MCPPoint,
+  MCPMatch,
+  ParsedMCPPoint,
+} from "./validation/mcpParser";
+
 // Query functions (continued)
 
 // Metadata functions (TODO)
