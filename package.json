@@ -74,8 +74,8 @@
     "release:major": "pnpm run commits && npm version $(semver $npm_package_version -i major) && npm publish --tag latest",
     "release:minor": "pnpm run commits && npm version $(semver $npm_package_version -i minor) && npm publish --tag latest",
     "release:patch": "pnpm run commits && npm version $(semver $npm_package_version -i patch) && npm publish --tag latest",
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#dist\"",
-    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\" \"#dist\""
+    "lint:md": "markdownlint-cli2 \"**/*.md\"",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\""
   },
   "devDependencies": {
     "@types/node": "^25.0.6",
@@ -85,6 +85,7 @@
     "esbuild": "^0.27.2",
     "eslint": "^9.39.2",
     "eslint-plugin-sonarjs": "^3.0.5",
+    "markdownlint-cli": "^0.47.0",
     "markdownlint-cli2": "^0.20.0",
     "semver": "^7.7.3",
     "tsup": "^8.5.1",
