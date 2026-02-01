@@ -1,26 +1,23 @@
 /**
  * createMatchUp - Create a new TODS matchUp
- * 
+ *
  * Pure function that creates a matchUp with TODS-compliant structure
  */
 
-import type { 
-  MatchUp, 
-  CreateMatchUpOptions, 
-  Side,
-  Score 
-} from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { utilities } from "tods-competition-factory";
+
+// Import necessary types
+import type { MatchUp, CreateMatchUpOptions, Side, Score } from "../types";
 
 /**
  * Create a new matchUp
- * 
+ *
  * @param options - Creation options
  * @returns New matchUp object
  */
 export function createMatchUp(options: CreateMatchUpOptions): MatchUp {
   const {
-    matchUpId = uuidv4(),
+    matchUpId = utilities.UUID(),
     matchUpFormat,
     participants = [],
     isDoubles = false,
@@ -28,7 +25,7 @@ export function createMatchUp(options: CreateMatchUpOptions): MatchUp {
   } = options;
 
   // Determine matchUpType
-  const type = matchUpType || (isDoubles ? 'DOUBLES' : 'SINGLES');
+  const type = matchUpType || (isDoubles ? "DOUBLES" : "SINGLES");
 
   // Create sides from participants
   const sides: Side[] = participants.map((participant, index) => ({
@@ -39,10 +36,7 @@ export function createMatchUp(options: CreateMatchUpOptions): MatchUp {
 
   // If no participants provided, create empty sides
   if (sides.length === 0) {
-    sides.push(
-      { sideNumber: 1 },
-      { sideNumber: 2 }
-    );
+    sides.push({ sideNumber: 1 }, { sideNumber: 2 });
   }
 
   // Initialize empty score
@@ -54,7 +48,7 @@ export function createMatchUp(options: CreateMatchUpOptions): MatchUp {
   const matchUp: MatchUp = {
     matchUpId,
     matchUpFormat,
-    matchUpStatus: 'TO_BE_PLAYED',
+    matchUpStatus: "TO_BE_PLAYED",
     matchUpType: type,
     sides,
     score,
