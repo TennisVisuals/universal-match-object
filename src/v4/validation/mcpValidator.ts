@@ -125,7 +125,7 @@ function parseMatchId(matchId: string): {
  */
 function extractFinalScore(points: MCPPoint[]): string | undefined {
   if (points.length === 0) return undefined;
-  
+
   // Get the last point to find the final score
   const lastPoint = points[points.length - 1];
   if (!lastPoint) return undefined;
@@ -139,9 +139,9 @@ function extractFinalScore(points: MCPPoint[]): string | undefined {
 
   const sets: string[] = [];
   if (set1) sets.push(`${set1}-${set2}`);
-  if (set3) sets.push(`${set3}-${set2 || '0'}`);
-  if (set4) sets.push(`${set4}-${set2 || '0'}`);
-  if (set5) sets.push(`${set5}-${set2 || '0'}`);
+  if (set3) sets.push(`${set3}-${set2 || "0"}`);
+  if (set4) sets.push(`${set4}-${set2 || "0"}`);
+  if (set5) sets.push(`${set5}-${set2 || "0"}`);
 
   return sets.length > 0 ? sets.join(", ") : undefined;
 }
@@ -157,7 +157,11 @@ export function validateMCPMatch(
     debug?: boolean;
   } = {},
 ): MCPMatchResult {
-  const { matchUpFormat: providedFormat, validateScore = true, debug = false } = options;
+  const {
+    matchUpFormat: providedFormat,
+    validateScore = true,
+    debug = false,
+  } = options;
 
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -179,7 +183,9 @@ export function validateMCPMatch(
     matchUpFormat = deduceMatchUpFormat(expectedScore);
     formatDeduced = true;
     if (debug) {
-      console.log(`Deduced format: ${matchUpFormat} from score: ${expectedScore}`);
+      console.log(
+        `Deduced format: ${matchUpFormat} from score: ${expectedScore}`,
+      );
     }
   } else {
     // Default format
@@ -257,16 +263,19 @@ export function validateMCPMatch(
 
       // Now enrich the point in history with MCP decorations
       if (matchUp.history?.points && matchUp.history.points.length > 0) {
-        const lastPoint = matchUp.history.points[matchUp.history.points.length - 1];
+        const lastPoint =
+          matchUp.history.points[matchUp.history.points.length - 1];
         if (lastPoint) {
           // Add MCP decorations
           if (parsedPoint.result) lastPoint.result = parsedPoint.result;
           if (parsedPoint.stroke) lastPoint.stroke = parsedPoint.stroke;
           if (parsedPoint.hand) lastPoint.hand = parsedPoint.hand;
           if (parsedPoint.serve) lastPoint.serve = parsedPoint.serve;
-          if (parsedPoint.serveLocation) lastPoint.serveLocation = parsedPoint.serveLocation;
+          if (parsedPoint.serveLocation)
+            lastPoint.serveLocation = parsedPoint.serveLocation;
           if (parsedPoint.rally) lastPoint.rally = parsedPoint.rally;
-          if (parsedPoint.rallyLength) lastPoint.rallyLength = parsedPoint.rallyLength;
+          if (parsedPoint.rallyLength)
+            lastPoint.rallyLength = parsedPoint.rallyLength;
           if (parsedPoint.code) lastPoint.code = parsedPoint.code;
         }
       }
@@ -329,7 +338,9 @@ export function validateMCPMatch(
   if (debug) {
     console.log(`Final score: ${actualScore}`);
     console.log(`Match complete: ${isComplete}`);
-    console.log(`Stats: ${aces} aces, ${doubleFaults} DFs, ${winners} winners, ${unforcedErrors} UEs, ${forcedErrors} FEs`);
+    console.log(
+      `Stats: ${aces} aces, ${doubleFaults} DFs, ${winners} winners, ${unforcedErrors} UEs, ${forcedErrors} FEs`,
+    );
   }
 
   return {
@@ -401,7 +412,9 @@ export function mcpValidator(
   const matches = groupByMatch(mcpPoints);
 
   if (debug) {
-    console.log(`Parsed ${mcpPoints.length} points from ${matches.length} matches`);
+    console.log(
+      `Parsed ${mcpPoints.length} points from ${matches.length} matches`,
+    );
   }
 
   // Filter by matchId if provided
